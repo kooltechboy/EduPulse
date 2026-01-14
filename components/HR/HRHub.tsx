@@ -1,0 +1,346 @@
+
+import React, { useState, useMemo } from 'react';
+import { 
+  Users, UserPlus, Briefcase, Calendar, ShieldCheck, Award, TrendingUp, 
+  Search, Filter, Plus, ChevronRight, X, Mail, Phone, FileText, 
+  CheckCircle2, AlertTriangle, Clock, Activity, Zap, Star, MoreVertical,
+  Globe, LayoutGrid, Heart, UserCheck, Trash2, Edit3, Send, Laptop, Sparkles,
+  SearchCheck, BadgeCheck, FileCheck, ClipboardCheck,
+  // Added missing PieChartIcon import alias
+  PieChart as PieChartIcon
+} from 'lucide-react';
+import { StaffMember, LeaveRequest, PDRecord, JobOpening, Applicant, StaffCompliance, StaffCategory } from '../../types';
+
+const INITIAL_OPENINGS: JobOpening[] = [
+  { id: 'JOB-001', title: 'Senior IB Mathematics Lead', department: 'Mathematics', type: 'Full-time', status: 'Open', applicantsCount: 12 },
+  { id: 'JOB-002', title: 'Director of Early Years', department: 'Early Years', type: 'Full-time', status: 'Open', applicantsCount: 8 },
+  { id: 'JOB-003', title: 'Psychology & Wellness Counselor', department: 'Wellness', type: 'Part-time', status: 'Draft', applicantsCount: 0 },
+];
+
+const INITIAL_APPLICANTS: Applicant[] = [
+  { id: 'APP-101', name: 'Dr. Emily Carter', email: 'e.carter@edu.com', jobId: 'JOB-001', jobTitle: 'Senior IB Mathematics Lead', stage: 'Interview', appliedDate: '2026-05-10', score: 94 },
+  { id: 'APP-102', name: 'Marcus Sterling', email: 'sterling@edu.com', jobId: 'JOB-001', jobTitle: 'Senior IB Mathematics Lead', stage: 'Screening', appliedDate: '2026-05-12', score: 82 },
+  { id: 'APP-103', name: 'Sarah Wu', email: 's.wu@edu.com', jobId: 'JOB-002', jobTitle: 'Director of Early Years', stage: 'Applied', appliedDate: '2026-05-15', score: 75 },
+];
+
+const INITIAL_LEAVE: LeaveRequest[] = [
+  { id: 'L-101', staffId: 'STF001', staffName: 'Prof. Mitchell', type: 'Professional Development', startDate: '2026-06-01', endDate: '2026-06-03', reason: 'IB Curriculum Workshop', status: 'Approved' },
+  { id: 'L-102', staffId: 'STF002', staffName: 'Dr. Linda Vance', type: 'Sick', startDate: '2026-05-18', endDate: '2026-05-19', reason: 'Seasonal Flu', status: 'Pending' },
+];
+
+const HRHub: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'recruitment' | 'leave' | 'compliance' | 'pd'>('dashboard');
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Data State
+  const [openings] = useState<JobOpening[]>(INITIAL_OPENINGS);
+  const [applicants] = useState<Applicant[]>(INITIAL_APPLICANTS);
+  const [leaveRequests] = useState<LeaveRequest[]>(INITIAL_LEAVE);
+
+  const renderDashboard = () => (
+    <div className="space-y-10 animate-in fade-in duration-700">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {[
+          { label: 'Total Faculty', value: '142', icon: <Users />, color: 'blue', trend: '+4% growth' },
+          { label: 'PD Completion', value: '88%', icon: <Award />, color: 'emerald', trend: 'Optimal' },
+          { label: 'Open Vacancies', value: openings.length, icon: <Briefcase />, color: 'indigo', trend: 'High Priority' },
+          { label: 'Retention Rate', value: '96.2%', icon: <Heart />, color: 'rose', trend: 'International Std' },
+        ].map((stat, i) => (
+          <div key={i} className="glass-card p-8 rounded-[40px] bg-white shadow-xl hover:translate-y-[-4px] transition-all group">
+            <div className="flex justify-between items-start mb-8">
+              <div className={`p-4 rounded-2xl shadow-sm bg-${stat.color}-50 text-${stat.color}-600 group-hover:bg-${stat.color}-600 group-hover:text-white transition-all`}>
+                {stat.icon}
+              </div>
+              <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">{stat.trend}</span>
+            </div>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">{stat.label}</p>
+            <h3 className="text-3xl font-black text-slate-900">{stat.value}</h3>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
+        <div className="xl:col-span-2 glass-card p-10 rounded-[56px] bg-white shadow-2xl">
+          <div className="flex justify-between items-center mb-12">
+            <div>
+              <h4 className="text-2xl font-black text-slate-900 tracking-tight">Recruitment Pipeline</h4>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Active Talent Acquisition Cycle</p>
+            </div>
+            <button onClick={() => setActiveTab('recruitment')} className="text-blue-600 font-black text-[10px] uppercase tracking-widest hover:underline">View All Candidates</button>
+          </div>
+          <div className="space-y-6">
+            {applicants.map(app => (
+              <div key={app.id} className="flex items-center justify-between p-6 bg-slate-50 rounded-[32px] border border-slate-100 hover:bg-white hover:shadow-lg transition-all group">
+                <div className="flex items-center gap-6">
+                  <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${app.name}`} className="w-14 h-14 rounded-2xl shadow-md" alt="" />
+                  <div>
+                    <h5 className="font-black text-slate-900 leading-none mb-1 group-hover:text-blue-600 transition-colors">{app.name}</h5>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{app.jobTitle}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-10">
+                  <div className="text-center">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Score</p>
+                    <p className="font-black text-emerald-600">{app.score}%</p>
+                  </div>
+                  <span className="px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[8px] font-black uppercase tracking-widest">{app.stage}</span>
+                  <ChevronRight size={20} className="text-slate-200 group-hover:text-blue-600 transition-colors" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="glass-card p-10 rounded-[56px] bg-slate-900 text-white shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
+          <h4 className="text-xl font-black mb-10 flex items-center gap-4 uppercase tracking-tighter">
+             <div className="p-3 bg-white/10 rounded-2xl"><ShieldCheck size={20} className="text-blue-400" /></div>
+             Safeguarding Hub
+          </h4>
+          <div className="space-y-8">
+            {[
+              { label: 'Background Checks', val: 98, color: 'blue' },
+              { label: 'Child Protection Certs', val: 100, color: 'emerald' },
+              { label: 'Medical Clearances', val: 94, color: 'indigo' },
+              { label: 'Work Permits', val: 100, color: 'purple' },
+            ].map(c => (
+              <div key={c.label} className="space-y-3">
+                <div className="flex justify-between items-end">
+                   <span className="text-xs font-black text-blue-200 uppercase tracking-widest">{c.label}</span>
+                   <span className="text-lg font-black">{c.val}%</span>
+                </div>
+                <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                   <div className="h-full rounded-full transition-all duration-1000" style={{ backgroundColor: `var(--tw-color-${c.color}-500)`, width: `${c.val}%` }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button onClick={() => setActiveTab('compliance')} className="w-full mt-12 py-5 bg-white text-slate-900 rounded-[28px] font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-blue-50 transition-all">
+             Run Compliance Audit
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderRecruitment = () => (
+    <div className="space-y-10 animate-in slide-in-from-right duration-700">
+      <div className="flex flex-col lg:flex-row justify-between items-end gap-6 px-1">
+        <div>
+          <h3 className="text-4xl font-black text-slate-900 tracking-tighter leading-none">Global Recruitment Engine</h3>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Applicant Tracking & Talent Acquisition Protocol</p>
+        </div>
+        <div className="flex gap-4">
+          <button className="bg-white border border-slate-100 text-slate-600 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-3">
+            <Laptop size={18} /> Board Job View
+          </button>
+          <button className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-blue-600 transition-all flex items-center gap-3">
+            <Plus size={18} /> Author Vacancy
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-10">
+        <div className="xl:col-span-3 space-y-10">
+          <div className="glass-card rounded-[48px] overflow-hidden bg-white shadow-2xl">
+            <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row gap-6">
+              <div className="relative flex-1 group">
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                <input type="text" placeholder="Query applicants by name, expertise, or ID..." className="w-full pl-16 pr-6 py-5 bg-slate-50 border-none rounded-[28px] focus:ring-4 focus:ring-blue-100 font-bold" />
+              </div>
+            </div>
+            <table className="w-full text-left">
+              <thead className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100">
+                <tr>
+                  <th className="px-10 py-6">Applicant</th>
+                  <th className="px-6 py-6">Target Role</th>
+                  <th className="px-6 py-6">Pipeline Stage</th>
+                  <th className="px-6 py-6 text-center">Neural Score</th>
+                  <th className="px-10 py-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {applicants.map(app => (
+                  <tr key={app.id} className="hover:bg-blue-50/20 transition-all group">
+                    <td className="px-10 py-6">
+                      <div className="flex items-center gap-4">
+                        <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${app.name}`} className="w-12 h-12 rounded-xl" alt="" />
+                        <div>
+                          <p className="font-black text-slate-900 leading-none mb-1 group-hover:text-blue-600 transition-colors">{app.name}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{app.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-6"><span className="text-xs font-bold text-slate-700">{app.jobTitle}</span></td>
+                    <td className="px-6 py-6">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                        <span className="text-[10px] font-black uppercase text-slate-700">{app.stage}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-6 text-center">
+                      <span className={`text-lg font-black ${app.score > 90 ? 'text-emerald-500' : 'text-blue-600'}`}>{app.score}%</span>
+                    </td>
+                    <td className="px-10 py-6 text-right">
+                      <button className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all"><ChevronRight size={18} /></button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="space-y-8">
+          <div className="glass-card p-10 rounded-[48px] bg-white border-none shadow-xl">
+            <h4 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3 uppercase tracking-tighter"><TrendingUp className="text-blue-500" /> Active Roles</h4>
+            <div className="space-y-6">
+              {openings.map(job => (
+                <div key={job.id} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 hover:shadow-md transition-all group">
+                   <div className="flex justify-between items-start mb-4">
+                      <span className="text-[9px] font-black text-blue-600 uppercase bg-blue-50 px-2.5 py-1 rounded-full">{job.department}</span>
+                      <span className="text-[9px] font-black text-slate-400 uppercase">{job.type}</span>
+                   </div>
+                   <h5 className="font-black text-slate-900 leading-tight mb-4 group-hover:text-blue-600 transition-colors">{job.title}</h5>
+                   <div className="flex justify-between items-center pt-4 border-t border-slate-200/50">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{job.applicantsCount} Applied</p>
+                      <button className="p-2 text-slate-300 hover:text-blue-600"><MoreVertical size={16} /></button>
+                   </div>
+                </div>
+              ))}
+            </div>
+            <button className="w-full mt-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all">Role Ledger</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderLeave = () => (
+    <div className="space-y-10 animate-in fade-in duration-700">
+       <div className="flex justify-between items-end px-1">
+          <div>
+            <h3 className="text-4xl font-black text-slate-900 tracking-tighter">Absence & Leave Protocol</h3>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 italic">Institutional Availability & Replacement Workflow</p>
+          </div>
+          <button className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-3 shadow-xl">
+             <Calendar size={18} /> Unified Absence Log
+          </button>
+       </div>
+
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          {leaveRequests.map(req => (
+            <div key={req.id} className="glass-card p-10 rounded-[56px] bg-white border-none shadow-xl hover:shadow-2xl transition-all group">
+               <div className="flex justify-between items-start mb-10">
+                  <div className="flex items-center gap-6">
+                     <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${req.staffName}`} className="w-20 h-20 rounded-3xl border-4 border-slate-50 shadow-2xl group-hover:scale-110 transition-transform" alt="" />
+                     <div>
+                        <h4 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1 group-hover:text-blue-600 transition-colors">{req.staffName}</h4>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{req.type} • Ref: {req.id}</p>
+                     </div>
+                  </div>
+                  <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                    req.status === 'Approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                    req.status === 'Pending' ? 'bg-amber-50 text-amber-600 border-amber-100 animate-pulse' : 
+                    'bg-rose-50 text-rose-600 border-rose-100'
+                  }`}>{req.status}</span>
+               </div>
+
+               <div className="bg-slate-50 rounded-[40px] p-8 border border-slate-100 space-y-6">
+                  <div className="grid grid-cols-2 gap-8">
+                     <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Duration</p>
+                        <p className="text-sm font-black text-slate-900">{req.startDate} → {req.endDate}</p>
+                     </div>
+                     <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Replacement</p>
+                        <p className="text-sm font-bold text-blue-600">Pending Assignment</p>
+                     </div>
+                  </div>
+                  <div className="pt-6 border-t border-slate-200">
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Context / Reason</p>
+                     <p className="text-sm text-slate-600 font-medium italic">"{req.reason}"</p>
+                  </div>
+               </div>
+
+               <div className="mt-10 flex gap-4 opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0">
+                  <button className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-3">
+                    <CheckCircle2 size={18} /> Approve
+                  </button>
+                  <button className="flex-1 py-4 bg-white border border-slate-200 text-slate-500 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 transition-all flex items-center justify-center gap-3">
+                    <X size={18} /> Decline
+                  </button>
+               </div>
+            </div>
+          ))}
+       </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-12 pb-32 animate-in fade-in duration-700">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-10 px-1">
+        <div>
+           <h2 className="text-5xl font-black text-slate-900 tracking-tighter leading-none">Human Capital</h2>
+           <p className="text-slate-500 font-bold italic mt-2 uppercase text-[10px] tracking-[0.4em] flex items-center gap-3">
+              <Users size={18} className="text-blue-500" /> Integrated HR Command Center 2026
+           </p>
+        </div>
+        <div className="bg-white/80 backdrop-blur-xl p-2 rounded-[32px] shadow-2xl border border-slate-100 flex gap-2 w-full xl:w-auto overflow-x-auto scrollbar-hide">
+           {[
+             { id: 'dashboard', label: 'HR Overview', icon: <PieChartIcon size={14} /> },
+             { id: 'recruitment', label: 'Recruitment', icon: <SearchCheck size={14} /> },
+             { id: 'leave', label: 'Absence Mgmt', icon: <Calendar size={14} /> },
+             { id: 'compliance', label: 'Compliance', icon: <ShieldCheck size={14} /> },
+             { id: 'pd', label: 'PD / Training', icon: <Award size={14} /> },
+           ].map(tab => (
+              <button 
+                key={tab.id} 
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-8 py-4 rounded-[24px] text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 whitespace-nowrap ${activeTab === tab.id ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}
+              >
+                {tab.icon} {tab.label}
+              </button>
+           ))}
+        </div>
+      </div>
+
+      <div className="animate-in fade-in duration-700">
+         {activeTab === 'dashboard' && renderDashboard()}
+         {activeTab === 'recruitment' && renderRecruitment()}
+         {activeTab === 'leave' && renderLeave()}
+         {activeTab === 'compliance' && (
+           <div className="py-40 text-center glass-card rounded-[64px] bg-white/40 border-none shadow-2xl">
+              <BadgeCheck size={80} className="mx-auto text-slate-200 mb-8" />
+              <h3 className="text-3xl font-black text-slate-900 tracking-tight">Institutional Compliance Vault</h3>
+              <p className="text-slate-400 font-bold text-lg mt-2">Background checks, visas, and child protection clearances.</p>
+              <button className="mt-10 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:translate-y-[-4px] transition-all">Launch Audit Protocol</button>
+           </div>
+         )}
+         {activeTab === 'pd' && (
+           <div className="py-40 text-center glass-card rounded-[64px] bg-white/40 border-none shadow-2xl">
+              <Laptop size={80} className="mx-auto text-slate-200 mb-8" />
+              <h3 className="text-3xl font-black text-slate-900 tracking-tight">Professional Development Portal</h3>
+              <p className="text-slate-400 font-bold text-lg mt-2">Faculty training credits, workshops, and certifications.</p>
+              <button className="mt-10 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:translate-y-[-4px] transition-all">Register PD Activity</button>
+           </div>
+         )}
+      </div>
+
+      {/* HR Policy Footer */}
+      <div className="fixed bottom-0 left-0 right-0 lg:left-72 p-6 bg-white/80 backdrop-blur-xl border-t border-slate-100 flex items-center justify-center gap-10 z-[100]">
+         <div className="flex items-center gap-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+            <BadgeCheck className="text-emerald-500" size={16} /> Safeguarding Standards V2.6
+         </div>
+         <div className="flex items-center gap-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+            <FileCheck className="text-emerald-500" size={16} /> ISO 45001 Verified
+         </div>
+         <div className="flex items-center gap-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+            <ClipboardCheck className="text-emerald-500" size={16} /> Real-time HR Audit Active
+         </div>
+      </div>
+    </div>
+  );
+};
+
+export default HRHub;
