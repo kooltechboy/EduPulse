@@ -20,6 +20,10 @@ import FleetManager from './components/Transport/FleetManager.tsx';
 import CampusEvents from './components/Campus/CampusEvents.tsx';
 import CanteenView from './components/Campus/CanteenView.tsx';
 import HRHub from './components/HR/HRHub.tsx';
+import AdmissionsPipeline from './components/Admissions/AdmissionsPipeline.tsx';
+import BehaviorMatrix from './components/Behavior/BehaviorMatrix.tsx';
+import MedicalClinic from './components/Health/MedicalClinic.tsx';
+import MessagingHub from './components/Communication/MessagingHub.tsx';
 import { User, UserRole } from './types.ts';
 import { Settings, Sparkles, ChevronRight } from 'lucide-react';
 
@@ -36,14 +40,24 @@ const App: React.FC = () => {
   const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
 
   const renderContent = () => {
+    if (!user) return null;
+
+    // Unified Communication
+    if (activeTab === 'messages') return <MessagingHub user={user} />;
+
     // LMS & Academic Core
     if (activeTab === 'classes' || activeTab === 'courses') {
-      return user ? <ClassroomManager user={user} /> : null;
+      return <ClassroomManager user={user} />;
     }
     if (activeTab === 'students') return <StudentTable />;
     if (activeTab === 'staff') return <StaffDirectory />;
     if (activeTab === 'timetable' || activeTab === 'schedule') return <Timetable />;
     
+    // Growth & Admissions
+    if (activeTab === 'admissions') return <AdmissionsPipeline />;
+    if (activeTab === 'behavior') return <BehaviorMatrix />;
+    if (activeTab === 'health') return <MedicalClinic />;
+
     // Administrative Infrastructure
     if (activeTab === 'hr') return <HRHub />;
     if (activeTab === 'finance') return <FinanceView />;
@@ -61,15 +75,15 @@ const App: React.FC = () => {
     if (activeTab === 'security') return <SecurityDashboard />;
 
     // Teacher-Specific Workflows
-    if (user?.role === UserRole.TEACHER) {
+    if (user.role === UserRole.TEACHER) {
       if (activeTab === 'attendance') return <AttendanceMarking />;
       if (activeTab === 'grades') return <Gradebook />;
     }
 
     // Role-Based Dashboards
     if (activeTab === 'dashboard') {
-      switch (user?.role) {
-        case UserRole.ADMIN: return <AdminView />;
+      switch (user.role) {
+        case UserRole.ADMIN: return <AdminView onNavigate={setActiveTab} />;
         case UserRole.TEACHER: return <TeacherView />;
         case UserRole.STUDENT: return <StudentView />;
         case UserRole.PARENT: return <ParentView />;

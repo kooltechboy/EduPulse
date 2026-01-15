@@ -1,22 +1,20 @@
-
 import React, { useState, useEffect } from 'react';
-// Added FileCheck to imports from lucide-react
 import { 
   BookOpen, Cpu, Sparkles, X, Plus, CheckCircle2, Zap, FileText, Download, 
-  History, Share2, Globe, Activity, ShieldCheck, 
-  Layers, Users, MoreVertical, Eye, ClipboardCheck, Trash2, Search, Filter, 
-  ChevronRight, Settings2, Clock, Wand2, Baby, School, GraduationCap, 
-  Laptop, Check, Calendar, ListChecks, Shapes, Presentation, LayoutGrid, 
-  Target, Info, UserCheck, Handshake, AlertCircle, Send, CheckCircle, 
-  PieChart as PieChartIcon, Library, ArrowRight, UserPlus, MoveRight,
-  FileCheck
+  Globe, Activity, ShieldCheck, 
+  ChevronRight, Wand2, Baby, School, GraduationCap, 
+  Check, Handshake, Send, CheckCircle, 
+  PieChart as PieChartIcon, 
+  FileCheck,
+  // Fix: Added UserCheck import to resolve the 'Cannot find name UserCheck' error
+  UserCheck
 } from 'lucide-react';
 import { 
-  ResponsiveContainer, XAxis, YAxis, Tooltip, Radar, RadarChart, PolarGrid, 
-  PolarAngleAxis, PolarRadiusAxis, AreaChart, Area, CartesianGrid, Legend, 
+  ResponsiveContainer, Tooltip, Radar, RadarChart, PolarGrid, 
+  PolarAngleAxis, Legend, 
   RadialBarChart, RadialBar 
 } from 'recharts';
-import { GradeLevel, Syllabus, CurriculumModule, TeacherEvaluation, HRRequest, Student, Course } from '../../types';
+import { Syllabus, TeacherEvaluation, HRRequest, Student, Course } from '../../types';
 import { generateFullSyllabus, generateTeacherFeedback } from '../../services/geminiService';
 
 const COORDINATION_HUBS = [
@@ -42,7 +40,7 @@ const ANALYTICS_DATA = {
 
 const CoordinationView: React.FC = () => {
   const [selectedHub, setSelectedHub] = useState(COORDINATION_HUBS[2]);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'syllabus' | 'placement' | 'evaluations' | 'hr'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'syllabus' | 'evaluations' | 'hr'>('analytics');
   
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [isEvalModalOpen, setIsEvalModalOpen] = useState(false);
@@ -54,8 +52,6 @@ const CoordinationView: React.FC = () => {
   const [hrRequests, setHrRequests] = useState<HRRequest[]>(() => JSON.parse(localStorage.getItem('edupulse_hr_requests') || '[]'));
   const [evaluations, setEvaluations] = useState<TeacherEvaluation[]>(() => JSON.parse(localStorage.getItem('edupulse_evals') || '[]'));
   const [syllabi, setSyllabi] = useState<Syllabus[]>(() => JSON.parse(localStorage.getItem('edupulse_syllabi') || '[]'));
-  const [students] = useState<Student[]>(() => JSON.parse(localStorage.getItem('edupulse_students_registry') || '[]'));
-  const [courses, setCourses] = useState<Course[]>(() => JSON.parse(localStorage.getItem('edupulse_courses_registry') || '[]'));
 
   const [newEval, setNewEval] = useState<Partial<TeacherEvaluation>>({
     scores: { planning: 5, management: 5, assessment: 5, professionalism: 5 }
@@ -93,7 +89,6 @@ const CoordinationView: React.FC = () => {
     setIsAIGenerating(false);
   };
 
-  // Added saveSyllabus to finalize the AI-generated syllabus architecting process
   const saveSyllabus = () => {
     if (aiSyllabus) {
       setSyllabi([...syllabi, aiSyllabus]);
@@ -102,7 +97,6 @@ const CoordinationView: React.FC = () => {
     }
   };
 
-  // Added commitEval to finalize and save the teacher evaluation audit
   const commitEval = () => {
     if (newEval.teacherName && newEval.feedback) {
       const evaluation: TeacherEvaluation = {
@@ -160,8 +154,8 @@ const CoordinationView: React.FC = () => {
            {[
              { id: 'analytics', label: 'Analytics', icon: <PieChartIcon size={14} /> },
              { id: 'syllabus', label: 'Syllabus', icon: <BookOpen size={14} /> },
-             { id: 'evaluations', label: 'Audit', icon: <ClipboardCheck size={14} /> },
-             { id: 'hr', label: 'HR Flow', icon: <Users size={14} /> },
+             { id: 'evaluations', label: 'Audit', icon: <FileText size={14} /> },
+             { id: 'hr', label: 'HR Flow', icon: <Handshake size={14} /> },
            ].map(tab => (
               <button 
                 key={tab.id} 
@@ -381,7 +375,7 @@ const CoordinationView: React.FC = () => {
 
       {/* EVALUATION MODAL - FULL SCREEN SHEET ON MOBILE */}
       {isEvalModalOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center md:p-4">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
            <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-3xl" onClick={() => setIsEvalModalOpen(false)}></div>
            <div className="relative w-full h-full md:h-auto md:max-w-4xl bg-white md:rounded-[48px] shadow-2xl overflow-hidden animate-in slide-in-from-bottom-20 flex flex-col max-h-screen md:max-h-[92vh]">
               <div className="p-8 md:p-12 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-20">

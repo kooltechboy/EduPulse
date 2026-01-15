@@ -1,4 +1,3 @@
-
 export enum UserRole {
   ADMIN = 'ADMIN',
   TEACHER = 'TEACHER',
@@ -11,8 +10,8 @@ export enum StaffCategory {
   PSYCHOLOGIST = 'Psychologist',
   ACCOUNTING = 'Accounting',
   HR = 'HR',
-  CLERICAL = 'Clerical',
-  AUXILIARY = 'Auxiliary'
+  CLERICAL = 'Clerical/Secretary',
+  AUXILIARY = 'Auxiliary Staff'
 }
 
 export enum GradeLevel {
@@ -22,6 +21,66 @@ export enum GradeLevel {
   ELEMENTARY = 'Elementary',
   JUNIOR_HIGH = 'Junior High',
   SENIOR_HIGH = 'Senior High'
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: UserRole;
+  content: string;
+  timestamp: string;
+  read: boolean;
+  channel?: 'Native' | 'WhatsApp';
+}
+
+export interface Conversation {
+  id: string;
+  participants: { 
+    id: string; 
+    name: string; 
+    role: UserRole; 
+    avatar?: string;
+    phoneNumber?: string; // For WhatsApp Bridge
+  }[];
+  lastMessage?: Message;
+  messages: Message[];
+  type: 'Direct' | 'Broadcast' | 'Institutional';
+}
+
+export interface AdmissionsCandidate {
+  id: string;
+  name: string;
+  appliedGrade: GradeLevel;
+  status: 'Inquiry' | 'Application' | 'Interview' | 'Offered' | 'Enrolled';
+  dateApplied: string;
+  parentName: string;
+  sentimentScore?: number; // 1-100 predicted by AI
+  notes: string;
+}
+
+export interface BehavioralIncident {
+  id: string;
+  studentId: string;
+  studentName: string;
+  type: 'Merit' | 'Demerit';
+  points: number;
+  category: string;
+  description: string;
+  date: string;
+  reporter: string;
+}
+
+export interface MedicalRecord {
+  id: string;
+  studentId: string;
+  studentName: string;
+  allergies: string[];
+  medications: string[];
+  lastVisit: string;
+  visitReason?: string;
+  criticalInfo?: string;
+  immunizationStatus: 'Complete' | 'Partial' | 'Pending';
 }
 
 export type AcademicDegree = 'PhD' | 'Master' | 'Bachelor' | 'Diploma' | 'Postgrad';
@@ -107,6 +166,7 @@ export interface Course {
   liveSessions: LiveSession[];
   materials: LearningMaterial[];
   bannerColor: string;
+  bannerUrl?: string;
 }
 
 export interface CurriculumModule { 
@@ -144,14 +204,13 @@ export interface HRRequest {
   staffId: string; 
   staffName: string; 
   type: 'Leave' | 'Expense' | 'Training' | 'Grievance'; 
-  description: string; 
+  description: string;
   status: 'PendingCoord' | 'ApprovedCoord' | 'RejectedCoord' | 'Finalized'; 
   submittedAt: string; 
 }
 
 export interface User { id: string; name: string; email: string; role: UserRole; avatar?: string; }
 
-// Fixed: Added StudentDocument and FinancialStatus exports
 export interface StudentDocument {
   id: string;
   name: string;
@@ -162,7 +221,6 @@ export interface StudentDocument {
 
 export type FinancialStatus = 'Settled' | 'Partial' | 'Overdue' | 'Pending' | 'Void';
 
-// Fixed: Enhanced Student interface to include missing properties used in StudentTable.tsx
 export interface Student { 
   id: string; 
   name: string; 
@@ -179,14 +237,13 @@ export interface Student {
   enrollmentDate?: string;
   fatherName?: string;
   motherName?: string;
+  parentPhone?: string; // WhatsApp Integration
   documents?: StudentDocument[];
   situationalNotes?: string;
 }
 
-// Fixed: Added Finance types for FinanceView.tsx
 export type TransactionType = 'Credit' | 'Debit';
 export type PaymentMethod = 'Bank Transfer' | 'Cash' | 'Credit Card' | 'Internal Transfer' | 'Digital Wallet';
-export type AccountType = 'Asset' | 'Liability' | 'Equity' | 'Revenue' | 'Expense';
 
 export interface FinancialTransaction {
   id: string;
@@ -201,39 +258,6 @@ export interface FinancialTransaction {
   method: PaymentMethod;
 }
 
-export interface TuitionInvoice {
-  id: string;
-  studentId: string;
-  studentName: string;
-  amount: number;
-  dueDate: string;
-  status: FinancialStatus;
-}
-
-export interface SalaryRecord {
-  id: string;
-  staffId: string;
-  staffName: string;
-  amount: number;
-  date: string;
-  status: FinancialStatus;
-}
-
-// Fixed: Added Schedule types for Timetable.tsx
-export interface ScheduleEntry {
-  id: string;
-  day: string;
-  time: string;
-  subject: string;
-  room: string;
-  teacher: string;
-  teacherId: string;
-  grade: string;
-  gradeLevel: GradeLevel;
-  color: string;
-}
-
-// Fixed: Added Staff types for StaffDirectory.tsx
 export interface StaffScheduleEntry {
   day: string;
   time: string;
@@ -266,7 +290,6 @@ export interface StaffMember {
   schedule?: StaffScheduleEntry[];
 }
 
-// Fixed: Added Counseling types for CounselingView.tsx
 export interface WellnessCase {
   id: string;
   studentName: string;
@@ -306,20 +329,6 @@ export interface CounselingDocument {
   accessLog?: { user: string; date: string; action: string }[];
 }
 
-// Fixed: Added Submission for ClassroomManager.tsx
-export interface Submission {
-  id: string;
-  assignmentId: string;
-  studentId: string;
-  studentName: string;
-  content: string;
-  submittedAt: string;
-  grade?: number;
-  feedback?: string;
-  status: 'Submitted' | 'Graded' | 'Late';
-}
-
-// Fixed: Added CampusAsset for InventoryHub.tsx
 export interface CampusAsset {
   id: string;
   name: string;
@@ -330,7 +339,6 @@ export interface CampusAsset {
   lastAudit: string;
 }
 
-// Fixed: Added LibraryBook for DigitalLibrary.tsx
 export interface LibraryBook {
   id: string;
   title: string;
@@ -342,7 +350,6 @@ export interface LibraryBook {
   dueDate?: string;
 }
 
-// Fixed: Added TransportRoute for FleetManager.tsx
 export interface TransportRoute {
   id: string;
   name: string;
@@ -355,7 +362,6 @@ export interface TransportRoute {
   status: 'On-Route' | 'Idle' | 'Maintenance';
 }
 
-// Fixed: Added SchoolEvent for CampusEvents.tsx
 export interface SchoolEvent {
   id: string;
   title: string;
@@ -366,7 +372,6 @@ export interface SchoolEvent {
   description: string;
 }
 
-// Fixed: Added CanteenMenu for CanteenView.tsx
 export interface CanteenMenu {
   id: string;
   day: string;
@@ -378,7 +383,6 @@ export interface CanteenMenu {
   }[];
 }
 
-// Fixed: Added HR types for HRHub.tsx
 export interface LeaveRequest {
   id: string;
   staffId: string;
@@ -388,15 +392,6 @@ export interface LeaveRequest {
   endDate: string;
   reason: string;
   status: 'Pending' | 'Approved' | 'Rejected';
-}
-
-export interface PDRecord {
-  id: string;
-  staffId: string;
-  title: string;
-  date: string;
-  credits: number;
-  status: string;
 }
 
 export interface JobOpening {
@@ -419,11 +414,15 @@ export interface Applicant {
   score: number;
 }
 
-export interface StaffCompliance {
+export interface ScheduleEntry {
   id: string;
-  staffId: string;
-  staffName: string;
-  checkType: string;
-  status: 'Verified' | 'Pending' | 'Expired';
-  expiryDate?: string;
+  day: string;
+  time: string;
+  subject: string;
+  room: string;
+  teacher: string;
+  teacherId: string;
+  grade: string;
+  gradeLevel: GradeLevel;
+  color: string;
 }

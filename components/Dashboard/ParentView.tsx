@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, CreditCard, GraduationCap, Bell, ChevronRight, MessageCircle, Layers, Target, CheckCircle2, TrendingUp, Clock, Activity } from 'lucide-react';
+import { Heart, CreditCard, GraduationCap, Bell, ChevronRight, MessageCircle, Layers, Target, CheckCircle2, TrendingUp, Clock, Activity, MessageCircleCode } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 const academicData = [
@@ -11,6 +11,12 @@ const academicData = [
 ];
 
 const ParentView: React.FC = () => {
+  const handleWhatsAppTeacher = (teacher: string) => {
+    const mockNumber = '1234567890';
+    const url = `https://wa.me/${mockNumber}?text=${encodeURIComponent(`Hello ${teacher}, this is Alex's guardian. I'd like to discuss...`)}`;
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="space-y-8 md:space-y-10 animate-in fade-in duration-700 px-2 md:px-0">
       <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start gap-6 px-1">
@@ -20,9 +26,14 @@ const ParentView: React.FC = () => {
              <GraduationCap className="text-blue-500" size={16} /> Alex Thompson • Monitoring Node 2026
           </p>
         </div>
-        <button className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 hover:shadow-xl transition-all text-blue-600 group">
-          <MessageCircle size={24} className="md:w-7 md:h-7 group-hover:scale-110 transition-transform" />
-        </button>
+        <div className="flex gap-4">
+           <button onClick={() => handleWhatsAppTeacher('Prof. Mitchell')} className="bg-emerald-500 p-5 rounded-[24px] shadow-lg text-white hover:bg-emerald-600 transition-all group">
+             <MessageCircleCode size={24} className="md:w-7 md:h-7 group-hover:scale-110 transition-transform" />
+           </button>
+           <button className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 hover:shadow-xl transition-all text-blue-600 group">
+             <MessageCircle size={24} className="md:w-7 md:h-7 group-hover:scale-110 transition-transform" />
+           </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10">
@@ -99,7 +110,10 @@ const ParentView: React.FC = () => {
                 { teacher: 'Dr. Sarah', subject: 'AP Physics', text: 'Excellent participation in the quantum lab session.', date: '1w ago' }
               ].map((note, i) => (
                 <div key={i} className="bg-slate-50 p-6 rounded-[24px] md:rounded-[32px] border border-slate-100 relative group transition-all hover:bg-white hover:shadow-2xl">
-                  <p className="text-[8px] md:text-[9px] font-black text-blue-600 mb-2 uppercase tracking-widest">{note.subject}</p>
+                  <div className="flex justify-between items-start mb-2">
+                    <p className="text-[8px] md:text-[9px] font-black text-blue-600 uppercase tracking-widest">{note.subject}</p>
+                    <button onClick={() => handleWhatsAppTeacher(note.teacher)} className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all"><MessageCircleCode size={14} /></button>
+                  </div>
                   <p className="text-xs md:text-sm text-slate-700 leading-relaxed mb-6 font-bold italic">"{note.text}"</p>
                   <div className="flex justify-between items-center text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-[0.2em]">
                     <span>{note.teacher}</span>

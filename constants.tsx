@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   LayoutDashboard, 
@@ -20,9 +19,13 @@ import {
   Coffee,
   Briefcase,
   MonitorPlay,
-  Video
+  UserPlus,
+  Stethoscope,
+  Medal,
+  Activity,
+  MessageSquareText
 } from 'lucide-react';
-import { UserRole } from './types';
+import { UserRole } from './types.ts';
 
 export interface NavGroup {
   label: string;
@@ -35,6 +38,8 @@ export const NAV_ITEMS_CATEGORIZED: Record<UserRole, NavGroup[]> = {
       label: 'Core Command',
       items: [
         { label: 'Dashboard', icon: <LayoutDashboard size={18} />, id: 'dashboard' },
+        { label: 'Communication Hub', icon: <MessageSquareText size={18} />, id: 'messages' },
+        { label: 'Admissions', icon: <UserPlus size={18} />, id: 'admissions' },
       ]
     },
     {
@@ -43,6 +48,7 @@ export const NAV_ITEMS_CATEGORIZED: Record<UserRole, NavGroup[]> = {
         { label: 'Classroom (LMS)', icon: <MonitorPlay size={18} />, id: 'classes' },
         { label: 'Student Registry', icon: <Users size={18} />, id: 'students' },
         { label: 'Staff Directory', icon: <UserCheck size={18} />, id: 'staff' },
+        { label: 'Behavior Matrix', icon: <Medal size={18} />, id: 'behavior' },
         { label: 'Master Timetable', icon: <Calendar size={18} />, id: 'timetable' },
       ]
     },
@@ -59,6 +65,7 @@ export const NAV_ITEMS_CATEGORIZED: Record<UserRole, NavGroup[]> = {
       items: [
         { label: 'Coordination Hub', icon: <GitBranch size={18} />, id: 'coordination' },
         { label: 'Library Node', icon: <Library size={18} />, id: 'library' },
+        { label: 'Health Clinic', icon: <Stethoscope size={18} />, id: 'health' },
         { label: 'Transport Fleet', icon: <Bus size={18} />, id: 'transport' },
         { label: 'Campus Events', icon: <CalendarDays size={18} />, id: 'events' },
       ]
@@ -77,6 +84,7 @@ export const NAV_ITEMS_CATEGORIZED: Record<UserRole, NavGroup[]> = {
       label: 'Faculty Command',
       items: [
         { label: 'Desk Dashboard', icon: <LayoutDashboard size={18} />, id: 'dashboard' },
+        { label: 'Communication Hub', icon: <MessageSquareText size={18} />, id: 'messages' },
         { label: 'LMS Classrooms', icon: <MonitorPlay size={18} />, id: 'classes' },
         { label: 'Master Schedule', icon: <Calendar size={18} />, id: 'timetable' },
       ]
@@ -85,6 +93,7 @@ export const NAV_ITEMS_CATEGORIZED: Record<UserRole, NavGroup[]> = {
       label: 'Instructional',
       items: [
         { label: 'Presence Log', icon: <ClipboardList size={18} />, id: 'attendance' },
+        { label: 'Merits/Incidents', icon: <Medal size={18} />, id: 'behavior' },
         { label: 'Grade Matrix', icon: <GraduationCap size={18} />, id: 'grades' },
       ]
     }
@@ -94,6 +103,7 @@ export const NAV_ITEMS_CATEGORIZED: Record<UserRole, NavGroup[]> = {
       label: 'Learning Pathway',
       items: [
         { label: 'Learning Hub', icon: <LayoutDashboard size={18} />, id: 'dashboard' },
+        { label: 'Communication Hub', icon: <MessageSquareText size={18} />, id: 'messages' },
         { label: 'Active Courses', icon: <MonitorPlay size={18} />, id: 'classes' },
         { label: 'Daily Schedule', icon: <Calendar size={18} />, id: 'timetable' },
       ]
@@ -101,6 +111,7 @@ export const NAV_ITEMS_CATEGORIZED: Record<UserRole, NavGroup[]> = {
     {
       label: 'Services',
       items: [
+        { label: 'Merit Points', icon: <Medal size={18} />, id: 'behavior' },
         { label: 'Bus Tracking', icon: <Bus size={18} />, id: 'transport' },
         { label: 'Meal Booking', icon: <Coffee size={18} />, id: 'canteen' },
       ]
@@ -111,7 +122,9 @@ export const NAV_ITEMS_CATEGORIZED: Record<UserRole, NavGroup[]> = {
       label: 'Observer Hub',
       items: [
         { label: 'Guardian Overview', icon: <LayoutDashboard size={18} />, id: 'dashboard' },
+        { label: 'Communication Hub', icon: <MessageSquareText size={18} />, id: 'messages' },
         { label: 'Child Performance', icon: <GraduationCap size={18} />, id: 'classes' },
+        { label: 'Behavioral Report', icon: <Medal size={18} />, id: 'behavior' },
         { label: 'Financial Balance', icon: <CreditCard size={18} />, id: 'finance' },
       ]
     }

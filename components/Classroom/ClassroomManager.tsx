@@ -178,7 +178,10 @@ const ClassroomManager: React.FC<{ user: User }> = ({ user }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-12">
         {courses.map(course => (
           <div key={course.id} onClick={() => handleEnterCourse(course)} className="group bg-white rounded-[48px] md:rounded-[64px] overflow-hidden shadow-xl hover:shadow-2xl hover:translate-y-[-8px] transition-all cursor-pointer border border-white/50 relative">
-            <div className={`h-48 md:h-60 bg-gradient-to-br ${course.bannerColor} p-8 md:p-12 flex justify-between items-start relative overflow-hidden`}>
+            <div className={`h-48 md:h-60 ${course.bannerUrl ? '' : `bg-gradient-to-br ${course.bannerColor}`} p-8 md:p-12 flex justify-between items-start relative overflow-hidden`}>
+               {course.bannerUrl && (
+                 <img src={course.bannerUrl} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110" />
+               )}
                <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-[100px] -mr-40 -mt-40 group-hover:scale-125 transition-transform duration-1000"></div>
                <div className="bg-white/20 backdrop-blur-xl px-5 md:px-6 py-2 md:py-2.5 rounded-full border border-white/20 relative z-10 shadow-sm">
                   <span className="text-[10px] font-black text-white uppercase tracking-widest">{course.code}</span>
@@ -521,7 +524,7 @@ const ClassroomManager: React.FC<{ user: User }> = ({ user }) => {
            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-8 md:gap-10 px-4 md:px-1">
              <div className="flex items-center gap-6 md:gap-10">
                 <button onClick={() => setView('dashboard')} className="p-8 md:p-12 rounded-[32px] md:rounded-[56px] bg-slate-900 text-white shadow-2xl relative overflow-hidden group hover:scale-105 transition-transform active:scale-95">
-                   <div className={`absolute inset-0 bg-gradient-to-tr ${selectedCourse?.bannerColor} opacity-40`}></div>
+                   <div className={`absolute inset-0 bg-gradient-to-tr ${selectedCourse?.bannerUrl ? 'opacity-0' : selectedCourse?.bannerColor} opacity-40`}></div>
                    <ArrowLeft size={32} className="md:w-10 md:h-10 relative z-10" />
                 </button>
                 <div>

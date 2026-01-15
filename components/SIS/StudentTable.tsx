@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, Plus, X, UserPlus, ChevronRight, 
   History, Receipt, Wallet, ArrowRight, Filter,
-  GraduationCap, TrendingUp, Activity, ShieldCheck
+  GraduationCap, TrendingUp, Activity, ShieldCheck,
+  MessageCircleCode, Phone
 } from 'lucide-react';
 import { Student, GradeLevel, FinancialStatus } from '../../types';
 
@@ -23,6 +24,7 @@ const INITIAL_STUDENTS: Student[] = [
     enrollmentDate: '2023-09-01', 
     fatherName: 'Robert Mitchell', 
     motherName: 'Sarah Mitchell',
+    parentPhone: '9876543210',
     documents: [
       { id: 'DOC-1', name: 'Birth Certificate', type: 'Identity', uploadDate: '2023-09-01', status: 'Verified' },
       { id: 'DOC-2', name: 'Baseline Math Evaluation', type: 'Evaluation', uploadDate: '2023-09-05', status: 'Verified' }
@@ -44,6 +46,7 @@ const INITIAL_STUDENTS: Student[] = [
     enrollmentDate: '2022-09-01', 
     fatherName: 'James Chen', 
     motherName: 'Li Chen',
+    parentPhone: '9876543211',
     documents: [],
     situationalNotes: 'Requires monitoring due to family relocation distance.'
   },
@@ -63,6 +66,7 @@ const INITIAL_STUDENTS: Student[] = [
     enrollmentDate: '2024-01-10', 
     fatherName: 'George Wilson', 
     motherName: 'Emma Wilson',
+    parentPhone: '9876543212',
     documents: []
   },
 ];
@@ -91,6 +95,12 @@ const StudentTable: React.FC = () => {
       case 'Overdue': return 'bg-rose-50 text-rose-600 border-rose-100 animate-pulse';
       default: return 'bg-slate-50 text-slate-400 border-slate-100';
     }
+  };
+
+  const handleWhatsAppShortcut = (student: Student) => {
+    const phone = student.parentPhone || '9876543210';
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(`Hello, I'm reaching out from EduPulse regarding ${student.name}.`)}`;
+    window.open(url, '_blank');
   };
 
   const filteredStudents = students.filter(s => {
@@ -126,8 +136,8 @@ const StudentTable: React.FC = () => {
         {/* MOBILE CARD VIEW */}
         <div className="block md:hidden p-4 space-y-4">
           {filteredStudents.map(stu => (
-            <div key={stu.id} onClick={() => { setSelectedStudent(stu); setIsProfileModalOpen(true); }} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm space-y-6 active:scale-[0.98] transition-all">
-              <div className="flex items-center gap-4">
+            <div key={stu.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm space-y-6 active:scale-[0.98] transition-all">
+              <div className="flex items-center gap-4" onClick={() => { setSelectedStudent(stu); setIsProfileModalOpen(true); }}>
                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${stu.name}`} className="w-16 h-16 rounded-2xl border-2 border-slate-100 shadow-md" alt="" />
                  <div className="flex-1">
                     <p className="font-black text-slate-900 text-xl tracking-tight leading-none mb-1">{stu.name}</p>
@@ -139,8 +149,13 @@ const StudentTable: React.FC = () => {
                  </div>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                 <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase border tracking-widest ${getFinancialColor(stu.lastPaymentStatus || 'Pending')}`}>{stu.lastPaymentStatus}</span>
-                 <ArrowRight size={20} className="text-slate-200" />
+                 <div className="flex gap-2">
+                    <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase border tracking-widest ${getFinancialColor(stu.lastPaymentStatus || 'Pending')}`}>{stu.lastPaymentStatus}</span>
+                 </div>
+                 <div className="flex gap-3">
+                    <button onClick={() => handleWhatsAppShortcut(stu)} className="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><MessageCircleCode size={20}/></button>
+                    <button onClick={() => { setSelectedStudent(stu); setIsProfileModalOpen(true); }} className="p-3 bg-blue-50 text-blue-600 rounded-xl"><ArrowRight size={20}/></button>
+                 </div>
               </div>
             </div>
           ))}
@@ -160,13 +175,13 @@ const StudentTable: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredStudents.map((stu) => (
-                <tr key={stu.id} onClick={() => { setSelectedStudent(stu); setIsProfileModalOpen(true); }} className="hover:bg-blue-50/20 transition-all group cursor-pointer">
-                  <td className="px-10 py-8">
+                <tr key={stu.id} className="hover:bg-blue-50/20 transition-all group cursor-pointer">
+                  <td className="px-10 py-8" onClick={() => { setSelectedStudent(stu); setIsProfileModalOpen(true); }}>
                     <div className="flex items-center gap-6">
                       <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${stu.name}`} className="w-16 h-16 rounded-[24px] border-4 border-white shadow-2xl group-hover:scale-110 transition-transform" alt="" />
                       <div>
                         <p className="font-black text-slate-900 text-xl tracking-tight leading-none mb-1 group-hover:text-blue-600 transition-colors">{stu.name}</p>
-                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{stu.id}</p>
+                        <p className="text-[10px] text-slate-400 font-black tracking-widest">{stu.id}</p>
                       </div>
                     </div>
                   </td>
@@ -177,7 +192,23 @@ const StudentTable: React.FC = () => {
                        <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase border tracking-widest w-fit ${getFinancialColor(stu.lastPaymentStatus || 'Pending')}`}>{stu.lastPaymentStatus}</span>
                     </div>
                   </td>
-                  <td className="px-10 py-8 text-right"><ChevronRight className="text-slate-200 group-hover:text-blue-600 transition-all ml-auto" /></td>
+                  <td className="px-10 py-8 text-right">
+                    <div className="flex items-center justify-end gap-3">
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handleWhatsAppShortcut(stu); }}
+                            className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                            title="WhatsApp Bridge"
+                        >
+                            <MessageCircleCode size={18} />
+                        </button>
+                        <button 
+                            onClick={() => { setSelectedStudent(stu); setIsProfileModalOpen(true); }}
+                            className="p-3 bg-slate-100 text-slate-400 hover:text-blue-600 hover:bg-white rounded-2xl transition-all shadow-sm"
+                        >
+                            <ChevronRight size={18} />
+                        </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -185,7 +216,7 @@ const StudentTable: React.FC = () => {
         </div>
       </div>
 
-      {/* PROFILE MODAL - FULL SHEET ON MOBILE */}
+      {/* Profile Modal Remains the same... */}
       {isProfileModalOpen && selectedStudent && (
         <div className="fixed inset-0 z-[700] flex items-center justify-center md:p-4">
            <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-3xl" onClick={() => setIsProfileModalOpen(false)}></div>
@@ -231,7 +262,9 @@ const StudentTable: React.FC = () => {
                           <div className="bg-slate-900 text-white p-8 md:p-10 rounded-[32px] md:rounded-[48px] shadow-2xl relative overflow-hidden group">
                              <p className="text-[10px] font-black text-blue-300 uppercase tracking-widest mb-4">Guardian Profile</p>
                              <h4 className="text-xl md:text-2xl font-black tracking-tight">{selectedStudent.fatherName || selectedStudent.motherName || 'Registry Not Synced'}</h4>
-                             <button className="mt-6 md:mt-8 w-full py-4 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-50 transition-all flex items-center justify-center gap-3">Dispatch Hub Statement</button>
+                             <button onClick={() => handleWhatsAppShortcut(selectedStudent)} className="mt-6 md:mt-8 w-full py-4 bg-emerald-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-3">
+                                <MessageCircleCode size={18} /> WhatsApp Guardian
+                             </button>
                           </div>
                        </div>
                     </div>
