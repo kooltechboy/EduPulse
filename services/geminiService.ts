@@ -1,9 +1,45 @@
-
 import { GoogleGenAI, Modality, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const SYSTEM_PROMPT = "You are the EduPulse AI, a world-class academic architect and pedagogy consultant for a futuristic 2026 digital campus. You specialize in generating curricula aligned with IB, IGCSE, and Common Core standards.";
+
+/**
+ * Architects a master grading rubric for high-fidelity LMS assessment.
+ */
+export const generateGradingRubric = async (assignmentTitle: string, criteria: string[]) => {
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Architect a professional 4-level grading rubric for "${assignmentTitle}". 
+      Criteria to evaluate: ${criteria.join(', ')}. 
+      Format: Clean Markdown table. Output criteria for levels: Mastery, Proficient, Developing, Beginning.`,
+      config: { systemInstruction: "Institutional Assessment Expert Mode." }
+    });
+    return response.text || "Failed to synthesize rubric.";
+  } catch (error) {
+    return "Assessment link offline.";
+  }
+};
+
+/**
+ * Matches available staff for substitutions based on skills and availability.
+ */
+export const findAIGuidedSubstitution = async (absentStaff: any, availableStaff: any[]) => {
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Match an available teacher for an absence. 
+      Absent Teacher: ${JSON.stringify(absentStaff)}. 
+      Available Pool: ${JSON.stringify(availableStaff)}. 
+      Select the top 3 best fits and explain why based on subject mastery and pedagogical alignment.`,
+      config: { systemInstruction: "Institutional Resource Coordinator mode." }
+    });
+    return response.text || "No optimal matches found.";
+  } catch (error) {
+    return "Sync offline.";
+  }
+};
 
 /**
  * Architects a master 40-week syllabus roadmap.
@@ -88,8 +124,6 @@ export const generateLessonRecapVideo = async (topic: string, description: strin
   try {
     if (onProgress) onProgress("Initializing Veo 3.1 Fast engine...");
     
-    // Create a new GoogleGenAI instance right before making an API call for Veo
-    // to ensure it always uses the most up-to-date API key from the dialog.
     const veoAi = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     let operation = await veoAi.models.generateVideos({

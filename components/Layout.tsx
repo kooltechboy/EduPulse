@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User } from '../types.ts';
+import { User, UserRole } from '../types.ts';
 import { NAV_ITEMS_CATEGORIZED } from '../constants.tsx';
-import { Bell, Search, LogOut, X, Sparkles, Menu, Wifi, ChevronRight } from 'lucide-react';
+import { Bell, Search, LogOut, X, Sparkles, Menu, Wifi, ChevronRight, Zap, Command, Terminal } from 'lucide-react';
 
 interface LayoutProps {
   user: User;
@@ -13,23 +13,75 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ user, children, activeTab, setActiveTab, onLogout }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navGroups = NAV_ITEMS_CATEGORIZED[user.role] || [];
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandOpen(prev => !prev);
+      }
+    };
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const handleTabClick = (id: string) => {
     setActiveTab(id);
     setIsSidebarOpen(false);
+    setIsCommandOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <div className="flex min-h-screen">
+      {/* Global Command Palette */}
+      {isCommandOpen && (
+        <div className="fixed inset-0 z-[1000] flex items-start justify-center pt-[15vh] px-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setIsCommandOpen(false)}></div>
+          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl overflow-hidden border border-slate-100 animate-in slide-in-from-top-4 duration-500">
+            <div className="p-6 border-b border-slate-100 flex items-center gap-4 bg-slate-50/50">
+              <Command size={22} className="text-blue-600" />
+              <input 
+                autoFocus 
+                placeholder="Type a command or search campus nodes (e.g., 'Aiden Mitchell', 'Finance', 'Lab 4')..." 
+                className="flex-1 bg-transparent border-none outline-none font-bold text-lg text-slate-800"
+              />
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-slate-200 text-[10px] font-black text-slate-400">ESC</div>
+            </div>
+            <div className="p-4 max-h-[400px] overflow-y-auto scrollbar-hide space-y-2">
+              <p className="px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Quick Navigation</p>
+              {navGroups.flatMap(g => g.items).slice(0, 8).map(item => (
+                <button 
+                  key={item.id} 
+                  onClick={() => handleTabClick(item.id)}
+                  className="w-full text-left p-4 rounded-2xl hover:bg-blue-50 flex items-center justify-between group transition-all"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-slate-100 rounded-lg text-slate-500 group-hover:bg-blue-600 group-hover:text-white transition-all">{item.icon}</div>
+                    <span className="font-bold text-slate-700 group-hover:text-blue-600">{item.label} Hub</span>
+                  </div>
+                  <ChevronRight size={16} className="text-slate-200 group-hover:translate-x-1 transition-all" />
+                </button>
+              ))}
+            </div>
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center px-8">
+              <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase">
+                <Terminal size={14} /> EduPulse Neural Search v2.6
+              </div>
+              <span className="text-[10px] font-bold text-blue-600">84 Active Nodes Online</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile Backdrop */}
       {isSidebarOpen && (
         <div 
@@ -58,10 +110,10 @@ const Layout: React.FC<LayoutProps> = ({ user, children, activeTab, setActiveTab
           </button>
         </div>
 
-        <nav className="flex-1 px-5 space-y-10 mt-6 overflow-y-auto scrollbar-hide pb-10">
+        <nav className="flex-1 px-5 space-y-8 mt-6 overflow-y-auto scrollbar-hide pb-10">
           {navGroups.map((group, gIdx) => (
             <div key={gIdx} className="space-y-4">
-              <p className="px-6 text-[9px] font-black text-slate-400 uppercase tracking-[0.5em] mb-4 opacity-70">{group.label}</p>
+              <p className="px-6 text-[9px] font-black text-slate-400 uppercase tracking-[0.5em] mb-2 opacity-70">{group.label}</p>
               <div className="space-y-1.5">
                 {group.items.map((item) => (
                   <button
@@ -76,9 +128,11 @@ const Layout: React.FC<LayoutProps> = ({ user, children, activeTab, setActiveTab
                     <div className={`transition-all duration-500 ${activeTab === item.id ? 'text-blue-400 scale-110' : 'text-slate-300 group-hover:text-blue-600'}`}>
                       {item.icon}
                     </div>
-                    <span className="font-black text-[13px] tracking-tight uppercase">{item.label}</span>
-                    {activeTab === item.id && (
-                      <div className="absolute right-4 w-1.5 h-1.5 bg-blue-400 rounded-full active-nav-indicator animate-pulse"></div>
+                    <span className="font-black text-[13px] tracking-tight uppercase flex-1 text-left">{item.label}</span>
+                    {activeTab === item.id ? (
+                      <div className="w-2 h-2 bg-blue-400 rounded-full active-nav-indicator animate-pulse"></div>
+                    ) : (
+                      <div className="opacity-0 group-hover:opacity-100 w-1 h-4 bg-blue-100 rounded-full transition-all"></div>
                     )}
                   </button>
                 ))}
@@ -111,13 +165,12 @@ const Layout: React.FC<LayoutProps> = ({ user, children, activeTab, setActiveTab
             >
               <Menu size={22} />
             </button>
-            <div className="flex-1 md:w-[450px] xl:w-[500px] relative group">
+            <div className="flex-1 md:w-[450px] xl:w-[500px] relative group" onClick={() => setIsCommandOpen(true)}>
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={20} />
-              <input 
-                type="text" 
-                placeholder="Search campus node: students, assets, or events..." 
-                className="w-full pl-16 pr-6 py-5 glass-card rounded-[28px] focus:outline-none focus:ring-[12px] focus:ring-blue-100/30 border-none bg-white/40 text-sm font-bold shadow-inner placeholder:text-slate-300 transition-all" 
-              />
+              <div className="w-full pl-16 pr-6 py-5 glass-card rounded-[28px] border-none bg-white/40 text-sm font-bold shadow-inner flex items-center justify-between cursor-pointer group-hover:bg-white transition-all">
+                <span className="text-slate-400 font-bold">Press <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-slate-600 mx-1">⌘ K</span> to jump to any node...</span>
+                <Command size={16} className="text-slate-300" />
+              </div>
             </div>
           </div>
           

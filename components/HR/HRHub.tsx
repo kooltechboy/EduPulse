@@ -5,9 +5,13 @@ import {
   CheckCircle2, Activity, Zap, MoreVertical,
   Globe, Heart, Trash2, Edit3, Send, Laptop, Sparkles,
   BadgeCheck, FileCheck, ClipboardCheck,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  UserX,
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
-import { LeaveRequest, JobOpening, Applicant } from '../../types.ts';
+import { LeaveRequest, JobOpening, Applicant, SubstitutionRequest } from '../../types.ts';
+import { findAIGuidedSubstitution } from '../../services/geminiService';
 
 const INITIAL_OPENINGS: JobOpening[] = [
   { id: 'JOB-001', title: 'Senior IB Mathematics Lead', department: 'Mathematics', type: 'Full-time', status: 'Open', applicantsCount: 12 },
@@ -26,13 +30,30 @@ const INITIAL_LEAVE: LeaveRequest[] = [
   { id: 'L-102', staffId: 'STF002', staffName: 'Dr. Linda Vance', type: 'Sick', startDate: '2026-05-18', endDate: '2026-05-19', reason: 'Seasonal Flu', status: 'Pending' },
 ];
 
+const INITIAL_SUBS: SubstitutionRequest[] = [
+  { id: 'SUB-01', absentStaffId: 'STF002', absentStaffName: 'Dr. Linda Vance', date: '2026-05-18', period: 'P1-P3', subject: 'Psychology 101', status: 'Pending' },
+];
+
 const HRHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'recruitment' | 'leave' | 'compliance' | 'pd'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'recruitment' | 'leave' | 'subs' | 'compliance' | 'pd'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   
   const [openings] = useState<JobOpening[]>(INITIAL_OPENINGS);
   const [applicants] = useState<Applicant[]>(INITIAL_APPLICANTS);
   const [leaveRequests] = useState<LeaveRequest[]>(INITIAL_LEAVE);
+  const [subs, setSubs] = useState<SubstitutionRequest[]>(INITIAL_SUBS);
+  const [isAIGenerating, setIsAIGenerating] = useState(false);
+  const [aiMatchResponse, setAiMatchResponse] = useState<string | null>(null);
+
+  const handleAIMatch = async (sub: SubstitutionRequest) => {
+    setIsAIGenerating(true);
+    const result = await findAIGuidedSubstitution(sub, [
+      { name: 'Prof. Mitchell', subjects: ['Math', 'Psychology'], availability: '80%' },
+      { name: 'Ms. Clara', subjects: ['Humanities', 'History'], availability: '100%' }
+    ]);
+    setAiMatchResponse(result);
+    setIsAIGenerating(false);
+  };
 
   const renderDashboard = () => (
     <div className="space-y-10 animate-in fade-in duration-700">
@@ -115,6 +136,79 @@ const HRHub: React.FC = () => {
           <button onClick={() => setActiveTab('compliance')} className="w-full mt-12 py-5 bg-white text-slate-900 rounded-[28px] font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-blue-50 transition-all">
              Run Compliance Audit
           </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSubs = () => (
+    <div className="space-y-10 animate-in slide-in-from-bottom duration-700">
+      <div className="flex flex-col lg:flex-row justify-between items-end gap-6 px-1">
+        <div>
+          <h3 className="text-4xl font-black text-slate-900 tracking-tighter leading-none">Substitution Hub</h3>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Faculty Deployment & Gap Management</p>
+        </div>
+        <button className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center gap-3">
+          <Plus size={18} /> Request Replacement
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-10">
+        <div className="xl:col-span-2 space-y-6">
+           {subs.map(sub => (
+              <div key={sub.id} className="glass-card p-10 rounded-[48px] bg-white border-none shadow-xl group">
+                 <div className="flex justify-between items-start mb-8">
+                    <div className="flex items-center gap-6">
+                       <div className="p-5 bg-rose-50 text-rose-600 rounded-[28px] shadow-inner"><UserX size={28} /></div>
+                       <div>
+                          <h4 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase">{sub.absentStaffName}</h4>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">{sub.subject} • {sub.period}</p>
+                       </div>
+                    </div>
+                    <span className="px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100 animate-pulse">Awaiting Match</span>
+                 </div>
+                 
+                 <div className="p-8 bg-slate-900 rounded-[40px] text-white shadow-2xl relative overflow-hidden">
+                    <div className="relative z-10">
+                       <div className="flex items-center justify-between mb-6">
+                          <h5 className="text-lg font-black flex items-center gap-3"><Zap size={20} className="text-blue-400" /> Neural Match Analysis</h5>
+                          <button 
+                            onClick={() => handleAIMatch(sub)} 
+                            disabled={isAIGenerating}
+                            className="bg-white/10 hover:bg-white/20 p-3 rounded-xl transition-all"
+                          >
+                             {isAIGenerating ? <RefreshCw size={18} className="animate-spin" /> : <Sparkles size={18} className="text-blue-400" />}
+                          </button>
+                       </div>
+                       {aiMatchResponse ? (
+                          <div className="text-sm font-medium text-blue-100 italic leading-relaxed prose prose-invert max-w-none">
+                             {aiMatchResponse}
+                          </div>
+                       ) : (
+                          <p className="text-xs text-slate-400 italic">Initialize AI matching to find the most certification-aligned substitute from the current active pool.</p>
+                       )}
+                    </div>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-3xl"></div>
+                 </div>
+              </div>
+           ))}
+        </div>
+        <div className="space-y-8">
+           <div className="glass-card p-10 rounded-[56px] bg-white shadow-xl">
+              <h4 className="text-xl font-black mb-8 flex items-center gap-3 uppercase tracking-tighter"><Activity className="text-blue-600" /> Deployment Stats</h4>
+              <div className="space-y-6">
+                 {[
+                   { label: 'Weekly Absences', val: 4, color: 'text-rose-500' },
+                   { label: 'Internal Coverage', val: '85%', color: 'text-emerald-500' },
+                   { label: 'Sub-Bank Capacity', val: 12, color: 'text-blue-500' }
+                 ].map(s => (
+                    <div key={s.label} className="flex justify-between py-4 border-b border-slate-50">
+                       <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{s.label}</span>
+                       <span className={`font-black ${s.color}`}>{s.val}</span>
+                    </div>
+                 ))}
+              </div>
+           </div>
         </div>
       </div>
     </div>
@@ -226,6 +320,7 @@ const HRHub: React.FC = () => {
              { id: 'dashboard', label: 'Overview', icon: <PieChartIcon size={14} /> },
              { id: 'recruitment', label: 'Recruitment', icon: <Briefcase size={14} /> },
              { id: 'leave', label: 'Absence Mgmt', icon: <Calendar size={14} /> },
+             { id: 'subs', label: 'Subs Node', icon: <UserX size={14} /> },
              { id: 'compliance', label: 'Compliance', icon: <ShieldCheck size={14} /> },
              { id: 'pd', label: 'PD Units', icon: <Award size={14} /> },
            ].map(tab => (
@@ -243,6 +338,7 @@ const HRHub: React.FC = () => {
       <div className="animate-in fade-in duration-700">
          {activeTab === 'dashboard' && renderDashboard()}
          {activeTab === 'recruitment' && renderRecruitment()}
+         {activeTab === 'subs' && renderSubs()}
          {activeTab === 'leave' && (
             <div className="py-40 text-center glass-card rounded-[64px] bg-white/40 border-none shadow-2xl">
               <Calendar size={80} className="mx-auto text-slate-200 mb-8" />

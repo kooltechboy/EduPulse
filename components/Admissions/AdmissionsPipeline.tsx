@@ -3,9 +3,10 @@ import {
   UserPlus, Search, Filter, MoreVertical, 
   ArrowRight, Sparkles, MessageCircle, 
   CheckCircle2, Clock, ShieldCheck, Zap, 
-  Mail, Phone, FileText, ChevronRight 
+  Mail, Phone, FileText, ChevronRight,
+  UserCheck, Loader2, Receipt
 } from 'lucide-react';
-import { AdmissionsCandidate, GradeLevel } from '../../types';
+import { AdmissionsCandidate, GradeLevel, Student, StudentLifecycleStatus, Invoice } from '../../types';
 
 const INITIAL_CANDIDATES: AdmissionsCandidate[] = [
   { id: 'CAN-9901', name: 'Zoe Winters', appliedGrade: GradeLevel.KINDERGARTEN, status: 'Interview', dateApplied: '2026-05-10', parentName: 'Mark Winters', sentimentScore: 92, notes: 'Highly engaged during tour. Parent expressed commitment to IB path.' },
@@ -16,10 +17,59 @@ const INITIAL_CANDIDATES: AdmissionsCandidate[] = [
 const STAGES = ['Inquiry', 'Application', 'Interview', 'Offered', 'Enrolled'];
 
 const AdmissionsPipeline: React.FC = () => {
-  const [candidates] = useState<AdmissionsCandidate[]>(INITIAL_CANDIDATES);
-  const [activeStage, setActiveStage] = useState('Interview');
+  const [candidates, setCandidates] = useState<AdmissionsCandidate[]>(INITIAL_CANDIDATES);
+  const [activeStage, setActiveStage] = useState('Offered');
+  const [isEnrolling, setIsEnrolling] = useState<string | null>(null);
 
   const filtered = candidates.filter(c => c.status === activeStage);
+
+  const finalizeEnrollment = (candidate: AdmissionsCandidate) => {
+    setIsEnrolling(candidate.id);
+    
+    setTimeout(() => {
+      const newStudentId = `STU-${Math.floor(1000 + Math.random() * 9000)}`;
+      
+      // 1. Create a permanent Student record
+      const newStudent: Student = {
+        id: newStudentId,
+        name: candidate.name,
+        gradeLevel: candidate.appliedGrade,
+        grade: 'Incoming',
+        gpa: 0,
+        status: 'Active',
+        lifecycleStatus: StudentLifecycleStatus.ENROLLED,
+        fatherName: candidate.parentName,
+        enrollmentDate: new Date().toISOString().split('T')[0],
+        lastPaymentStatus: 'Pending',
+        balanceOwed: 5000,
+        documents: []
+      };
+
+      // 2. Automated Fiscal Trigger: Create initial Tuition Invoice
+      const newInvoice: Invoice = {
+        id: `INV-${Date.now().toString().slice(-4)}`,
+        studentId: newStudentId,
+        studentName: candidate.name,
+        amount: 5000,
+        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        status: 'Sent',
+        category: 'Tuition'
+      };
+
+      // 3. Save to Registry
+      const savedStudents = JSON.parse(localStorage.getItem('edupulse_students_registry') || '[]');
+      localStorage.setItem('edupulse_students_registry', JSON.stringify([...savedStudents, newStudent]));
+      
+      const savedInvoices = JSON.parse(localStorage.getItem('edupulse_invoices') || '[]');
+      localStorage.setItem('edupulse_invoices', JSON.stringify([newInvoice, ...savedInvoices]));
+
+      // 4. Update candidate status in pipeline
+      setCandidates(prev => prev.map(c => c.id === candidate.id ? { ...c, status: 'Enrolled' } : c));
+      
+      setIsEnrolling(null);
+      alert(`Executive Chain Reaction Triggered!\n\n1. Identity ${newStudentId} Promoted to Registry.\n2. Initial Tuition Invoice Generated ($5,000).\n3. Enrollment Packet Dispatched via Digital Hub.`);
+    }, 2000);
+  };
 
   return (
     <div className="space-y-10 animate-in fade-in duration-1000">
@@ -80,9 +130,20 @@ const AdmissionsPipeline: React.FC = () => {
                    </div>
 
                    <div className="flex gap-4">
-                      <button className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-3">
-                         Advance Node <ArrowRight size={16} />
-                      </button>
+                      {activeStage === 'Offered' ? (
+                        <button 
+                          onClick={() => finalizeEnrollment(c)}
+                          disabled={isEnrolling === c.id}
+                          className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center justify-center gap-3 shadow-xl shadow-emerald-100 disabled:opacity-50"
+                        >
+                          {isEnrolling === c.id ? <Loader2 size={18} className="animate-spin" /> : <UserCheck size={18} />}
+                          {isEnrolling === c.id ? 'Initializing Lifecycle...' : 'Finalize Enrollment'}
+                        </button>
+                      ) : (
+                        <button className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-3">
+                           Advance Node <ArrowRight size={16} />
+                        </button>
+                      )}
                       <button className="p-4 bg-slate-100 text-slate-400 rounded-2xl hover:bg-blue-600 hover:text-white transition-all"><Mail size={20} /></button>
                    </div>
                 </div>
@@ -98,6 +159,7 @@ const AdmissionsPipeline: React.FC = () => {
 
         <div className="space-y-8">
            <div className="glass-card p-10 rounded-[56px] bg-slate-900 text-white shadow-2xl relative overflow-hidden group neural-glow">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-[100px] -mr-40 -mt-40 pointer-events-none"></div>
               <div className="relative z-10">
                  <h4 className="text-xl font-black mb-10 flex items-center gap-4 uppercase tracking-tighter">
                     <div className="p-3 bg-white/10 rounded-2xl"><Zap size={20} className="text-amber-400" /></div>
@@ -119,6 +181,13 @@ const AdmissionsPipeline: React.FC = () => {
                          </div>
                       </div>
                     ))}
+                 </div>
+                 <div className="mt-12 p-6 bg-white/5 rounded-3xl border border-white/10">
+                    <div className="flex items-center gap-3 mb-3">
+                       <Receipt size={16} className="text-blue-400" />
+                       <span className="text-[9px] font-black uppercase tracking-widest">Enrollment Chain-Trigger</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-relaxed italic">"Enrolling a candidate initiates fiscal, medical, and academic dossiers in real-time."</p>
                  </div>
                  <button className="w-full mt-12 py-5 bg-white text-slate-900 rounded-[28px] font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-blue-50 transition-all flex items-center justify-center gap-3">
                     Institutional Alpha Report <ChevronRight size={16} />

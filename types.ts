@@ -23,6 +23,49 @@ export enum GradeLevel {
   SENIOR_HIGH = 'Senior High'
 }
 
+export enum StudentLifecycleStatus {
+  ADMITTED = 'Admitted',
+  ENROLLED = 'Enrolled',
+  WITHDRAWN = 'Withdrawn',
+  GRADUATED = 'Graduated',
+  ALUMNI = 'Alumni'
+}
+
+export interface Invoice {
+  id: string;
+  studentId: string;
+  studentName: string;
+  amount: number;
+  dueDate: string;
+  status: 'Draft' | 'Sent' | 'Paid' | 'Overdue';
+  category: 'Tuition' | 'Lab' | 'Facility' | 'Extracurricular';
+}
+
+export interface SubstitutionRequest {
+  id: string;
+  absentStaffId: string;
+  absentStaffName: string;
+  date: string;
+  period: string;
+  subject: string;
+  status: 'Pending' | 'Matched' | 'Internal-Cover' | 'External-Sub';
+  matchedStaffId?: string;
+  matchedStaffName?: string;
+  aiConfidence?: number;
+}
+
+export interface ResourceBooking {
+  id: string;
+  resourceId: string;
+  resourceName: string;
+  type: 'Room' | 'Lab' | 'Vehicle' | 'Equipment';
+  bookedById: string;
+  bookedByName: string;
+  startTime: string;
+  endTime: string;
+  purpose: string;
+}
+
 export interface Message {
   id: string;
   senderId: string;
@@ -228,6 +271,7 @@ export interface Student {
   grade: string; 
   gpa: number; 
   status: string;
+  lifecycleStatus: StudentLifecycleStatus;
   gender?: string;
   dob?: string;
   email?: string;
@@ -235,6 +279,7 @@ export interface Student {
   lastPaymentStatus?: FinancialStatus;
   balanceOwed?: number;
   enrollmentDate?: string;
+  graduationDate?: string;
   fatherName?: string;
   motherName?: string;
   parentPhone?: string; // WhatsApp Integration
@@ -337,6 +382,8 @@ export interface CampusAsset {
   location: string;
   value: number;
   lastAudit: string;
+  healthIndex: number; // 0-100
+  nextMaintenance?: string;
 }
 
 export interface LibraryBook {
