@@ -435,7 +435,7 @@ export interface SchoolEvent {
   id: string;
   title: string;
   date: string;
-  type: 'Academic' | 'Sports' | 'Arts' | 'Community';
+  type: 'Academic' | 'Sports' | 'Arts' | 'Community' | 'Holiday';
   scope: 'Global' | 'Tier-Specific';
   targetLevels?: GradeLevel[];
   description: string;
