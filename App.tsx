@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout.tsx';
 import AdminView from './components/Dashboard/AdminView.tsx';
 import TeacherView from './components/Dashboard/TeacherView.tsx';
@@ -25,7 +25,7 @@ import BehaviorMatrix from './components/Behavior/BehaviorMatrix.tsx';
 import MedicalClinic from './components/Health/MedicalClinic.tsx';
 import MessagingHub from './components/Communication/MessagingHub.tsx';
 import { User, UserRole } from './types.ts';
-import { Settings, Sparkles, ChevronRight } from 'lucide-react';
+import { Settings, Sparkles, ChevronRight, Key } from 'lucide-react';
 
 const MOCK_USERS: Record<UserRole, User> = {
   [UserRole.ADMIN]: { id: 'ADM001', name: 'Principal Anderson', email: 'admin@edupulse.edu', role: UserRole.ADMIN },
@@ -38,6 +38,31 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(MOCK_USERS[UserRole.ADMIN]);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
+  // Institutional API Key Selection State (Mandatory for Veo & Advanced Models)
+  const [hasApiKey, setHasApiKey] = useState(false);
+
+  useEffect(() => {
+    // Initial verification of selected API key node
+    const checkApiKey = async () => {
+      try {
+        const selected = await (window as any).aistudio.hasSelectedApiKey();
+        setHasApiKey(selected);
+      } catch (e) {
+        console.error("Institutional auth check failed", e);
+      }
+    };
+    checkApiKey();
+  }, []);
+
+  const handleSelectKey = async () => {
+    try {
+      await (window as any).aistudio.openSelectKey();
+      // Assume success to proceed and mitigate potential race conditions
+      setHasApiKey(true);
+    } catch (e) {
+      console.error("Key node selection failed", e);
+    }
+  };
 
   const renderContent = () => {
     if (!user) return null;
@@ -101,6 +126,34 @@ const App: React.FC = () => {
       </div>
     );
   };
+
+  // Mandatory API selection before app initialization for compliance with video synthesis models
+  if (!hasApiKey) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-indigo-950 p-6 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+           <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-blue-600 rounded-full blur-[160px]"></div>
+        </div>
+        <div className="glass-card max-w-lg w-full p-12 md:p-20 rounded-[64px] text-center shadow-2xl relative z-10 border border-white/10">
+          <div className="w-28 h-28 bg-white/5 rounded-[40px] mx-auto flex items-center justify-center mb-12 shadow-2xl border border-white/10 transform -rotate-6">
+            <Key className="text-blue-400" size={56} />
+          </div>
+          <h2 className="text-4xl font-black text-white mb-6 uppercase tracking-tighter">Institutional Handshake</h2>
+          <p className="text-slate-400 mb-12 font-medium leading-relaxed">
+            Configure your institutional API credentials to enable global node synchronization, including Veo cinematic synthesis and predictive academic modeling.
+            <br/><br/>
+            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline font-bold tracking-widest uppercase text-[10px]">Review Billing Node Logic</a>
+          </p>
+          <button 
+            onClick={handleSelectKey}
+            className="w-full bg-blue-600 text-white py-7 rounded-[32px] font-black text-xs uppercase tracking-[0.4em] shadow-[0_20px_50px_-10px_rgba(37,99,235,0.4)] hover:bg-blue-500 transition-all active:scale-95 flex items-center justify-center gap-4"
+          >
+            Authorize Terminal Node <Sparkles size={20} />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (

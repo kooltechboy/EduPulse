@@ -91,6 +91,14 @@ export interface Conversation {
   type: 'Direct' | 'Broadcast' | 'Institutional';
 }
 
+export interface CandidateDocument {
+  id: string;
+  name: string;
+  type: 'Birth Certificate' | 'Parent ID' | 'Medical Report' | 'Recommendation' | 'Previous Transcripts' | 'Photo';
+  status: 'Verified' | 'Pending' | 'Rejected';
+  uploadDate: string;
+}
+
 export interface AdmissionsCandidate {
   id: string;
   name: string;
@@ -98,8 +106,22 @@ export interface AdmissionsCandidate {
   status: 'Inquiry' | 'Application' | 'Interview' | 'Offered' | 'Enrolled';
   dateApplied: string;
   parentName: string;
-  sentimentScore?: number; // 1-100 predicted by AI
+  sentimentScore?: number;
   notes: string;
+  // Expanded Identity Node
+  dob?: string;
+  gender?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  fatherName?: string;
+  motherName?: string;
+  guardianName?: string;
+  siblings?: string; // e.g. "Maya (Grade 4), Leo (Nursery)"
+  previousSchool?: string;
+  medicalInfo?: string;
+  documents?: CandidateDocument[];
+  photoUrl?: string;
 }
 
 export interface BehavioralIncident {

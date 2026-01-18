@@ -124,6 +124,7 @@ export const generateLessonRecapVideo = async (topic: string, description: strin
   try {
     if (onProgress) onProgress("Initializing Veo 3.1 Fast engine...");
     
+    // Create a new instance right before the call to ensure the latest API key from user selection is utilized
     const veoAi = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     let operation = await veoAi.models.generateVideos({
@@ -143,9 +144,17 @@ export const generateLessonRecapVideo = async (topic: string, description: strin
     }
 
     const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+    // Append API key when fetching from download link as per protocol
     return `${downloadLink}&key=${process.env.API_KEY}`;
-  } catch (error) {
-    console.error("Veo Error:", error);
+  } catch (error: any) {
+    // If request fails due to missing auth entity, prompt for key re-selection
+    if (error?.message?.includes("Requested entity was not found.")) {
+      console.warn("Auth drift detected. Requesting key re-selection.");
+      if (typeof window !== 'undefined' && (window as any).aistudio) {
+        (window as any).aistudio.openSelectKey();
+      }
+    }
+    console.error("Veo Synthesis Error:", error);
     return null;
   }
 };

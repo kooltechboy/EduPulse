@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   Stethoscope, ShieldAlert, HeartPulse, Search, Plus, 
   Filter, MoreVertical, X, CheckCircle2, AlertCircle, 
-  Thermometer, Pills, History, ShieldCheck, Phone, Mail, 
+  // Fixed Pills to Pill as lucide-react doesn't export Pills
+  Thermometer, Pill, History, ShieldCheck, Phone, Mail, 
   ChevronRight, Activity, Clock, Lock
 } from 'lucide-react';
 import { MedicalRecord } from '../../types';

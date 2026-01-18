@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { User, UserRole } from '../types.ts';
 import { NAV_ITEMS_CATEGORIZED } from '../constants.tsx';
-import { Bell, Search, LogOut, X, Sparkles, Menu, Wifi, ChevronRight, Zap, Command, Terminal } from 'lucide-react';
+import { 
+  Bell, Search, LogOut, X, Sparkles, Menu, 
+  ChevronRight, Command, Terminal, 
+  ShieldCheck, Cpu 
+} from 'lucide-react';
 
 interface LayoutProps {
   user: User;
@@ -15,125 +19,85 @@ const Layout: React.FC<LayoutProps> = ({ user, children, activeTab, setActiveTab
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [sidebarSearch, setSidebarSearch] = useState('');
+  
   const navGroups = NAV_ITEMS_CATEGORIZED[user.role] || [];
 
+  const filteredNavGroups = navGroups.map(group => ({
+    ...group,
+    items: group.items.filter(item => 
+      item.label.toLowerCase().includes(sidebarSearch.toLowerCase())
+    )
+  })).filter(group => group.items.length > 0);
+
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsCommandOpen(prev => !prev);
-      }
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleTabClick = (id: string) => {
     setActiveTab(id);
     setIsSidebarOpen(false);
-    setIsCommandOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Global Command Palette */}
-      {isCommandOpen && (
-        <div className="fixed inset-0 z-[1000] flex items-start justify-center pt-[15vh] px-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => setIsCommandOpen(false)}></div>
-          <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl overflow-hidden border border-slate-100 animate-in slide-in-from-top-4 duration-500">
-            <div className="p-6 border-b border-slate-100 flex items-center gap-4 bg-slate-50/50">
-              <Command size={22} className="text-blue-600" />
-              <input 
-                autoFocus 
-                placeholder="Type a command or search campus nodes (e.g., 'Aiden Mitchell', 'Finance', 'Lab 4')..." 
-                className="flex-1 bg-transparent border-none outline-none font-bold text-lg text-slate-800"
-              />
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border border-slate-200 text-[10px] font-black text-slate-400">ESC</div>
-            </div>
-            <div className="p-4 max-h-[400px] overflow-y-auto scrollbar-hide space-y-2">
-              <p className="px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Quick Navigation</p>
-              {navGroups.flatMap(g => g.items).slice(0, 8).map(item => (
-                <button 
-                  key={item.id} 
-                  onClick={() => handleTabClick(item.id)}
-                  className="w-full text-left p-4 rounded-2xl hover:bg-blue-50 flex items-center justify-between group transition-all"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-slate-100 rounded-lg text-slate-500 group-hover:bg-blue-600 group-hover:text-white transition-all">{item.icon}</div>
-                    <span className="font-bold text-slate-700 group-hover:text-blue-600">{item.label} Hub</span>
-                  </div>
-                  <ChevronRight size={16} className="text-slate-200 group-hover:translate-x-1 transition-all" />
-                </button>
-              ))}
-            </div>
-            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center px-8">
-              <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase">
-                <Terminal size={14} /> EduPulse Neural Search v2.6
-              </div>
-              <span className="text-[10px] font-bold text-blue-600">84 Active Nodes Online</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Backdrop */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] lg:hidden animate-in fade-in duration-300"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
+    <div className="flex min-h-screen selection:bg-blue-600 selection:text-white bg-[#f8fafc]">
+      
+      {/* Sidebar - Redesigned as High Contrast Command Column */}
       <aside className={`
-        fixed inset-y-0 left-0 z-[110] w-72 sidebar-gradient flex flex-col transition-all duration-700 transform cubic-bezier(0.23, 1, 0.32, 1)
+        fixed inset-y-0 left-0 z-[110] w-72 sidebar-dark flex flex-col transition-all duration-500 ease-in-out
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 border-r border-slate-100/50 shadow-2xl lg:shadow-none
+        lg:translate-x-0 shadow-2xl lg:shadow-none
       `}>
-        <div className="p-10 flex items-center justify-between">
-          <div className="flex items-center gap-4 group cursor-pointer">
-            <div className="bg-blue-600 p-3.5 rounded-[22px] shadow-2xl shadow-blue-300 transform group-hover:rotate-[360deg] transition-transform duration-1000">
+        <div className="p-8 pb-4 flex items-center justify-between">
+          <div onClick={() => setActiveTab('dashboard')} className="flex items-center gap-4 group cursor-pointer">
+            <div className="bg-blue-600 p-3 rounded-2xl shadow-lg shadow-blue-900/40">
               <Sparkles className="text-white" size={24} />
             </div>
-            <h1 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-500 tracking-tighter uppercase leading-none">
-              EduPulse
-            </h1>
+            <div>
+                <h1 className="text-xl font-black text-white tracking-tighter uppercase leading-none">EduPulse</h1>
+                <p className="text-[7px] font-black text-blue-400 uppercase tracking-[0.4em] mt-1">2026 Core</p>
+            </div>
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-300 p-2 hover:bg-slate-100 rounded-xl transition-all">
-            <X size={24} />
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 p-2 hover:bg-slate-800 rounded-xl transition-all">
+            <X size={20} />
           </button>
         </div>
 
-        <nav className="flex-1 px-5 space-y-8 mt-6 overflow-y-auto scrollbar-hide pb-10">
-          {navGroups.map((group, gIdx) => (
-            <div key={gIdx} className="space-y-4">
-              <p className="px-6 text-[9px] font-black text-slate-400 uppercase tracking-[0.5em] mb-2 opacity-70">{group.label}</p>
-              <div className="space-y-1.5">
+        <div className="px-6 my-6">
+            <div className="relative group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" size={14} />
+                <input 
+                    type="text"
+                    value={sidebarSearch}
+                    onChange={(e) => setSidebarSearch(e.target.value)}
+                    placeholder="Quick Link..."
+                    className="w-full pl-10 pr-4 py-3 bg-slate-900 border-none rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-300 outline-none focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600"
+                />
+            </div>
+        </div>
+
+        <nav className="flex-1 px-4 space-y-8 overflow-y-auto scrollbar-hide pb-6">
+          {filteredNavGroups.map((group, gIdx) => (
+            <div key={gIdx} className="space-y-3">
+              <p className="px-4 text-[8px] font-black text-blue-400/80 uppercase tracking-[0.4em]">{group.label}</p>
+              <div className="space-y-1">
                 {group.items.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => handleTabClick(item.id)}
-                    className={`w-full flex items-center gap-5 px-6 py-4 rounded-[24px] transition-all duration-500 group relative overflow-hidden ${
+                    className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative ${
                       activeTab === item.id 
-                        ? 'bg-slate-900 text-white shadow-[0_20px_40px_-10px_rgba(15,23,42,0.3)] translate-x-2' 
-                        : 'text-slate-500 hover:bg-white hover:text-blue-600 hover:translate-x-2'
+                        ? 'active-glow text-white' 
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                     }`}
                   >
-                    <div className={`transition-all duration-500 ${activeTab === item.id ? 'text-blue-400 scale-110' : 'text-slate-300 group-hover:text-blue-600'}`}>
+                    <div className={`transition-all duration-300 ${activeTab === item.id ? 'scale-110' : 'text-slate-500 group-hover:text-blue-400'}`}>
                       {item.icon}
                     </div>
-                    <span className="font-black text-[13px] tracking-tight uppercase flex-1 text-left">{item.label}</span>
-                    {activeTab === item.id ? (
-                      <div className="w-2 h-2 bg-blue-400 rounded-full active-nav-indicator animate-pulse"></div>
-                    ) : (
-                      <div className="opacity-0 group-hover:opacity-100 w-1 h-4 bg-blue-100 rounded-full transition-all"></div>
-                    )}
+                    <span className="font-black text-[10px] tracking-widest uppercase flex-1 text-left">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -141,15 +105,15 @@ const Layout: React.FC<LayoutProps> = ({ user, children, activeTab, setActiveTab
           ))}
         </nav>
 
-        <div className="p-8 border-t border-slate-100/50 bg-white/40 backdrop-blur-xl">
-          <div className="glass-card p-5 rounded-[32px] flex items-center gap-4 bg-white/80 border border-white shadow-lg hover:translate-y-[-2px] transition-all group cursor-default">
-            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="avatar" className="w-12 h-12 rounded-[18px] border-2 border-white shadow-xl flex-shrink-0 group-hover:scale-110 transition-transform" />
+        <div className="p-6 border-t border-white/5 bg-slate-950">
+          <div className="p-4 rounded-2xl flex items-center gap-4 bg-slate-900 border border-white/5 group cursor-default">
+            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="avatar" className="w-10 h-10 rounded-xl border border-white/10 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-black text-slate-900 truncate tracking-tight uppercase leading-none">{user.name}</p>
-              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1.5">{user.role}</p>
+              <p className="text-[10px] font-black text-white truncate uppercase leading-none">{user.name}</p>
+              <p className="text-[7px] text-blue-400 font-black uppercase tracking-widest mt-1.5">{user.role}</p>
             </div>
-            <button onClick={onLogout} className="text-slate-300 hover:text-rose-500 transition-all p-2 hover:bg-rose-50 rounded-xl">
-              <LogOut size={18} />
+            <button onClick={onLogout} className="text-slate-500 hover:text-rose-500 transition-all p-2">
+              <LogOut size={16} />
             </button>
           </div>
         </div>
@@ -157,40 +121,39 @@ const Layout: React.FC<LayoutProps> = ({ user, children, activeTab, setActiveTab
 
       {/* Main Content Area */}
       <main className="flex-1 lg:ml-72 transition-all duration-500 w-full overflow-x-hidden relative z-10">
-        <header className={`sticky top-0 z-[90] transition-all duration-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 px-6 py-8 md:px-14 md:py-12 ${scrolled ? 'bg-white/70 backdrop-blur-3xl shadow-xl shadow-slate-100/30 py-6 md:py-8' : 'bg-transparent'}`}>
-          <div className="flex items-center gap-5 w-full md:w-auto">
-            <button 
-              onClick={() => setIsSidebarOpen(true)} 
-              className="lg:hidden p-4 glass-card rounded-[22px] text-slate-600 hover:bg-white shadow-lg transition-all active:scale-95"
-            >
-              <Menu size={22} />
+        <header className={`sticky top-0 z-[90] transition-all duration-500 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-6 py-6 md:px-12 md:py-8 ${scrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}>
+          <div className="flex items-center gap-6 w-full md:w-auto">
+            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-3 bg-white border border-slate-200 rounded-xl text-slate-900 shadow-sm">
+              <Menu size={20} />
             </button>
-            <div className="flex-1 md:w-[450px] xl:w-[500px] relative group" onClick={() => setIsCommandOpen(true)}>
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={20} />
-              <div className="w-full pl-16 pr-6 py-5 glass-card rounded-[28px] border-none bg-white/40 text-sm font-bold shadow-inner flex items-center justify-between cursor-pointer group-hover:bg-white transition-all">
-                <span className="text-slate-400 font-bold">Press <span className="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-slate-600 mx-1">⌘ K</span> to jump to any node...</span>
-                <Command size={16} className="text-slate-300" />
-              </div>
+            <div className="hidden md:flex items-center gap-4">
+                <div className="p-2 bg-slate-100 rounded-lg text-slate-400"><Command size={14} /></div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">EduPulse Operating System v2.6</span>
             </div>
           </div>
           
-          <div className="hidden md:flex items-center gap-8 justify-end">
-            <div className="hidden xl:flex items-center gap-4 bg-white/60 backdrop-blur-md px-8 py-4 rounded-full border border-white shadow-sm hover:shadow-md transition-all">
-               <div className="relative">
-                  <Wifi size={18} className="text-emerald-500" />
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span>
-               </div>
-               <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">Network: Stable</span>
+          <div className="flex items-center gap-6 w-full md:w-auto justify-end">
+            <div className="flex items-center gap-4 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-full">
+                <ShieldCheck size={14} className="text-emerald-500" />
+                <span className="text-[8px] font-black text-emerald-700 uppercase tracking-widest">Protocol Verified</span>
             </div>
-            <button className="relative glass-card p-5 rounded-[24px] hover:bg-white shadow-lg transition-all group active:scale-95">
-              <Bell size={24} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
-              <span className="absolute top-5 right-5 w-2.5 h-2.5 bg-rose-500 rounded-full border-4 border-white shadow-xl"></span>
+            <button className="relative p-3 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all group">
+              <Bell size={18} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
             </button>
           </div>
         </header>
 
-        <section className="px-6 md:px-14 pb-32 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-          {children}
+        <section className="px-6 md:px-12 pb-24">
+          {/* Enhanced Context Path */}
+          <div className="flex items-center gap-2 mb-8 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+             <span className="hover:text-blue-600 cursor-pointer" onClick={() => setActiveTab('dashboard')}>CAMPUS CORE</span>
+             <ChevronRight size={10} />
+             <span className="text-slate-900 bg-slate-100 px-2 py-0.5 rounded">{activeTab} node</span>
+          </div>
+          <div className="max-w-[1400px] mx-auto">
+            {children}
+          </div>
         </section>
       </main>
     </div>

@@ -8,10 +8,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --brand-blue: #2563eb;
+            --brand-blue: #2563eb; 
             --brand-indigo: #4f46e5;
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-bg: rgba(255, 255, 255, 1); /* 100% Solid for perfect text reading */
+            --glass-border: #e2e8f0;
+            --text-primary: #020617; /* Slate-950 */
+            --text-secondary: #334155; /* Slate-700 */
+            --text-muted: #475569; /* Slate-600 */
         }
         body {
             font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
@@ -20,72 +23,55 @@
                 radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 50%),
                 radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.05) 0px, transparent 50%);
             min-height: 100vh;
-            color: #0f172a;
+            color: var(--text-primary);
             overflow-x: hidden;
         }
         .neural-grid {
-            background-size: 40px 40px;
-            background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-image: radial-gradient(circle, #cbd5e1 1.5px, transparent 1.5px);
+        }
+        .sidebar-dark {
+            background-color: #020617;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
         .glass-card {
             background: var(--glass-bg);
-            backdrop-filter: blur(24px) saturate(160%);
-            -webkit-backdrop-filter: blur(24px) saturate(160%);
             border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
         }
         .glass-card-dark {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            background: #0f172a;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .instructional-glow {
-            box-shadow: 0 0 60px -15px rgba(37, 99, 235, 0.25);
+        /* Absolute Visibility Overrides */
+        .text-slate-400 { color: #475569 !important; font-weight: 600; } 
+        .text-slate-500 { color: #334155 !important; font-weight: 600; }
+        .text-slate-300 { color: #64748b !important; font-weight: 500; }
+        .text-slate-900 { color: #020617 !important; }
+        
+        .active-glow {
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+            background: #2563eb !important;
+            color: white !important;
         }
-        .neural-glow {
-            box-shadow: 0 0 80px -10px rgba(99, 102, 241, 0.3);
-        }
-        .sidebar-gradient {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
-        }
-        .animate-float {
-            animation: float 6s ease-in-out infinite;
-        }
-        .animate-glow-pulse {
-            animation: glow-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        @keyframes glow-pulse {
-            0%, 100% { opacity: 1; filter: brightness(100%) drop-shadow(0 0 5px rgba(37, 99, 235, 0.5)); }
-            50% { opacity: 0.8; filter: brightness(120%) drop-shadow(0 0 15px rgba(37, 99, 235, 0.8)); }
-        }
+
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: transparent;
+            background: #f1f5f9;
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(30, 41, 59, 0.15);
+            background: #94a3b8;
             border-radius: 20px;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(30, 41, 59, 0.3);
+        .animate-spin-slow {
+            animation: spin 8s linear infinite;
         }
-        .active-nav-indicator {
-            box-shadow: 0 0 12px #2563eb;
-        }
-        .card-hover-effect {
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-        .card-hover-effect:hover {
-            transform: translateY(-8px) scale(1.01);
-            box-shadow: 0 32px 64px -16px rgba(15, 23, 42, 0.1);
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     </style>
 <script type="importmap">
