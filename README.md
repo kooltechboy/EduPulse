@@ -1,20 +1,51 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# EduPulse - Unified Digital Campus
 
-# Run and deploy your AI Studio app
+EduPulse is a comprehensive School Management System designed to streamline campus operations, enhance communication, and provide actionable insights for educational institutions.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/drive/140W-I1pfCQoyA5zI5syXsE4AL7izdt67
+- **Dashboard**: Real-time overview of key metrics for Admins, Teachers, Students, and Parents.
+- **Student Information System (SIS)**: Manage student records, enrollment, and attendance.
+- **Academic Management**: Gradebooks, scheduling, and curriculum planning.
+- **Communication Hub**: Integrated messaging for the entire school community.
+- **Finance & HR**: Manage fees, payroll, and staff records.
+- **Campus Operations**: Track inventory, transport, and facility management.
 
-## Run Locally
+## Tech Stack
 
-**Prerequisites:**  Node.js
+- **Frontend**: React, TypeScript, Vite
+- **Styling**: Tailwind CSS, Lucide React (Icons)
+- **Charts**: Recharts
+- **AI Integration**: Google GenAI
 
+## Getting Started
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Prerequisites
+
+- Node.js (v18 or higher recommended)
+
+### Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/kooltechboy/EduPulse.git
+    cd EduPulse
+    ```
+
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+
+3.  Start the development server:
+    ```bash
+    npm run dev
+    ```
+
+## Building for Production
+
+To create a production build:
+
+```bash
+npm run build
+```
