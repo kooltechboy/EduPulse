@@ -1,9 +1,0 @@
-{
-  "requestFramePermissions": [
-    "camera",
-    "microphone",
-    "geolocation"
-  ],
-  "name": "EduPulse - Unified Digital Campus 2026",
-  "description": "Integrated School Management, Coordination Hub, and High-Fidelity Learning Management System with Neural Synthesis Core."
-}

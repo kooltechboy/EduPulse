@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { User } from '@/types';
 import { NAV_ITEMS_CATEGORIZED } from '@/config/constants';
 import {
-  Bell, LogOut, X, Sparkles, Menu,
-  Command, Search, ChevronRight
-} from 'lucide-react';
+  ChevronRight, Command, ShieldCheck, Database, CloudIcon, Bot,
+  CornerDownLeft, Search, FileText, Cpu, X, LogOut, Menu, Bell, Sparkles
+} from "lucide-react";
+import { performAIResearch } from '@/services/geminiService';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface LayoutProps {
@@ -17,10 +18,18 @@ const Layout: React.FC<LayoutProps> = ({ user, children, onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCommandNodeOpen, setIsCommandNodeOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const navGroups = NAV_ITEMS_CATEGORIZED[user.role] || [];
   const activeTab = location.pathname.substring(1) || 'dashboard';
+
+  // Nexus Agent State
+  const [nexusMessages, setNexusMessages] = useState<{ role: 'user' | 'assistant', content: string, sources?: any[] }[]>([
+    { role: 'assistant', content: "EduPulse Nexus initialized. Institutional data nodes are synced. How can I assist your campus management today?" }
+  ]);
+  const [nexusInput, setNexusInput] = useState("");
+  const [isNexusProcessing, setIsNexusProcessing] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -31,38 +40,63 @@ const Layout: React.FC<LayoutProps> = ({ user, children, onLogout }) => {
   const handleTabClick = (id: string) => {
     navigate(`/${id}`);
     setIsSidebarOpen(false);
+    setIsCommandNodeOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-900">
+  const handleNexusSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!nexusInput.trim() || isNexusProcessing) return;
 
-      {/* Sidebar - Clean White */}
-      <aside className={`fixed inset-y-0 left-0 z-[110] w-72 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-        <div className="p-8 pb-6 flex items-center justify-between">
-          <div onClick={() => handleTabClick('dashboard')} className="flex items-center gap-3 cursor-pointer group">
-            <div className="bg-blue-600 p-2.5 rounded-xl shadow-sm text-white group-hover:bg-blue-700 transition-colors">
-              <Sparkles size={20} />
+    const userMsg = nexusInput;
+    setNexusInput("");
+    setNexusMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    setIsNexusProcessing(true);
+
+    try {
+      const response = await performAIResearch(userMsg);
+      setNexusMessages(prev => [...prev, {
+        role: 'assistant',
+        content: response.text,
+        sources: response.sources
+      }]);
+    } catch (error) {
+      setNexusMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "Neural link timeout. Please re-delegate your request."
+      }]);
+    } finally {
+      setIsNexusProcessing(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen bg-[#f8fafc] text-slate-900">
+
+      {/* Sidebar - Modern Dark */}
+      <aside className={`fixed inset-y-0 left-0 z-[110] w-72 bg-[#020617] border-r border-white/10 flex flex-col transition-all duration-500 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 shadow-2xl lg:shadow-none`}>
+        <div className="p-8 pb-4 flex items-center justify-between">
+          <div onClick={() => handleTabClick('dashboard')} className="flex items-center gap-4 group cursor-pointer">
+            <div className="bg-blue-600 p-3 rounded-2xl shadow-lg shadow-blue-900/40">
+              <Sparkles className="text-white" size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight leading-none">EduPulse</h1>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Academic Suite</p>
+              <h1 className="text-xl font-black text-white tracking-tighter uppercase leading-none">EduPulse</h1>
+              <p className="text-[7px] font-black text-blue-400 uppercase tracking-[0.4em] mt-1">2026 Core</p>
             </div>
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 hover:text-slate-600 transition-colors"><X size={20} /></button>
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 p-2 hover:bg-slate-800 rounded-xl transition-all"><X size={20} /></button>
         </div>
 
-        {/* Navigation scroll area */}
-        <nav className="flex-1 px-4 space-y-8 overflow-y-auto scrollbar-hide py-4">
+        <nav className="flex-1 px-4 space-y-8 overflow-y-auto scrollbar-hide py-6">
           {navGroups.map((group, gIdx) => (
-            <div key={gIdx} className="space-y-2">
-              <p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{group.label}</p>
-              <div className="space-y-0.5">
+            <div key={gIdx} className="space-y-3">
+              <p className="px-4 text-[8px] font-black text-blue-400/80 uppercase tracking-[0.4em]">{group.label}</p>
+              <div className="space-y-1">
                 {group.items.map((item) => (
-                  <button key={item.id} onClick={() => handleTabClick(item.id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group text-sm font-bold ${activeTab === item.id ? 'bg-slate-100 text-slate-950 shadow-sm' : 'text-slate-900 hover:bg-slate-50 hover:text-black'}`}>
-                    <div className={`transition-colors ${activeTab === item.id ? 'text-blue-700' : 'text-slate-700 group-hover:text-black'}`}>{item.icon}</div>
-                    <span className="flex-1 text-left">{item.label}</span>
-                    {activeTab === item.id && <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>}
+                  <button key={item.id} onClick={() => handleTabClick(item.id)} className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative ${activeTab === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}>
+                    <div className={`transition-all duration-300 ${activeTab === item.id ? 'scale-110' : 'text-slate-500 group-hover:text-blue-400'}`}>{item.icon}</div>
+                    <span className="font-black text-[10px] tracking-widest uppercase flex-1 text-left">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -70,55 +104,160 @@ const Layout: React.FC<LayoutProps> = ({ user, children, onLogout }) => {
           ))}
         </nav>
 
-        {/* User Profile / Footer */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50/50">
-          <div className="flex items-center gap-3">
-            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="avatar" className="w-10 h-10 rounded-full bg-slate-200 border border-white shadow-sm" />
+        <div className="p-6 border-t border-white/5 bg-slate-950">
+          {/* Cloud Health Metrics in Sidebar */}
+          <div className="mb-6 space-y-3 px-2">
+            <div className="flex items-center justify-between text-[7px] font-black text-slate-500 uppercase tracking-widest">
+              <span className="flex items-center gap-2"><Database size={10} className="text-emerald-500" /> Supabase Node</span>
+              <span className="text-emerald-400">99.9%</span>
+            </div>
+            <div className="flex items-center justify-between text-[7px] font-black text-slate-500 uppercase tracking-widest">
+              <span className="flex items-center gap-2"><CloudIcon size={10} className="text-blue-500" /> Firebase Pulse</span>
+              <span className="text-blue-400">Stable</span>
+            </div>
+          </div>
+          <div className="p-4 rounded-2xl flex items-center gap-4 bg-slate-900 border border-white/5 group text-white">
+            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} alt="avatar" className="w-10 h-10 rounded-xl border border-white/10 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
-              <p className="text-xs text-slate-500 font-medium truncate">{user.role}</p>
+              <p className="text-[10px] font-black uppercase truncate leading-none">{user.name}</p>
+              <p className="text-[7px] text-blue-400 font-black uppercase tracking-widest mt-1.5">{user.role}</p>
             </div>
-            <button onClick={onLogout} className="p-2 hover:bg-white hover:text-rose-600 rounded-lg transition-all text-slate-400 shadow-sm border border-transparent hover:border-slate-200"><LogOut size={16} /></button>
-          </div>
-        </div>
-      </aside>
+            <button onClick={onLogout} className="text-slate-500 hover:text-rose-500 transition-all p-2"><LogOut size={16} /></button>
+          </div >
+        </div >
+      </aside >
 
-      {/* Main Content Area */}
-      <main className="flex-1 lg:pl-72 transition-all duration-300 w-full relative z-10">
-
-        {/* Header - Minimalist */}
-        <header className={`sticky top-0 z-[90] transition-all duration-200 flex flex-col md:flex-row justify-between items-center gap-4 px-8 py-4 ${scrolled ? 'bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm' : 'bg-transparent'}`}>
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 text-slate-600"><Menu size={24} /></button>
-
-            {/* Context Breadcrumb / Search */}
-            <div className="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-200 w-72 focus-within:ring-2 focus-within:ring-blue-100 transition-shadow">
-              <Search size={16} className="text-slate-400" />
-              <input type="text" placeholder="Search students, staff, or resources..." className="bg-transparent border-none outline-none text-sm text-slate-900 placeholder-slate-400 w-full" />
-              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-slate-100 rounded text-[10px] text-slate-500 font-bold border border-slate-200"><Command size={10} /> K</div>
+      <main className="flex-1 lg:pl-72 transition-all duration-500 w-full overflow-x-hidden relative z-10">
+        <header className={`sticky top-0 z-[90] transition-all duration-500 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-6 py-6 md:px-12 md:py-8 ${scrolled ? 'bg-white shadow-md' : 'bg-transparent'}`}>
+          <div className="flex items-center gap-6 w-full md:w-auto">
+            <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-3 bg-white border border-slate-200 rounded-xl text-slate-900 shadow-sm"><Menu size={20} /></button>
+            <div className="hidden md:flex items-center gap-4">
+              <button onClick={() => setIsCommandNodeOpen(true)} className="p-2.5 bg-white border border-slate-200 shadow-sm rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all active:scale-90 group">
+                <Command size={18} className="group-hover:rotate-12 transition-transform" />
+              </button>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">EduPulse OS v2.6 • Hybrid Cloud Active</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-full">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">System Operational</span>
+          <div className="flex items-center gap-6 w-full md:w-auto justify-end">
+            <div className="flex items-center gap-4 px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-full">
+              <ShieldCheck size={14} className="text-emerald-500" />
+              <span className="text-[8px] font-black text-emerald-700 uppercase tracking-widest">Registry Synced</span>
             </div>
-            <button className="relative p-2.5 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors group">
-              <Bell size={18} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+            <button className="relative p-3 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all group">
+              <Bell size={18} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
             </button>
           </div>
         </header>
 
-        {/* Content Container */}
-        <div className="px-8 pb-20 pt-6 animate-fade-in-up">
-          {children}
-        </div>
+        <section className="px-6 md:px-12 pb-24 animate-fade-in-up">
+          <div className="flex items-center gap-2 mb-8 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+            <span className="hover:text-blue-600 cursor-pointer" onClick={() => handleTabClick('dashboard')}>CAMPUS CORE</span>
+            <ChevronRight size={10} />
+            <span className="text-slate-900 bg-slate-100 px-2 py-0.5 rounded uppercase">{activeTab} node</span>
+          </div>
+          <div className="max-w-[1400px] mx-auto">{children}</div>
+        </section>
       </main>
 
-    </div>
+      {/* Command Node Modal - The Nexus Agent */}
+      {
+        isCommandNodeOpen && (
+          <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-2xl" onClick={() => setIsCommandNodeOpen(false)}></div>
+            <div className="relative w-full max-w-3xl h-[600px] bg-white rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col">
+
+              {/* Header */}
+              <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-600 text-white rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-transform"><Bot size={20} /></div>
+                  <div>
+                    <h3 className="text-sm font-black uppercase tracking-tighter text-slate-900">EduPulse Autonomous Nexus</h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                      <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none">Intelligence Engine v3.0 Online</p>
+                    </div>
+                  </div>
+                </div>
+                <button onClick={() => setIsCommandNodeOpen(false)} className="p-2 text-slate-400 hover:text-slate-900 transition-colors"><X size={20} /></button>
+              </div>
+
+              {/* Chat Area */}
+              <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide">
+                {nexusMessages.map((msg, i) => (
+                  <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in-up`}>
+                    <div className={`max-w-[85%] p-5 rounded-[28px] ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-tr-none shadow-xl' : 'bg-slate-50 border border-slate-100 text-slate-700 rounded-tl-none'}`}>
+                      <p className="text-xs font-semibold leading-relaxed">{msg.content}</p>
+                      {msg.sources && msg.sources.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-slate-200/50 flex flex-wrap gap-2">
+                          {msg.sources.map((source: any, sIdx: number) => (
+                            <a key={sIdx} href={source.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[8px] font-black uppercase tracking-tighter bg-white/50 px-2 py-1 rounded-lg border border-slate-200 hover:bg-white transiton-colors">
+                              <Search size={10} /> {source.title}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {isNexusProcessing && (
+                  <div className="flex justify-start animate-fade-in-up">
+                    <div className="bg-slate-50 border border-slate-100 p-4 rounded-[28px] rounded-tl-none flex items-center gap-3">
+                      <div className="flex gap-1">
+                        <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></span>
+                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                        <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Nexus Synthesizing...</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer / Input */}
+              <div className="p-6 bg-slate-50 border-t border-slate-100">
+                <form onSubmit={handleNexusSubmit} className="relative group">
+                  <input
+                    type="text"
+                    value={nexusInput}
+                    onChange={(e) => setNexusInput(e.target.value)}
+                    placeholder="Ask Nexus to research, summarize, or automate..."
+                    className="w-full bg-white border border-slate-200 rounded-[28px] py-4 pl-6 pr-16 text-xs font-semibold focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all shadow-sm placeholder:text-slate-400"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!nexusInput.trim() || isNexusProcessing}
+                    className="absolute right-2 top-2 p-2.5 bg-slate-900 text-white rounded-full hover:bg-blue-600 disabled:bg-slate-200 disabled:text-slate-400 transition-all shadow-lg active:scale-95"
+                  >
+                    <CornerDownLeft size={16} />
+                  </button>
+                </form>
+                <div className="mt-4 flex items-center justify-center gap-6">
+                  {[
+                    { label: 'Summarize Comms', icon: <FileText size={10} /> },
+                    { label: 'Market Insight', icon: <Search size={10} /> },
+                    { label: 'Load Analysis', icon: <Cpu size={10} /> }
+                  ].map((chip, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setNexusInput(chip.label)}
+                      className="text-[8px] font-black text-slate-400 hover:text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2 transition-colors"
+                    >
+                      {chip.icon} {chip.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )
+      }
+    </div >
   );
 };
 
 export default Layout;
+

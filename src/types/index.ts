@@ -79,10 +79,10 @@ export interface Message {
 
 export interface Conversation {
   id: string;
-  participants: { 
-    id: string; 
-    name: string; 
-    role: UserRole; 
+  participants: {
+    id: string;
+    name: string;
+    role: UserRole;
     avatar?: string;
     phoneNumber?: string; // For WhatsApp Bridge
   }[];
@@ -180,7 +180,7 @@ export interface LessonPlan {
   title: string;
   objectives: string[];
   content: string;
-  dateRange?: string; 
+  dateRange?: string;
   associatedMaterials: string[];
   status: 'Draft' | 'Published' | 'Archived';
 }
@@ -194,7 +194,7 @@ export interface Assignment {
   type: AssignmentType;
   dueDate: string;
   maxPoints: number;
-  weight: number; 
+  weight: number;
   status: 'Active' | 'Upcoming' | 'Draft' | 'Archived';
   resources: string[];
 }
@@ -226,7 +226,7 @@ export interface Course {
   teacherName: string;
   gradeLevel: GradeLevel;
   room: string;
-  students: string[]; 
+  students: string[];
   modules: CourseModule[];
   liveSessions: LiveSession[];
   materials: LearningMaterial[];
@@ -234,44 +234,44 @@ export interface Course {
   bannerUrl?: string;
 }
 
-export interface CurriculumModule { 
-  id?: string; 
-  weekRange: string; 
-  title: string; 
-  objectives: string[]; 
-  summary: string; 
-  standards: string[]; 
-  pedagogicalLoad: number; 
-  suggestedExercise: string; 
+export interface CurriculumModule {
+  id?: string;
+  weekRange: string;
+  title: string;
+  objectives: string[];
+  summary: string;
+  standards: string[];
+  pedagogicalLoad: number;
+  suggestedExercise: string;
 }
 
-export interface Syllabus { 
-  id: string; 
-  subject: string; 
-  gradeLevel: string; 
-  standard: string; 
-  introduction: string; 
-  modules: CurriculumModule[]; 
+export interface Syllabus {
+  id: string;
+  subject: string;
+  gradeLevel: string;
+  standard: string;
+  introduction: string;
+  modules: CurriculumModule[];
 }
 
-export interface TeacherEvaluation { 
-  id: string; 
-  teacherName: string; 
-  date: string; 
-  scores: { planning: number; management: number; assessment: number; professionalism: number; }; 
-  feedback: string; 
-  status: string; 
+export interface TeacherEvaluation {
+  id: string;
+  teacherName: string;
+  date: string;
+  scores: { planning: number; management: number; assessment: number; professionalism: number; };
+  feedback: string;
+  status: string;
   coordinatorId?: string;
 }
 
-export interface HRRequest { 
-  id: string; 
-  staffId: string; 
-  staffName: string; 
-  type: 'Leave' | 'Expense' | 'Training' | 'Grievance'; 
+export interface HRRequest {
+  id: string;
+  staffId: string;
+  staffName: string;
+  type: 'Leave' | 'Expense' | 'Training' | 'Grievance';
   description: string;
-  status: 'PendingCoord' | 'ApprovedCoord' | 'RejectedCoord' | 'Finalized'; 
-  submittedAt: string; 
+  status: 'PendingCoord' | 'ApprovedCoord' | 'RejectedCoord' | 'Finalized';
+  submittedAt: string;
 }
 
 export interface User { id: string; name: string; email: string; role: UserRole; avatar?: string; }
@@ -286,12 +286,12 @@ export interface StudentDocument {
 
 export type FinancialStatus = 'Settled' | 'Partial' | 'Overdue' | 'Pending' | 'Void';
 
-export interface Student { 
-  id: string; 
-  name: string; 
-  gradeLevel: GradeLevel; 
-  grade: string; 
-  gpa: number; 
+export interface Student {
+  id: string;
+  name: string;
+  gradeLevel: GradeLevel;
+  grade: string;
+  gpa: number;
   status: string;
   lifecycleStatus: StudentLifecycleStatus;
   gender?: string;
@@ -495,3 +495,10 @@ export interface ScheduleEntry {
   gradeLevel: GradeLevel;
   color: string;
 }
+
+export const MOCK_USERS: Record<UserRole, User> = {
+  [UserRole.ADMIN]: { id: 'ADM001', name: 'Principal Anderson', email: 'admin@edupulse.edu', role: UserRole.ADMIN },
+  [UserRole.TEACHER]: { id: 'TCH001', name: 'Professor Mitchell', email: 'mitchell@edupulse.edu', role: UserRole.TEACHER },
+  [UserRole.STUDENT]: { id: 'STU001', name: 'Alex Thompson', email: 'alex@edupulse.edu', role: UserRole.STUDENT },
+  [UserRole.PARENT]: { id: 'PAR001', name: 'Mrs. Thompson', email: 'parent@edupulse.edu', role: UserRole.PARENT },
+};

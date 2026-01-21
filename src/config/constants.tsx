@@ -1,11 +1,11 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
-  BookOpen, 
-  CreditCard, 
-  Calendar, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Users,
+  BookOpen,
+  CreditCard,
+  Calendar,
+  Settings,
   UserCheck,
   ClipboardList,
   GraduationCap,
@@ -23,7 +23,10 @@ import {
   Stethoscope,
   Medal,
   Activity,
-  MessageSquareText
+  MessageSquareText,
+  Target,
+  Database,
+  Sparkles
 } from 'lucide-react';
 import { UserRole } from '@/types';
 
@@ -40,6 +43,15 @@ export const NAV_ITEMS_CATEGORIZED: Record<UserRole, NavGroup[]> = {
         { label: 'Dashboard', icon: <LayoutDashboard size={18} />, id: 'dashboard' },
         { label: 'Communication Hub', icon: <MessageSquareText size={18} />, id: 'messages' },
         { label: 'Admissions', icon: <UserPlus size={18} />, id: 'admissions' },
+      ]
+    },
+    {
+      label: 'Academic Management',
+      items: [
+        { id: 'students', label: 'Students', icon: <Users size={18} /> },
+        { id: 'trajectory-matrix', label: 'Destiny Matrix', icon: <Target size={18} /> },
+        { id: 'staff', label: 'Staff Hub', icon: <Database size={18} /> },
+        { id: 'classes', label: 'LMS Center', icon: <MonitorPlay size={18} /> }
       ]
     },
     {
