@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import { performAIResearch } from '@/services/geminiService';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { checkSupabaseHealth } from '@/lib/supabase';
+import { checkFirebaseHealth } from '@/lib/firebase';
 
 interface LayoutProps {
   user: User;
@@ -30,6 +32,23 @@ const Layout: React.FC<LayoutProps> = ({ user, children, onLogout }) => {
   ]);
   const [nexusInput, setNexusInput] = useState("");
   const [isNexusProcessing, setIsNexusProcessing] = useState(false);
+
+  // Cloud Health Pulse
+  const [supabaseStatus, setSupabaseStatus] = useState<'Checking...' | '99.9%' | 'OFFLINE'>('Checking...');
+  const [firebaseStatus, setFirebaseStatus] = useState<'Checking...' | 'Stable' | 'Offline'>('Checking...');
+
+  useEffect(() => {
+    const updateHealth = async () => {
+      const isSupabaseOk = await checkSupabaseHealth();
+      const isFirebaseOk = await checkFirebaseHealth();
+      setSupabaseStatus(isSupabaseOk ? '99.9%' : 'OFFLINE');
+      setFirebaseStatus(isFirebaseOk ? 'Stable' : 'Offline');
+    };
+
+    updateHealth();
+    const interval = setInterval(updateHealth, 30000); // Pulse every 30s
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -108,12 +127,12 @@ const Layout: React.FC<LayoutProps> = ({ user, children, onLogout }) => {
           {/* Cloud Health Metrics in Sidebar */}
           <div className="mb-6 space-y-3 px-2">
             <div className="flex items-center justify-between text-[7px] font-black text-slate-500 uppercase tracking-widest">
-              <span className="flex items-center gap-2"><Database size={10} className="text-emerald-500" /> Supabase Node</span>
-              <span className="text-emerald-400">99.9%</span>
+              <span className="flex items-center gap-2"><Database size={10} className={supabaseStatus === 'OFFLINE' ? 'text-rose-500' : 'text-emerald-500'} /> Supabase Node</span>
+              <span className={supabaseStatus === 'OFFLINE' ? 'text-rose-400' : 'text-emerald-400'}>{supabaseStatus}</span>
             </div>
             <div className="flex items-center justify-between text-[7px] font-black text-slate-500 uppercase tracking-widest">
-              <span className="flex items-center gap-2"><CloudIcon size={10} className="text-blue-500" /> Firebase Pulse</span>
-              <span className="text-blue-400">Stable</span>
+              <span className="flex items-center gap-2"><CloudIcon size={10} className={firebaseStatus === 'Offline' ? 'text-rose-500' : 'text-blue-500'} /> Firebase Pulse</span>
+              <span className={firebaseStatus === 'Offline' ? 'text-rose-400' : 'text-blue-400'}>{firebaseStatus}</span>
             </div>
           </div>
           <div className="p-4 rounded-2xl flex items-center gap-4 bg-slate-900 border border-white/5 group text-white">
