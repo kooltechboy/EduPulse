@@ -232,6 +232,8 @@ export interface Course {
   materials: LearningMaterial[];
   bannerColor: string;
   bannerUrl?: string;
+  department?: string;
+  semester?: string;
 }
 
 export interface CurriculumModule {

@@ -51,7 +51,7 @@ export const NAV_ITEMS_CATEGORIZED: Record<UserRole, NavGroup[]> = {
         { id: 'students', label: 'Students', icon: <Users size={18} /> },
         { id: 'trajectory-matrix', label: 'Destiny Matrix', icon: <Target size={18} /> },
         { id: 'staff', label: 'Staff Hub', icon: <Database size={18} /> },
-        { id: 'classes', label: 'LMS Center', icon: <MonitorPlay size={18} /> }
+        { id: 'lms-center', label: 'LMS Center', icon: <BookOpen size={18} /> }
       ]
     },
     {
