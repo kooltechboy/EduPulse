@@ -26,7 +26,8 @@ import {
   MessageSquareText,
   Target,
   Database,
-  Sparkles
+  Sparkles,
+  Building2
 } from 'lucide-react';
 import { UserRole } from '@/types';
 
@@ -87,6 +88,7 @@ export const NAV_ITEMS_CATEGORIZED: Record<UserRole, NavGroup[]> = {
       items: [
         { label: 'Wellness Center', icon: <HeartPulse size={18} />, id: 'counseling' },
         { label: 'Security Center', icon: <ShieldCheck size={18} />, id: 'security' },
+        { label: 'School Settings', icon: <Building2 size={18} />, id: 'school-settings' },
         { label: 'System Config', icon: <Settings size={18} />, id: 'settings' },
       ]
     }

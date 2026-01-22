@@ -50,8 +50,9 @@ const LMSCenter: React.FC<{ user: User }> = ({ user }) => {
 
     useEffect(() => {
         const loadCourses = async () => {
+            if (!user.schoolId) return;
             setIsLoading(true);
-            const data = await courseService.fetchAll();
+            const data = await courseService.fetchAll(user.schoolId);
             if (data.length === 0) {
                 // Use defaults if no data in Supabase
                 setCourses(DEFAULT_COURSES);

@@ -67,11 +67,8 @@ const INITIAL_CONVERSATIONS: Conversation[] = [
 ];
 
 const MessagingHub: React.FC<{ user: UserType }> = ({ user }) => {
-  const [conversations, setConversations] = useState<Conversation[]>(() => {
-    const saved = localStorage.getItem('edupulse_conversations');
-    return saved ? JSON.parse(saved) : INITIAL_CONVERSATIONS;
-  });
-
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,12 +79,25 @@ const MessagingHub: React.FC<{ user: UserType }> = ({ user }) => {
   const [discoveryTab, setDiscoveryTab] = useState<'Staff' | 'Parents' | 'Groups' | 'Tiers'>('Staff');
   const [isCallActive, setIsCallActive] = useState<{ active: boolean; type: 'Audio' | 'Video' | null }>({ active: false, type: null });
   const [isMobileView, setIsMobileView] = useState(false);
+  const [availableContacts, setAvailableContacts] = useState<any[]>(CAMPUS_DIRECTORY.STAFF); // Fallback to mock for directory if DB empty
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    localStorage.setItem('edupulse_conversations', JSON.stringify(conversations));
-  }, [conversations]);
+    const loadConversations = async () => {
+      setIsLoading(true);
+      try {
+        const { messagingService } = await import('@/services/messagingService');
+        const data = await messagingService.fetchConversations(user.id);
+        setConversations(data);
+      } catch (error) {
+        console.error("Failed to load messages", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (user?.id) loadConversations();
+  }, [user.id]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -98,15 +108,16 @@ const MessagingHub: React.FC<{ user: UserType }> = ({ user }) => {
 
   const canBroadcast = user.role === UserRole.ADMIN || user.role === UserRole.TEACHER;
 
-  const handleSendMessage = (channel: 'Native' | 'WhatsApp' = 'Native') => {
+  const handleSendMessage = async (channel: 'Native' | 'WhatsApp' = 'Native') => {
     if (!messageInput.trim() || !activeConvId) return;
 
     if (channel === 'WhatsApp' && otherParticipant?.phoneNumber) {
       window.open(`https://wa.me/${otherParticipant.phoneNumber}?text=${encodeURIComponent(messageInput)}`, '_blank');
     }
 
+    // Optimistic update
     const newMessage: Message = {
-      id: `M-${Date.now()}`,
+      id: `TEMP-${Date.now()}`,
       senderId: user.id,
       senderName: user.name,
       senderRole: user.role,
@@ -118,9 +129,17 @@ const MessagingHub: React.FC<{ user: UserType }> = ({ user }) => {
 
     setConversations(prev => prev.map(c => c.id === activeConvId ? { ...c, messages: [...c.messages, newMessage] } : c));
     setMessageInput('');
+
+    try {
+      const { messagingService } = await import('@/services/messagingService');
+      await messagingService.sendMessage(activeConvId, newMessage.content, user.id, channel);
+    } catch (e) {
+      console.error("Failed to send message", e);
+    }
   };
 
   const deleteMessage = (msgId: string) => {
+    // Implement delete via service if needed
     if (confirm("Permanently remove this transmission from your local ledger?")) {
       setConversations(prev => prev.map(c => c.id === activeConvId ? { ...c, messages: c.messages.filter(m => m.id !== msgId) } : c));
     }
@@ -128,31 +147,33 @@ const MessagingHub: React.FC<{ user: UserType }> = ({ user }) => {
 
   const toggleUnread = (convId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setConversations(prev => prev.map(c => {
-      if (c.id !== convId || c.messages.length === 0) return c;
-      const updatedMessages = [...c.messages];
-      const lastIdx = updatedMessages.length - 1;
-      updatedMessages[lastIdx] = { ...updatedMessages[lastIdx], read: !updatedMessages[lastIdx].read };
-      return { ...c, messages: updatedMessages };
-    }));
+    // Logic to toggle read status in DB
   };
 
-  const startNewConversation = (node: any, type: 'Direct' | 'Broadcast') => {
+  const startNewConversation = async (node: any, type: 'Direct' | 'Broadcast') => {
     const existing = conversations.find(c => c.participants.some(p => p.id === node.id));
     if (existing) {
       setActiveConvId(existing.id);
     } else {
-      const newConv: Conversation = {
-        id: `CONV-${Date.now()}`,
-        type,
-        participants: [
-          { id: user.id, name: user.name, role: user.role },
-          { id: node.id, name: node.name, role: node.role || UserRole.ADMIN, avatar: node.avatar, phoneNumber: node.phoneNumber }
-        ],
-        messages: []
-      };
-      setConversations([newConv, ...conversations]);
-      setActiveConvId(newConv.id);
+      try {
+        const { messagingService } = await import('@/services/messagingService');
+        // For demo, just creating local first or calling service
+        // In real app: const newConv = await messagingService.createConversation(type, [user.id, node.id]);
+        // For now, using mock structure to avoid blocking on empty DB
+        const newConv: Conversation = {
+          id: `CONV-${Date.now()}`,
+          type,
+          participants: [
+            { id: user.id, name: user.name, role: user.role },
+            { id: node.id, name: node.name, role: node.role || UserRole.ADMIN, avatar: node.avatar, phoneNumber: node.phoneNumber }
+          ],
+          messages: []
+        };
+        setConversations([newConv, ...conversations]);
+        setActiveConvId(newConv.id);
+      } catch (e) {
+        console.error("Failed to start conversation", e);
+      }
     }
     setIsDiscoveryOpen(false);
   };

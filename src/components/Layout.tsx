@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 import { NAV_ITEMS_CATEGORIZED } from '@/config/constants';
 import {
   ChevronRight, Command, ShieldCheck, Database, CloudIcon, Bot,
@@ -17,6 +18,7 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ user, children, onLogout }) => {
+  const { school } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -100,8 +102,8 @@ const Layout: React.FC<LayoutProps> = ({ user, children, onLogout }) => {
               <Sparkles className="text-white" size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-black text-white tracking-tighter uppercase leading-none">EduPulse</h1>
-              <p className="text-[7px] font-black text-blue-400 uppercase tracking-[0.4em] mt-1">2026 Core</p>
+              <h1 className="text-xl font-black text-white tracking-tighter uppercase leading-none">{school?.name || 'EduPulse'}</h1>
+              <p className="text-[7px] font-black text-blue-400 uppercase tracking-[0.4em] mt-1">{school?.subscriptionPlan || '2026 Core'}</p>
             </div>
           </div>
           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-400 p-2 hover:bg-slate-800 rounded-xl transition-all"><X size={20} /></button>

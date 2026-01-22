@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
-import { User, UserRole, MOCK_USERS } from '@/types';
+import { User, UserRole, School } from '@/types';
 
 interface AuthContextType {
     user: User | null;
+    school: School | null;
     role: UserRole | null;
     isLoading: boolean;
     isAuthenticated: boolean;
@@ -62,15 +63,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const isDevMode = import.meta.env.DEV || !import.meta.env.VITE_SUPABASE_URL;
 
     const [user, setUser] = useState<User | null>(null);
+    const [school, setSchool] = useState<School | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const initAuth = async () => {
             if (isDevMode) {
-                // Dev mode: default to Admin
-                setUser(MOCK_USERS[UserRole.ADMIN]);
-                setIsLoading(false);
-                return;
+                // Dev mode: check console for status
+                console.log("EduPulse Dev Mode: Connected to live Supabase instance");
             }
 
             // Production: check Supabase session
@@ -90,8 +90,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         name: profile.name,
                         email: profile.email,
                         role: profile.role as UserRole,
-                        avatar: profile.avatar
+                        avatar: profile.avatar,
+                        schoolId: profile.school_id
                     });
+
+                    // Fetch School Details if user is associated with one
+                    if (profile.school_id) {
+                        const { data: schoolData } = await supabase
+                            .from('schools')
+                            .select('*')
+                            .eq('id', profile.school_id)
+                            .single();
+
+                        if (schoolData) {
+                            setSchool({
+                                id: schoolData.id,
+                                name: schoolData.name,
+                                slug: schoolData.slug,
+                                domain: schoolData.domain,
+                                logoUrl: schoolData.logo_url,
+                                subscriptionPlan: schoolData.subscription_plan as any
+                            });
+                        }
+                    }
                 }
             }
 
@@ -137,18 +158,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const logout = async () => {
-        if (isDevMode) {
-            setUser(null);
-            return;
-        }
         await supabase.auth.signOut();
         setUser(null);
     };
 
     const switchRole = (role: UserRole) => {
-        if (isDevMode) {
-            setUser(MOCK_USERS[role]);
-        }
+        console.warn("Dev mode role switching is disabled in production build.");
     };
 
     const hasPermission = (requiredRoles: UserRole[]): boolean => {

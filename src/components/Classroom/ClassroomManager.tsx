@@ -58,42 +58,44 @@ const ClassroomManager: React.FC<{ user: User }> = ({ user }) => {
          try {
             // Dynamic import to avoid circular deps
             const { courseService } = await import('@/services/courseService');
-            const data = await courseService.fetchAll();
-            if (data.length > 0) {
-               setCourses(data);
-            } else {
-               // Fallback to localStorage if no Supabase data
-               const saved = localStorage.getItem('edupulse_courses_registry');
-               if (saved) {
-                  setCourses(JSON.parse(saved));
+            if (user.schoolId) {
+               const data = await courseService.fetchAll(user.schoolId);
+               if (data.length > 0) {
+                  setCourses(data);
                } else {
-                  // Use defaults
-                  setCourses([
-                     {
-                        id: 'C1', name: 'Advanced Calculus & Topology', code: 'MATH-12A', teacherId: 'TCH-001', teacherName: 'Professor Mitchell',
-                        gradeLevel: GradeLevel.SENIOR_HIGH, room: 'B-102', students: ['STU-001', 'STU-002', 'STU-2910'],
-                        bannerColor: 'from-blue-600 via-indigo-600 to-violet-700',
-                        department: 'STEM', semester: 'Spring 2026',
-                        materials: [], liveSessions: [],
-                        modules: [
-                           {
-                              id: 'M-MAY', title: 'May: Topology Foundations', description: 'Exploring non-Euclidean manifolds.', order: 1,
-                              plans: [
-                                 { id: 'P-W1', modality: PlanningModality.WEEKLY, title: 'Week 3: Möbius Strips', objectives: ['Continuity', 'Orientation'], content: 'Structural overview.', associatedMaterials: [], status: 'Published' },
-                                 { id: 'P-D1', modality: PlanningModality.DAILY, title: 'Day 1: Set Theory Basics', objectives: ['Definitions'], content: 'Basics.', associatedMaterials: [], status: 'Published' }
-                              ],
-                              assignments: []
-                           }
-                        ]
-                     },
-                     {
-                        id: 'C2', name: 'Early Literacy & Phonics', code: 'K-ENG', teacherId: 'TCH-006', teacherName: 'Mrs. Daisy',
-                        gradeLevel: GradeLevel.KINDERGARTEN, room: 'K-001', students: ['STU-003'],
-                        bannerColor: 'from-emerald-500 via-teal-600 to-cyan-700',
-                        department: 'Humanities', semester: 'Full Year 2026',
-                        materials: [], modules: [], liveSessions: []
-                     }
-                  ]);
+                  // Fallback to localStorage if no Supabase data
+                  const saved = localStorage.getItem('edupulse_courses_registry');
+                  if (saved) {
+                     setCourses(JSON.parse(saved));
+                  } else {
+                     // Use defaults
+                     setCourses([
+                        {
+                           id: 'C1', name: 'Advanced Calculus & Topology', code: 'MATH-12A', teacherId: 'TCH-001', teacherName: 'Professor Mitchell',
+                           gradeLevel: GradeLevel.SENIOR_HIGH, room: 'B-102', students: ['STU-001', 'STU-002', 'STU-2910'],
+                           bannerColor: 'from-blue-600 via-indigo-600 to-violet-700',
+                           department: 'STEM', semester: 'Spring 2026',
+                           materials: [], liveSessions: [],
+                           modules: [
+                              {
+                                 id: 'M-MAY', title: 'May: Topology Foundations', description: 'Exploring non-Euclidean manifolds.', order: 1,
+                                 plans: [
+                                    { id: 'P-W1', modality: PlanningModality.WEEKLY, title: 'Week 3: Möbius Strips', objectives: ['Continuity', 'Orientation'], content: 'Structural overview.', associatedMaterials: [], status: 'Published' },
+                                    { id: 'P-D1', modality: PlanningModality.DAILY, title: 'Day 1: Set Theory Basics', objectives: ['Definitions'], content: 'Basics.', associatedMaterials: [], status: 'Published' }
+                                 ],
+                                 assignments: []
+                              }
+                           ]
+                        },
+                        {
+                           id: 'C2', name: 'Early Literacy & Phonics', code: 'K-ENG', teacherId: 'TCH-006', teacherName: 'Mrs. Daisy',
+                           gradeLevel: GradeLevel.KINDERGARTEN, room: 'K-001', students: ['STU-003'],
+                           bannerColor: 'from-emerald-500 via-teal-600 to-cyan-700',
+                           department: 'Humanities', semester: 'Full Year 2026',
+                           materials: [], modules: [], liveSessions: []
+                        }
+                     ]);
+                  }
                }
             }
          } catch (err) {

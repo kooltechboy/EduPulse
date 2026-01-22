@@ -1,7 +1,7 @@
 
 import { supabase } from '../lib/supabase.ts';
 import { db } from '../lib/firebase.ts';
-import { collection, addDoc, serverTimestamp } from 'https://esm.sh/firebase@10/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 /**
  * Synchronizes an Event Node with the Supabase Relational Registry.
@@ -10,9 +10,9 @@ export const syncEventToCloud = async (event: any) => {
   try {
     const { data, error } = await supabase
       .from('campus_events')
-      .upsert({ 
-        id: event.id, 
-        title: event.title, 
+      .upsert({
+        id: event.id,
+        title: event.title,
         payload: event,
         updated_at: new Date()
       });

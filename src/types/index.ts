@@ -5,6 +5,15 @@ export enum UserRole {
   PARENT = 'PARENT'
 }
 
+export interface School {
+  id: string;
+  name: string;
+  slug: string;
+  domain?: string;
+  logoUrl?: string;
+  subscriptionPlan: 'free' | 'basic' | 'premium' | 'enterprise';
+}
+
 export enum StaffCategory {
   FACULTY = 'Faculty',
   PSYCHOLOGIST = 'Psychologist',
@@ -498,9 +507,14 @@ export interface ScheduleEntry {
   color: string;
 }
 
-export const MOCK_USERS: Record<UserRole, User> = {
-  [UserRole.ADMIN]: { id: 'ADM001', name: 'Principal Anderson', email: 'admin@edupulse.edu', role: UserRole.ADMIN },
-  [UserRole.TEACHER]: { id: 'TCH001', name: 'Professor Mitchell', email: 'mitchell@edupulse.edu', role: UserRole.TEACHER },
-  [UserRole.STUDENT]: { id: 'STU001', name: 'Alex Thompson', email: 'alex@edupulse.edu', role: UserRole.STUDENT },
-  [UserRole.PARENT]: { id: 'PAR001', name: 'Mrs. Thompson', email: 'parent@edupulse.edu', role: UserRole.PARENT },
-};
+// End of types
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatar?: string;
+  schoolId?: string; // Tenant ID
+  isSuperAdmin?: boolean;
+}

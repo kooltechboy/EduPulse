@@ -25,26 +25,48 @@ const AdminView: React.FC = () => {
   const navigate = useNavigate();
   const [aiSummary, setAiSummary] = useState("Analyzing institutional metrics...");
   const [isSyncing, setIsSyncing] = useState(false);
-
-  const candidates: AdmissionsCandidate[] = JSON.parse(localStorage.getItem('edupulse_admissions_pipeline') || '[]');
-  const invoices: Invoice[] = JSON.parse(localStorage.getItem('edupulse_invoices') || '[]');
-  const pendingRevenue = invoices.filter(i => i.status !== 'Paid').reduce((sum, i) => sum + i.amount, 0);
+  const [stats, setStats] = useState({
+    pendingRevenue: 0,
+    enrollmentCount: 0,
+    activeFaculty: 0,
+    studentsCount: 0
+  });
 
   useEffect(() => {
-    const fetchSummary = async () => {
-      const summary = await getCampusSummary({
-        revenue: pendingRevenue,
-        enrollment: candidates.length,
-        cycle: 'Q2 2026'
-      });
-      setAiSummary(summary);
+    const loadDashboard = async () => {
+      setIsSyncing(true);
+      try {
+        const { dashboardService } = await import('@/services/dashboardService');
+        const [financials, quickStats] = await Promise.all([
+          dashboardService.getFinancialMetrics(),
+          dashboardService.getQuickStats()
+        ]);
+
+        setStats({
+          pendingRevenue: financials.pending,
+          enrollmentCount: quickStats.enrollmentQueue,
+          activeFaculty: quickStats.activeFaculty,
+          studentsCount: quickStats.totalStudents
+        });
+
+        // AI Summary update
+        const summary = await getCampusSummary({
+          revenue: financials.pending,
+          enrollment: quickStats.enrollmentQueue,
+          cycle: 'Q2 2026'
+        });
+        setAiSummary(summary);
+      } catch (e) {
+        console.error("Dashboard sync failed", e);
+      } finally {
+        setIsSyncing(false);
+      }
     };
-    fetchSummary();
-  }, [pendingRevenue, candidates.length]);
+    loadDashboard();
+  }, []);
 
   return (
     <div className="space-y-8 animate-fade-in-up pb-20">
-
       {/* Header Stat Overview */}
       <div className="flex flex-col md:flex-row gap-8 justify-between items-end mb-4">
         <div>
@@ -54,28 +76,25 @@ const AdminView: React.FC = () => {
         <div className="flex gap-3">
           <div className="bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm flex items-center gap-3">
             <Clock size={16} className="text-slate-400" />
-            <span className="text-sm font-semibold text-slate-700">10:42 AM</span>
+            <span className="text-sm font-semibold text-slate-700">Live Stream</span>
           </div>
-          <button className="primary-button px-4 py-2 text-sm flex items-center gap-2">
-            Generate Report <ArrowRight size={14} />
-          </button>
         </div>
       </div>
 
       {/* Executive Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Fiscal Reserve', value: `$${pendingRevenue.toLocaleString()}`, change: '+12%', trend: 'up', icon: <Wallet />, color: 'blue' },
-          { label: 'Enrollment Queue', value: candidates.length, change: '+5%', trend: 'up', icon: <UserPlus />, color: 'emerald' },
-          { label: 'Campus Health', value: '98%', change: 'Stable', trend: 'up', icon: <ShieldCheck />, color: 'indigo' },
-          { label: 'Active Faculty', value: '142', change: '84% Load', trend: 'up', icon: <Users />, color: 'purple' },
+          { label: 'Fiscal Reserve', value: `$${stats.pendingRevenue.toLocaleString()}`, change: 'Live', trend: 'up', icon: <Wallet />, color: 'blue' },
+          { label: 'Enrollment Queue', value: stats.enrollmentCount, change: 'Active', trend: 'up', icon: <UserPlus />, color: 'emerald' },
+          { label: 'Total Students', value: stats.studentsCount, change: 'Enrolled', trend: 'up', icon: <GraduationCap />, color: 'indigo' },
+          { label: 'Active Faculty', value: stats.activeFaculty, change: 'On Campus', trend: 'up', icon: <Users />, color: 'purple' },
         ].map((m, i) => (
           <div key={i} className="academic-card p-6 group hover:-translate-y-1">
             <div className="flex justify-between items-start mb-4">
               <div className={`p-3 bg-${m.color}-50 rounded-xl text-${m.color}-600 group-hover:bg-${m.color}-100 transition-colors`}>
                 {m.icon}
               </div>
-              <span className={`text-xs font-bold px-2 py-1 rounded-full border ${m.trend === 'up' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>{m.change}</span>
+              <span className={`text-xs font-bold px-2 py-1 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-100`}>{m.change}</span>
             </div>
             <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">{m.label}</p>
             <h3 className="text-3xl font-bold text-slate-900 tracking-tight">{m.value}</h3>

@@ -53,10 +53,11 @@ export const courseService = {
     /**
      * Fetch all courses from Supabase
      */
-    async fetchAll(): Promise<Course[]> {
+    async fetchAll(schoolId: string): Promise<Course[]> {
         const { data, error } = await supabase
             .from('courses')
             .select('*')
+            .eq('school_id', schoolId)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -72,10 +73,13 @@ export const courseService = {
     /**
      * Create a new course
      */
-    async create(course: Partial<Course>): Promise<Course | null> {
+    async create(course: Partial<Course>, schoolId: string): Promise<Course | null> {
         const { data, error } = await supabase
             .from('courses')
-            .insert(toSupabaseRow(course))
+            .insert({
+                ...toSupabaseRow(course),
+                school_id: schoolId
+            })
             .select()
             .single();
 
