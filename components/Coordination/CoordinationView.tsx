@@ -7,7 +7,6 @@ import {
   Check, Handshake, Send, CheckCircle, 
   PieChart as PieChartIcon, 
   FileCheck,
-  // Fix: Added UserCheck import to resolve the 'Cannot find name UserCheck' error
   UserCheck,
   TrendingUp
 } from 'lucide-react';
@@ -84,17 +83,27 @@ const CoordinationView: React.FC = () => {
     const formData = new FormData(e.target as HTMLFormElement);
     const subject = formData.get('subject') as string;
     const standard = formData.get('standard') as string;
+    
+    if (!subject || !standard) return;
+
     setIsAIGenerating(true);
     const roadmap = await generateFullSyllabus(subject, selectedHub.scope, standard);
+    
     if (roadmap) {
-      setAiSyllabus({ id: `SYL-${Date.now()}`, subject, gradeLevel: selectedHub.scope, standard, ...roadmap });
+      setAiSyllabus({ 
+        id: `SYL-${Date.now()}`, 
+        subject, 
+        gradeLevel: selectedHub.scope, 
+        standard, 
+        ...roadmap 
+      });
       setWizardStep(2);
     }
     setIsAIGenerating(false);
   };
 
   const handleAIEvalFeedback = async () => {
-    if (!newEval.teacherName || !evalNotes) return;
+    if (!newEval.teacherName || !evalNotes.trim()) return;
     setIsAIGenerating(true);
     const feedback = await generateTeacherFeedback(evalNotes, newEval.teacherName);
     setNewEval(prev => ({ ...prev, feedback }));
@@ -106,6 +115,7 @@ const CoordinationView: React.FC = () => {
       setSyllabi([...syllabi, aiSyllabus]);
       setIsWizardOpen(false);
       setAiSyllabus(null);
+      setWizardStep(1);
     }
   };
 

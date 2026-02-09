@@ -38,7 +38,9 @@ import {
   Hash,
   Languages,
   Keyboard,
-  HardHat
+  HardHat,
+  Monitor,
+  Contact
 } from 'lucide-react';
 import { StaffMember, GradeLevel, StaffCategory, AcademicDegree } from '../../types.ts';
 
@@ -127,7 +129,7 @@ const StaffDirectory: React.FC = () => {
   const [formState, setFormState] = useState<Partial<StaffMember>>({
     name: '', email: '', phone: '', category: StaffCategory.FACULTY,
     status: 'Active', load: 100, startDate: new Date().toISOString().split('T')[0],
-    subjects: [], gradeLevels: []
+    subjects: [], gradeLevels: [], certifications: [], languages: []
   });
 
   const filteredStaff = staff.filter(s => {
@@ -174,7 +176,7 @@ const StaffDirectory: React.FC = () => {
     setFormState({
         name: '', email: '', phone: '', category: StaffCategory.FACULTY,
         status: 'Active', load: 100, startDate: new Date().toISOString().split('T')[0],
-        subjects: [], gradeLevels: []
+        subjects: [], gradeLevels: [], certifications: [], languages: []
     });
   };
 
@@ -195,7 +197,7 @@ const StaffDirectory: React.FC = () => {
             setFormState({
               name: '', email: '', phone: '', category: StaffCategory.FACULTY,
               status: 'Active', load: 100, startDate: new Date().toISOString().split('T')[0],
-              subjects: [], gradeLevels: []
+              subjects: [], gradeLevels: [], certifications: [], languages: []
             }); 
             setIsModalOpen(true); 
           }} 
@@ -235,33 +237,6 @@ const StaffDirectory: React.FC = () => {
           </button>
         </div>
 
-        {/* MOBILE CARDS */}
-        <div className="block xl:hidden p-4 space-y-4">
-          {filteredStaff.map(s => (
-            <div key={s.id} onClick={() => { setSelectedStaff(s); setIsDossierOpen(true); }} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm space-y-4 active:scale-[0.98] transition-all group">
-              <div className="flex items-center gap-4">
-                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${s.name}`} className="w-14 h-14 rounded-2xl border-2 border-slate-100 shadow-md group-hover:scale-105 transition-transform" alt="" />
-                 <div className="flex-1">
-                    <p className="font-black text-slate-900 text-lg leading-tight">{s.name}</p>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">{s.id}</p>
-                 </div>
-                 <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">{getCategoryIcon(s.category)}</div>
-              </div>
-              <div className="pt-4 border-t border-slate-50 flex justify-between items-center">
-                 <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">{s.category}</span>
-                 </div>
-                 <div className="flex gap-2">
-                    <button onClick={(e) => { e.stopPropagation(); handleOpenEdit(s); }} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Edit2 size={16} /></button>
-                    <button onClick={(e) => { e.stopPropagation(); handleDeleteMember(s.id); }} className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all"><Trash2 size={16} /></button>
-                    <ChevronRight size={18} className="text-slate-200" />
-                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
         {/* DESKTOP TABLE */}
         <div className="hidden xl:block overflow-x-auto">
           <table className="w-full text-left">
@@ -269,7 +244,8 @@ const StaffDirectory: React.FC = () => {
               <tr>
                 <th className="px-10 py-6">Professional Profile</th>
                 <th className="px-6 py-6">Classification</th>
-                <th className="px-6 py-6">Status Node</th>
+                <th className="px-6 py-6">Subjects / Dept</th>
+                <th className="px-6 py-6">Contact</th>
                 <th className="px-10 py-6 text-right">Dossier Hub</th>
               </tr>
             </thead>
@@ -292,10 +268,34 @@ const StaffDirectory: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-6">
-                    <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{s.status}</span>
-                    </div>
+                    {s.subjects && s.subjects.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {s.subjects.slice(0, 2).map(sub => (
+                          <span key={sub} className="px-2 py-1 bg-blue-50 text-blue-600 rounded-md text-[9px] font-bold uppercase border border-blue-100">{sub}</span>
+                        ))}
+                        {s.subjects.length > 2 && <span className="text-[9px] text-slate-400 font-bold self-center">+{s.subjects.length - 2}</span>}
+                      </div>
+                    ) : (
+                      <span className="text-xs font-bold text-slate-500">{s.department || s.assignedZone || 'General'}</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-6">
+                     <div className="flex gap-2">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); window.open(`mailto:${s.email}`); }}
+                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-white rounded-lg transition-all"
+                        >
+                            <Mail size={18} />
+                        </button>
+                        {s.phone && (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); window.open(`tel:${s.phone}`); }}
+                            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-white rounded-lg transition-all"
+                          >
+                              <Phone size={18} />
+                          </button>
+                        )}
+                     </div>
                   </td>
                   <td className="px-10 py-6 text-right">
                     <div className="flex items-center justify-end gap-3">
@@ -311,11 +311,11 @@ const StaffDirectory: React.FC = () => {
         </div>
       </div>
 
-      {/* DOSSIER MODAL - FULL SHEET ON MOBILE */}
+      {/* DOSSIER MODAL - REFINED PROFILE VIEW */}
       {isDossierOpen && selectedStaff && (
         <div className="fixed inset-0 z-[500] flex items-center justify-center md:p-4">
            <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-3xl" onClick={() => setIsDossierOpen(false)}></div>
-           <div className="relative w-full h-full md:h-auto md:max-w-4xl bg-white md:rounded-[48px] shadow-2xl overflow-hidden flex flex-col max-h-screen md:max-h-[92vh] animate-in zoom-in-95">
+           <div className="relative w-full h-full md:h-auto md:max-w-5xl bg-white md:rounded-[48px] shadow-2xl overflow-hidden flex flex-col max-h-screen md:max-h-[92vh] animate-in zoom-in-95">
               <div className="p-8 md:p-12 bg-slate-900 text-white relative">
                  <button onClick={() => setIsDossierOpen(false)} className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all"><X size={24} /></button>
                  <div className="flex flex-col md:flex-row items-center gap-8">
@@ -329,114 +329,132 @@ const StaffDirectory: React.FC = () => {
                     </div>
                  </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-8 md:p-12 space-y-8 scrollbar-hide">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><MapPin size={14}/> Location Registry</p>
-                       <p className="font-bold text-slate-700 mb-2">{selectedStaff.address || 'Address Not Synced'}</p>
-                       <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-200">
-                          <Mail size={16} className="text-blue-500" />
-                          <p className="font-bold text-sm text-slate-700">{selectedStaff.email}</p>
-                       </div>
-                       {selectedStaff.phone && (
-                         <div className="flex items-center gap-3 mt-2">
-                           <Smartphone size={16} className="text-emerald-500" />
-                           <p className="font-bold text-sm text-slate-700">{selectedStaff.phone}</p>
-                           <button 
-                             onClick={() => window.open(`https://wa.me/${selectedStaff.phone?.replace(/[^0-9]/g, '')}`, '_blank')}
-                             className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all ml-auto"
-                             title="Chat on WhatsApp"
-                           >
-                             <MessageCircleCode size={14} />
-                           </button>
-                         </div>
-                       )}
-                    </div>
-                    <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><Briefcase size={14}/> Professional Details</p>
-                       <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                             <span className="text-xs font-bold text-slate-500">Service Load</span>
-                             <span className="text-xs font-black text-blue-600">{selectedStaff.load}%</span>
+              
+              <div className="flex-1 overflow-y-auto p-8 md:p-12 space-y-8 scrollbar-hide bg-slate-50/30">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    
+                    {/* CONTACT COORDINATES */}
+                    <div className="p-8 bg-white rounded-[40px] shadow-sm border border-slate-100">
+                       <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+                          <Contact size={16} className="text-emerald-500" /> Contact Coordinates
+                       </h4>
+                       <div className="space-y-6">
+                          <div>
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Email Node</p>
+                             <div className="flex items-center gap-3">
+                                <Mail size={16} className="text-slate-300" />
+                                <span className="font-bold text-slate-800">{selectedStaff.email}</span>
+                             </div>
                           </div>
-                          <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                             <div className="bg-blue-600 h-full rounded-full" style={{ width: `${selectedStaff.load}%` }}></div>
+                          <div>
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Mobile Uplink</p>
+                             <div className="flex items-center gap-3">
+                                <Phone size={16} className="text-slate-300" />
+                                <span className="font-bold text-slate-800">{selectedStaff.phone || 'Not Registered'}</span>
+                             </div>
                           </div>
-                          {selectedStaff.department && (
-                             <div className="mt-4">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Department</span>
-                                <p className="text-sm font-bold text-slate-800">{selectedStaff.department}</p>
+                          <div>
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Physical Address</p>
+                             <div className="flex items-center gap-3">
+                                <MapPin size={16} className="text-slate-300" />
+                                <span className="font-bold text-slate-800">{selectedStaff.address || 'Address Not Synced'}</span>
                              </div>
-                          )}
-                          {selectedStaff.licenseNumber && (
-                             <div className="mt-2">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">License ID</span>
-                                <p className="text-sm font-bold text-slate-800 font-mono">{selectedStaff.licenseNumber}</p>
-                             </div>
-                          )}
-                          {selectedStaff.assignedZone && (
-                             <div className="mt-2">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assigned Zone</span>
-                                <p className="text-sm font-bold text-slate-800">{selectedStaff.assignedZone}</p>
-                             </div>
-                          )}
-                          {selectedStaff.certifications && selectedStaff.certifications.length > 0 && (
-                             <div className="mt-4 pt-4 border-t border-slate-200">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Certifications</span>
-                                <div className="flex flex-wrap gap-2">
-                                   {selectedStaff.certifications.map(c => (
-                                      <span key={c} className="px-2 py-1 bg-white rounded-md text-[9px] font-bold text-slate-600 border border-slate-200">{c}</span>
-                                   ))}
+                          </div>
+                          {selectedStaff.emergencyContact && (
+                             <div className="pt-6 border-t border-slate-50">
+                                <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest mb-1">Emergency Protocol</p>
+                                <div className="flex items-center gap-3">
+                                   <ShieldAlert size={16} className="text-rose-400" />
+                                   <span className="font-bold text-slate-800">{selectedStaff.emergencyContact}</span>
                                 </div>
                              </div>
                           )}
                        </div>
+                    </div>
+
+                    {/* PROFESSIONAL DETAILS */}
+                    <div className="space-y-8">
+                       <div className="p-8 bg-white rounded-[40px] shadow-sm border border-slate-100">
+                          <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+                             <Briefcase size={16} className="text-blue-500" /> Professional Nexus
+                          </h4>
+                          <div className="space-y-4">
+                             <div className="flex justify-between items-center">
+                                <span className="text-xs font-bold text-slate-500">Service Load</span>
+                                <span className="text-xs font-black text-blue-600">{selectedStaff.load}%</span>
+                             </div>
+                             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div className="bg-blue-600 h-full rounded-full" style={{ width: `${selectedStaff.load}%` }}></div>
+                             </div>
+                             
+                             <div className="grid grid-cols-2 gap-4 mt-4">
+                                <div className="p-4 bg-slate-50 rounded-2xl">
+                                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Start Date</p>
+                                   <p className="text-sm font-black text-slate-800">{selectedStaff.startDate || 'N/A'}</p>
+                                </div>
+                                <div className="p-4 bg-slate-50 rounded-2xl">
+                                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</p>
+                                   <p className="text-sm font-black text-emerald-600 uppercase">{selectedStaff.status}</p>
+                                </div>
+                             </div>
+                          </div>
+                       </div>
+
+                       {/* ACADEMIC REGISTRY (FACULTY ONLY) */}
+                       {selectedStaff.category === StaffCategory.FACULTY && (
+                          <div className="p-8 bg-indigo-900 text-white rounded-[40px] shadow-2xl relative overflow-hidden">
+                             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl"></div>
+                             <h4 className="text-[11px] font-black text-indigo-200 uppercase tracking-[0.2em] mb-6 flex items-center gap-3 relative z-10">
+                                <GraduationCap size={16} /> Academic Registry
+                             </h4>
+                             <div className="space-y-6 relative z-10">
+                                <div>
+                                   <p className="text-[9px] font-black text-indigo-300 uppercase tracking-widest mb-2">Subject Mastery</p>
+                                   <div className="flex flex-wrap gap-2">
+                                      {selectedStaff.subjects?.map(s => (
+                                         <span key={s} className="px-3 py-1 bg-white/10 border border-white/20 rounded-lg text-[10px] font-black uppercase tracking-tight">{s}</span>
+                                      )) || <span className="text-xs italic opacity-50">No subjects listed</span>}
+                                   </div>
+                                </div>
+                                <div className="flex gap-4">
+                                   <div>
+                                      <p className="text-[9px] font-black text-indigo-300 uppercase tracking-widest mb-1">Degree</p>
+                                      <p className="text-sm font-bold">{selectedStaff.academicDegree || 'N/A'}</p>
+                                   </div>
+                                   <div>
+                                      <p className="text-[9px] font-black text-indigo-300 uppercase tracking-widest mb-1">Languages</p>
+                                      <p className="text-sm font-bold">{selectedStaff.languages?.join(', ') || 'English'}</p>
+                                   </div>
+                                </div>
+                             </div>
+                          </div>
+                       )}
                     </div>
                  </div>
                  
-                 {/* DYNAMIC CATEGORY FIELDS */}
-                 {selectedStaff.category === StaffCategory.FACULTY && (
-                    <div className="p-8 bg-white border border-slate-100 rounded-[40px] shadow-sm">
-                        <h4 className="text-xl font-black text-slate-900 mb-6 uppercase tracking-tight flex items-center gap-3"><GraduationCap className="text-indigo-500"/> Academic Pulse</h4>
-                        <div className="space-y-4">
-                            <div className="flex flex-wrap gap-4">
-                                <div className="flex items-center gap-2 bg-amber-50 px-4 py-2 rounded-xl border border-amber-100">
-                                    <Award className="text-amber-500" size={16} />
-                                    <span className="text-xs font-black text-amber-700 uppercase">{selectedStaff.academicDegree || 'Master'} Degree</span>
-                                </div>
-                                <div className="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100">
-                                    <Languages className="text-indigo-500" size={16} />
-                                    <span className="text-xs font-black text-indigo-700 uppercase">{selectedStaff.languages?.join(', ') || 'English'}</span>
-                                </div>
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Subject Mastery</p>
-                                <div className="flex flex-wrap gap-2">
-                                    {selectedStaff.subjects?.map(s => (
-                                        <span key={s} className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-lg border border-blue-100">{s}</span>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                 )}
-
+                 {/* SCHEDULE NODE */}
                  <div className="p-8 bg-white border border-slate-100 rounded-[40px] shadow-sm">
-                    <h4 className="text-xl font-black text-slate-900 mb-6 uppercase tracking-tight flex items-center gap-3"><Clock className="text-emerald-500"/> Active Schedule Node</h4>
+                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3">
+                       <Clock size={16} className="text-amber-500" /> Active Schedule Node
+                    </h4>
                     {selectedStaff.schedule && selectedStaff.schedule.length > 0 ? (
-                      <div className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {selectedStaff.schedule.map((item, idx) => (
-                          <div key={idx} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl">
-                             <div>
-                                <p className="font-black text-slate-800 text-sm">{item.subject || item.task}</p>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.time} • {item.room}</p>
+                          <div key={idx} className="flex flex-col p-5 bg-slate-50 rounded-[24px] hover:bg-slate-100 transition-colors">
+                             <div className="flex justify-between items-start mb-2">
+                                <span className="px-3 py-1 bg-white rounded-lg text-[9px] font-black text-slate-900 shadow-sm">{item.day}</span>
+                                <span className="text-[9px] font-bold text-slate-400 uppercase">{item.time}</span>
                              </div>
-                             <span className="px-3 py-1 bg-white rounded-lg text-[9px] font-black text-blue-600 shadow-sm">{item.day}</span>
+                             <p className="font-black text-slate-800 text-sm leading-tight">{item.subject || item.task}</p>
+                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">{item.room} • {item.class || 'N/A'}</p>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-slate-400 italic text-sm text-center py-6">No schedule entries registered for this cycle.</p>
+                      <div className="p-8 text-center bg-slate-50 rounded-[24px] border border-dashed border-slate-200">
+                         <Calendar size={24} className="mx-auto text-slate-300 mb-2" />
+                         <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">No schedule entries registered.</p>
+                      </div>
                     )}
                  </div>
               </div>
@@ -485,208 +503,141 @@ const StaffDirectory: React.FC = () => {
                                   />
                               </div>
                               <div className="space-y-3">
-                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Phone Contact</label>
+                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Classification</label>
+                                  <select 
+                                    value={formState.category}
+                                    onChange={e => setFormState({...formState, category: e.target.value as StaffCategory})}
+                                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-blue-400 transition-all cursor-pointer" 
+                                  >
+                                      {Object.values(StaffCategory).map(c => <option key={c} value={c}>{c}</option>)}
+                                  </select>
+                              </div>
+                          </div>
+                      </div>
+
+                      {/* SECTION 2: CONTACT COORDINATES */}
+                      <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
+                          <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"><Contact size={16} className="text-emerald-500"/> Contact Coordinates</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div className="space-y-3">
+                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Phone Uplink</label>
                                   <input 
                                     value={formState.phone || ''}
                                     onChange={e => setFormState({...formState, phone: e.target.value})}
-                                    placeholder="+1..." 
-                                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-blue-400 transition-all" 
+                                    placeholder="+1 (555)..." 
+                                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-emerald-400 transition-all" 
                                   />
                               </div>
                               <div className="space-y-3">
-                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Physical Address</label>
+                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Emergency Contact</label>
                                   <input 
+                                    value={formState.emergencyContact || ''}
+                                    onChange={e => setFormState({...formState, emergencyContact: e.target.value})}
+                                    placeholder="Name & Phone..." 
+                                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-emerald-400 transition-all" 
+                                  />
+                              </div>
+                              <div className="space-y-3 md:col-span-2">
+                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Physical Residency</label>
+                                  <textarea 
                                     value={formState.address || ''}
                                     onChange={e => setFormState({...formState, address: e.target.value})}
+                                    rows={2}
                                     placeholder="Full residential address..." 
-                                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-blue-400 transition-all" 
+                                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-emerald-400 transition-all resize-none" 
                                   />
                               </div>
                           </div>
                       </div>
 
-                      {/* SECTION 2: PROFESSIONAL NEXUS */}
+                      {/* SECTION 3: PROFESSIONAL */}
                       <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
-                          <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"><Briefcase size={16} className="text-indigo-500"/> Professional Nexus</h4>
+                          <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"><Briefcase size={16} className="text-indigo-500"/> Employment Data</h4>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                              <div className="space-y-3">
-                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Classification</label>
-                                  <select 
-                                    value={formState.category}
-                                    onChange={e => setFormState({...formState, category: e.target.value as StaffCategory})}
-                                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-[20px] font-bold text-slate-900 outline-none cursor-pointer focus:border-indigo-400 appearance-none"
-                                  >
-                                      {Object.values(StaffCategory).map(cat => (
-                                          <option key={cat} value={cat}>{cat}</option>
-                                      ))}
-                                  </select>
-                              </div>
                               <div className="space-y-3">
                                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Start Date</label>
                                   <input 
                                     type="date"
                                     value={formState.startDate}
                                     onChange={e => setFormState({...formState, startDate: e.target.value})}
-                                    required 
-                                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-indigo-400" 
+                                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-indigo-400 transition-all" 
                                   />
                               </div>
                               <div className="space-y-3">
-                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Target Load (%)</label>
+                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Work Load %</label>
                                   <input 
                                     type="number"
                                     min="0" max="100"
                                     value={formState.load}
                                     onChange={e => setFormState({...formState, load: parseInt(e.target.value)})}
-                                    required 
-                                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-indigo-400" 
+                                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-indigo-400 transition-all" 
                                   />
+                              </div>
+                              <div className="space-y-3">
+                                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Status</label>
+                                  <select 
+                                    value={formState.status}
+                                    onChange={e => setFormState({...formState, status: e.target.value})}
+                                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-indigo-400 transition-all cursor-pointer" 
+                                  >
+                                      <option>Active</option>
+                                      <option>On Leave</option>
+                                      <option>Sabbatical</option>
+                                      <option>Terminated</option>
+                                  </select>
                               </div>
                           </div>
                       </div>
 
-                      {/* SECTION 3: DYNAMIC CATEGORY FIELDS */}
+                      {/* SECTION 4: FACULTY ACADEMICS (CONDITIONAL) */}
                       {formState.category === StaffCategory.FACULTY && (
-                          <div className="bg-indigo-50/50 p-8 rounded-[32px] border border-indigo-100 animate-in fade-in">
-                              <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"><GraduationCap size={16}/> Academic Specifics</h4>
-                              <div className="grid grid-cols-1 gap-6">
-                                  <div className="space-y-3">
-                                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Instructional Subjects (Comma Separated)</label>
+                        <div className="bg-indigo-900 p-8 rounded-[32px] shadow-xl border border-indigo-800 text-white relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl"></div>
+                            <h4 className="text-[11px] font-black text-indigo-200 uppercase tracking-[0.2em] mb-6 flex items-center gap-3 relative z-10"><BookOpen size={16} /> Academic Registry</h4>
+                            <div className="space-y-6 relative z-10">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-indigo-300 uppercase tracking-widest px-2">Subjects (Comma Separated)</label>
+                                    <input 
+                                      value={formState.subjects?.join(', ')}
+                                      onChange={e => handleArrayInput('subjects', e.target.value)}
+                                      placeholder="Math, Physics, ..." 
+                                      className="w-full px-6 py-4 bg-indigo-950/50 border-2 border-indigo-800 rounded-[20px] font-bold text-white outline-none focus:border-blue-400 transition-all placeholder:text-indigo-400" 
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                   <div className="space-y-3">
+                                      <label className="text-[10px] font-black text-indigo-300 uppercase tracking-widest px-2">Academic Degree</label>
+                                      <select 
+                                        value={formState.academicDegree}
+                                        onChange={e => setFormState({...formState, academicDegree: e.target.value as AcademicDegree})}
+                                        className="w-full px-6 py-4 bg-indigo-950/50 border-2 border-indigo-800 rounded-[20px] font-bold text-white outline-none focus:border-blue-400 transition-all cursor-pointer"
+                                      >
+                                         <option value="">Select Degree...</option>
+                                         <option value="Bachelor">Bachelor</option>
+                                         <option value="Master">Master</option>
+                                         <option value="PhD">PhD</option>
+                                         <option value="Diploma">Diploma</option>
+                                      </select>
+                                   </div>
+                                   <div className="space-y-3">
+                                      <label className="text-[10px] font-black text-indigo-300 uppercase tracking-widest px-2">Languages (Comma Separated)</label>
                                       <input 
-                                        value={formState.subjects?.join(', ') || ''}
-                                        onChange={e => handleArrayInput('subjects', e.target.value)}
-                                        placeholder="Math, Physics, Chemistry..." 
-                                        className="w-full px-6 py-4 bg-white border-2 border-indigo-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-indigo-400 transition-all" 
+                                        value={formState.languages?.join(', ')}
+                                        onChange={e => handleArrayInput('languages', e.target.value)}
+                                        placeholder="English, French..." 
+                                        className="w-full px-6 py-4 bg-indigo-950/50 border-2 border-indigo-800 rounded-[20px] font-bold text-white outline-none focus:border-blue-400 transition-all placeholder:text-indigo-400" 
                                       />
-                                  </div>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                      <div className="space-y-3">
-                                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Academic Degree</label>
-                                          <select 
-                                            value={formState.academicDegree || 'Bachelor'}
-                                            onChange={e => setFormState({...formState, academicDegree: e.target.value as AcademicDegree})}
-                                            className="w-full px-6 py-4 bg-white border-2 border-indigo-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-indigo-400 cursor-pointer" 
-                                          >
-                                              <option value="Bachelor">Bachelor</option>
-                                              <option value="Master">Master</option>
-                                              <option value="PhD">PhD</option>
-                                              <option value="Diploma">Diploma</option>
-                                          </select>
-                                      </div>
-                                      <div className="space-y-3">
-                                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Languages (Comma Separated)</label>
-                                          <input 
-                                            value={formState.languages?.join(', ') || ''}
-                                            onChange={e => handleArrayInput('languages', e.target.value)}
-                                            placeholder="English, French..." 
-                                            className="w-full px-6 py-4 bg-white border-2 border-indigo-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-indigo-400 transition-all" 
-                                          />
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
+                                   </div>
+                                </div>
+                            </div>
+                        </div>
                       )}
-
-                      {formState.category === StaffCategory.PSYCHOLOGIST && (
-                          <div className="bg-rose-50/50 p-8 rounded-[32px] border border-rose-100 animate-in fade-in">
-                              <h4 className="text-[11px] font-black text-rose-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"><HeartPulse size={16}/> Clinical Details</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                  <div className="space-y-3">
-                                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">License Number</label>
-                                      <input 
-                                        value={formState.licenseNumber || ''}
-                                        onChange={e => setFormState({...formState, licenseNumber: e.target.value})}
-                                        placeholder="LIC-XXXX-YYYY" 
-                                        className="w-full px-6 py-4 bg-white border-2 border-rose-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-rose-400 transition-all" 
-                                      />
-                                  </div>
-                                  <div className="space-y-3">
-                                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Department / Area</label>
-                                      <input 
-                                        value={formState.department || ''}
-                                        onChange={e => setFormState({...formState, department: e.target.value})}
-                                        placeholder="Counseling / Wellness..." 
-                                        className="w-full px-6 py-4 bg-white border-2 border-rose-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-rose-400 transition-all" 
-                                      />
-                                  </div>
-                              </div>
-                          </div>
-                      )}
-
-                      {formState.category === StaffCategory.ACCOUNTING && (
-                          <div className="bg-emerald-50/50 p-8 rounded-[32px] border border-emerald-100 animate-in fade-in">
-                              <h4 className="text-[11px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"><Calculator size={16}/> Financial Registry</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                  <div className="space-y-3">
-                                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Department</label>
-                                      <input 
-                                        value={formState.department || ''}
-                                        onChange={e => setFormState({...formState, department: e.target.value})}
-                                        placeholder="e.g. Fiscal Ops, Tuition..." 
-                                        className="w-full px-6 py-4 bg-white border-2 border-emerald-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-emerald-400 transition-all" 
-                                      />
-                                  </div>
-                                  <div className="space-y-3">
-                                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Certifications</label>
-                                      <input 
-                                        value={formState.certifications?.join(', ') || ''}
-                                        onChange={e => handleArrayInput('certifications', e.target.value)}
-                                        placeholder="CPA, CFA..." 
-                                        className="w-full px-6 py-4 bg-white border-2 border-emerald-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-emerald-400 transition-all" 
-                                      />
-                                  </div>
-                              </div>
-                          </div>
-                      )}
-
-                      {formState.category === StaffCategory.CLERICAL && (
-                          <div className="bg-blue-50/50 p-8 rounded-[32px] border border-blue-100 animate-in fade-in">
-                              <h4 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"><Keyboard size={16}/> Admin Support</h4>
-                              <div className="grid grid-cols-1 gap-6">
-                                  <div className="space-y-3">
-                                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Assigned Department</label>
-                                      <input 
-                                        value={formState.department || ''}
-                                        onChange={e => setFormState({...formState, department: e.target.value})}
-                                        placeholder="e.g. Front Office, Registrar..." 
-                                        className="w-full px-6 py-4 bg-white border-2 border-blue-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-blue-400 transition-all" 
-                                      />
-                                  </div>
-                              </div>
-                          </div>
-                      )}
-
-                      {formState.category === StaffCategory.AUXILIARY && (
-                          <div className="bg-amber-50/50 p-8 rounded-[32px] border border-amber-100 animate-in fade-in">
-                              <h4 className="text-[11px] font-black text-amber-600 uppercase tracking-[0.2em] mb-6 flex items-center gap-3"><HardHat size={16}/> Operations Detail</h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                  <div className="space-y-3">
-                                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Assigned Zone</label>
-                                      <input 
-                                        value={formState.assignedZone || ''}
-                                        onChange={e => setFormState({...formState, assignedZone: e.target.value})}
-                                        placeholder="e.g. North Wing, Maintenance..." 
-                                        className="w-full px-6 py-4 bg-white border-2 border-amber-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-amber-400 transition-all" 
-                                      />
-                                  </div>
-                                  <div className="space-y-3">
-                                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Safety Certs</label>
-                                      <input 
-                                        value={formState.certifications?.join(', ') || ''}
-                                        onChange={e => handleArrayInput('certifications', e.target.value)}
-                                        placeholder="OSHA, First Aid..." 
-                                        className="w-full px-6 py-4 bg-white border-2 border-amber-100 rounded-[20px] font-bold text-slate-900 outline-none focus:border-amber-400 transition-all" 
-                                      />
-                                  </div>
-                              </div>
-                          </div>
-                      )}
-
                   </div>
 
-                  <div className="p-8 bg-white border-t border-slate-100 shadow-[0_-20px_40px_-10px_rgba(0,0,0,0.02)]">
-                      <button type="submit" className="w-full py-6 bg-slate-900 text-white font-black rounded-[28px] uppercase tracking-[0.4em] shadow-xl hover:translate-y-[-4px] active:scale-95 transition-all flex items-center justify-center gap-4">
-                         Commit to Hub <Save size={20} className="text-blue-400" />
+                  <div className="p-8 border-t border-slate-100 bg-white flex gap-6">
+                      <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-6 bg-slate-100 text-slate-500 font-black rounded-[28px] text-xs uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel Entry</button>
+                      <button type="submit" className="flex-[2] py-6 bg-slate-900 text-white font-black rounded-[28px] text-xs uppercase tracking-[0.4em] shadow-xl hover:bg-blue-600 transition-all flex items-center justify-center gap-4">
+                          <CheckCircle2 size={20} /> Commit to Registry
                       </button>
                   </div>
               </form>

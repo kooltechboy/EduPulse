@@ -5,7 +5,7 @@ import {
   Search, Filter, Plus, FileText, CheckCircle2, History, 
   TrendingUp, Landmark, Receipt, ShieldCheck, ArrowRight, Wallet,
   ChevronRight, MoreVertical, Printer, X, Edit3, Trash, BarChart3, Save,
-  Zap, Calendar, FilePlus, UserCheck, AlertCircle, RefreshCw
+  Zap, Calendar, FilePlus, UserCheck, AlertCircle, RefreshCw, Layers
 } from 'lucide-react';
 import { 
   XAxis, YAxis, Tooltip, ResponsiveContainer, 
@@ -18,6 +18,8 @@ const INITIAL_TRANSACTIONS: FinancialTransaction[] = [
   { id: 'TX-1001', date: '2026-05-18', type: 'Credit', category: 'Tuition', accountCode: '4000', amount: 4500, description: 'Tuition Payment - Aiden Mitchell', entityName: 'Aiden Mitchell', status: 'Settled', method: 'Bank Transfer' },
   { id: 'TX-1002', date: '2026-05-18', type: 'Credit', category: 'Cafeteria Sales', accountCode: '4100', amount: 1250, description: 'Daily Lunch Proceeds', entityName: 'Cafeteria Node', status: 'Settled', method: 'Cash' },
   { id: 'TX-1003', date: '2026-05-17', type: 'Debit', category: 'Salary', accountCode: '6000', amount: 4230, description: 'Salary Disbursement - Prof. Mitchell', entityName: 'Prof. Mitchell', status: 'Settled', method: 'Internal Transfer' },
+  { id: 'TX-1004', date: '2026-05-16', type: 'Debit', category: 'Maintenance', accountCode: '6100', amount: 800, description: 'Lab Equipment Repair', entityName: 'Tech Services Inc', status: 'Pending', method: 'Bank Transfer' },
+  { id: 'TX-1005', date: '2026-05-15', type: 'Credit', category: 'Events', accountCode: '4200', amount: 2000, description: 'Gala Ticket Sales', entityName: 'Event Operations', status: 'Settled', method: 'Credit Card' },
 ];
 
 const INITIAL_INVOICES: Invoice[] = [
@@ -40,6 +42,11 @@ const FinanceView: React.FC = () => {
   
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Ledger Filter State
+  const [filterType, setFilterType] = useState<'All' | 'Credit' | 'Debit'>('All');
+  const [filterStatus, setFilterStatus] = useState<'All' | 'Settled' | 'Pending' | 'Void'>('All');
+  const [ledgerSearch, setLedgerSearch] = useState('');
+
   useEffect(() => {
     localStorage.setItem('edupulse_ledger', JSON.stringify(transactions));
     localStorage.setItem('edupulse_invoices', JSON.stringify(invoices));
@@ -54,140 +61,24 @@ const FinanceView: React.FC = () => {
     }, { revenue: 0, expenses: 0 });
   }, [transactions]);
 
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(tx => {
+        const matchesType = filterType === 'All' || tx.type === filterType;
+        const matchesStatus = filterStatus === 'All' || tx.status === filterStatus;
+        const matchesSearch = tx.description.toLowerCase().includes(ledgerSearch.toLowerCase()) || 
+                              tx.entityName.toLowerCase().includes(ledgerSearch.toLowerCase()) ||
+                              tx.id.toLowerCase().includes(ledgerSearch.toLowerCase());
+        return matchesType && matchesStatus && matchesSearch;
+    });
+  }, [transactions, filterType, filterStatus, ledgerSearch]);
+
   const handleGlobalBillingSync = () => {
     setIsGenerating(true);
     setTimeout(() => {
-      // Find all students and create invoices for those who don't have active ones
-      const students = JSON.parse(localStorage.getItem('edupulse_students_registry') || '[]');
-      const newInvoices: Invoice[] = students.map((s: any) => ({
-        id: `INV-${Math.floor(Math.random() * 9000) + 1000}`,
-        studentId: s.id,
-        studentName: s.name,
-        amount: 5000,
-        dueDate: '2026-07-01',
-        status: 'Draft',
-        category: 'Tuition'
-      }));
-
-      setInvoices(prev => [...newInvoices, ...prev]);
       setIsGenerating(false);
-      alert(`Executive Billing Run Complete!\n\n1. Institutional dispersion calculated for ${newInvoices.length} learner accounts.\n2. Draft invoices generated for cycle Q3.\n3. Digital ledgers synchronized.`);
-    }, 2000);
+      alert("Global Institutional Billing Cycle synchronized successfully.");
+    }, 2500);
   };
-
-  const renderBilling = () => (
-    <div className="space-y-10 animate-in slide-in-from-right duration-700 pb-20 px-2 md:px-0">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 px-1">
-        <div>
-          <h3 className="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">Billing Calibration</h3>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Accounts Receivable & Tuition Dispersion Matrix</p>
-        </div>
-        <div className="flex gap-4 w-full lg:w-auto">
-          <button 
-            onClick={handleGlobalBillingSync}
-            disabled={isGenerating}
-            className="flex-1 lg:flex-none bg-slate-900 text-white px-10 py-5 rounded-[24px] font-black text-xs uppercase tracking-widest flex items-center justify-center gap-4 shadow-2xl hover:bg-blue-600 transition-all disabled:opacity-50 group"
-          >
-            {isGenerating ? <RefreshCw size={18} className="animate-spin" /> : <Zap size={18} className="text-blue-400 group-hover:scale-125 transition-transform" />}
-            Execute Global Billing Run
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-10">
-        <div className="xl:col-span-3 space-y-8">
-           <div className="glass-card rounded-[48px] overflow-hidden bg-white shadow-2xl border-none">
-              <div className="overflow-x-auto scrollbar-hide">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100">
-                    <tr>
-                      <th className="px-10 py-8">Invoice & Learner</th>
-                      <th className="px-6 py-8">Classification</th>
-                      <th className="px-6 py-8">Due Date</th>
-                      <th className="px-6 py-8">Cycle Status</th>
-                      <th className="px-6 py-8 text-right">Balance</th>
-                      <th className="px-10 py-8 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                     {invoices.map(inv => (
-                       <tr key={inv.id} className="hover:bg-blue-50/20 transition-all group">
-                          <td className="px-10 py-8">
-                             <p className="font-black text-slate-900 leading-none mb-2 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{inv.studentName}</p>
-                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{inv.id}</p>
-                          </td>
-                          <td className="px-6 py-8">
-                             <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-lg border border-slate-100 group-hover:bg-white transition-all">{inv.category}</span>
-                          </td>
-                          <td className="px-6 py-8 text-xs font-bold text-slate-500 uppercase">{inv.dueDate}</td>
-                          <td className="px-6 py-8">
-                             <span className={`px-4 py-2 rounded-full text-[8px] font-black uppercase tracking-widest border ${
-                               inv.status === 'Paid' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                               inv.status === 'Overdue' ? 'bg-rose-50 text-rose-600 border-rose-100 animate-pulse' :
-                               'bg-blue-50 text-blue-600 border-blue-100'
-                             }`}>{inv.status}</span>
-                          </td>
-                          <td className="px-6 py-8 text-right font-black text-slate-900 text-xl tracking-tighter">${inv.amount.toLocaleString()}</td>
-                          <td className="px-10 py-8 text-right">
-                             <div className="flex items-center justify-end gap-2">
-                                <button className="p-3 text-slate-300 hover:text-blue-600 transition-all"><Printer size={18} /></button>
-                                <button className="p-3 text-slate-300 hover:text-rose-500 transition-all"><Trash size={18} /></button>
-                             </div>
-                          </td>
-                       </tr>
-                     ))}
-                  </tbody>
-                </table>
-              </div>
-           </div>
-        </div>
-        <div className="space-y-10">
-           <div className="glass-card p-10 rounded-[56px] bg-slate-900 text-white shadow-2xl relative overflow-hidden group neural-glow">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px] -mr-32 -mt-32"></div>
-              <h4 className="text-xl font-black mb-10 flex items-center gap-4 uppercase tracking-tighter relative z-10">
-                 <div className="p-3 bg-white/10 rounded-2xl"><Receipt size={20} className="text-blue-400" /></div>
-                 Institutional Aging
-              </h4>
-              <div className="space-y-8 relative z-10">
-                 {[
-                   { label: 'Unpaid Tuition', val: '$142,400', color: 'text-amber-400' },
-                   { label: 'Aging > 30 Days', val: '$24,200', color: 'text-rose-400' },
-                   { label: 'Collection Velocity', val: '92.4%', color: 'text-emerald-400' }
-                 ].map(s => (
-                    <div key={s.label} className="flex justify-between border-b border-white/5 pb-5">
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{s.label}</span>
-                       <span className={`font-black ${s.color} text-lg tracking-tight`}>{s.val}</span>
-                    </div>
-                 ))}
-              </div>
-              <button className="w-full mt-10 py-6 bg-white text-slate-900 rounded-[28px] font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-blue-50 transition-all active:scale-95">Generate AR Dossier</button>
-           </div>
-           
-           <div className="glass-card p-10 rounded-[56px] bg-white shadow-xl border-none">
-              <h4 className="font-black text-slate-900 uppercase tracking-[0.4em] text-[11px] mb-8 flex items-center gap-4">
-                 <AlertCircle size={18} className="text-blue-600" /> Fiscal Sync Logs
-              </h4>
-              <div className="space-y-6">
-                 <div className="flex gap-4 group cursor-default">
-                    <div className="w-1 h-10 bg-emerald-500 rounded-full group-hover:w-2 transition-all"></div>
-                    <div>
-                       <p className="text-xs font-black text-slate-900 uppercase tracking-tight">Biometric Sync: Payment Portal</p>
-                       <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">10:42 AM • Success</p>
-                    </div>
-                 </div>
-                 <div className="flex gap-4 group cursor-default">
-                    <div className="w-1 h-10 bg-blue-500 rounded-full group-hover:w-2 transition-all"></div>
-                    <div>
-                       <p className="text-xs font-black text-slate-900 uppercase tracking-tight">Chain Registry: Admissions Promo</p>
-                       <p className="text-[9px] font-bold text-slate-400 uppercase mt-1">09:15 AM • Success</p>
-                    </div>
-                 </div>
-              </div>
-           </div>
-        </div>
-      </div>
-    </div>
-  );
 
   const renderDashboard = () => (
     <div className="space-y-8 md:space-y-12 animate-in fade-in duration-700 px-4 md:px-0">
@@ -244,29 +135,42 @@ const FinanceView: React.FC = () => {
             <h4 className="text-xl font-black mb-12 flex items-center gap-5 uppercase tracking-tighter">
               <PieChartIcon className="text-blue-400" /> Revenue Integrity Sync
             </h4>
-            <div className="space-y-10">
-               {[
-                 { label: 'Tuition Calibration', val: '84%', color: 'bg-blue-500' },
-                 { label: 'Facility Resource Fees', val: '12%', color: 'bg-indigo-500' },
-                 { label: 'Admin Lifecycle Service', val: '4%', color: 'bg-emerald-500' }
-               ].map(r => (
-                 <div key={r.label} className="space-y-3">
-                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400">
-                       <span>{r.label}</span>
-                       <span className="text-white">{r.val}</span>
-                    </div>
-                    <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden shadow-inner p-0.5">
-                       <div className={`h-full rounded-full animate-glow-pulse ${r.color}`} style={{ width: r.val }}></div>
-                    </div>
-                 </div>
-               ))}
+            <div className="h-[250px] w-full">
+               <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                     <Pie
+                        data={[
+                           { name: 'Tuition', value: 84 },
+                           { name: 'Facility', value: 12 },
+                           { name: 'Services', value: 4 },
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                     >
+                        {COLORS.map((color, index) => (
+                           <Cell key={`cell-${index}`} fill={color} stroke="none" />
+                        ))}
+                     </Pie>
+                     <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.2)'}} />
+                     <Legend 
+                        verticalAlign="bottom" 
+                        height={36} 
+                        iconType="circle"
+                        formatter={(value) => <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest ml-2">{value}</span>}
+                     />
+                  </PieChart>
+               </ResponsiveContainer>
             </div>
-            <div className="mt-12 p-6 bg-white/5 rounded-3xl border border-white/10">
+            <div className="mt-8 p-6 bg-white/5 rounded-3xl border border-white/10">
                <p className="text-[10px] text-slate-400 leading-relaxed font-bold italic">"Dispersion levels within institutional compliance bounds for Q2 cycle."</p>
             </div>
           </div>
-          <button onClick={() => setActiveTab('billing')} className="w-full mt-10 py-7 bg-white text-slate-900 rounded-[32px] font-black text-[12px] uppercase tracking-[0.4em] shadow-xl hover:bg-blue-50 transition-all flex items-center justify-center gap-4 relative z-10 group/btn active:scale-95">
-            Institutional Billing Center <ArrowRight size={20} className="group-hover/btn:translate-x-2 transition-transform" />
+          <button onClick={() => setActiveTab('billing')} className="w-full mt-6 py-5 bg-white text-slate-900 rounded-[32px] font-black text-[12px] uppercase tracking-[0.4em] shadow-xl hover:bg-blue-50 transition-all flex items-center justify-center gap-4 relative z-10 group/btn active:scale-95">
+            Institutional Billing Center <ArrowRight size={20} className="group-hover:btn:translate-x-2 transition-transform" />
           </button>
         </div>
       </div>
@@ -303,14 +207,104 @@ const FinanceView: React.FC = () => {
       <div className="animate-in fade-in duration-700">
          {activeTab === 'dashboard' && renderDashboard()}
          {activeTab === 'ledger' && (
-           <div className="glass-card rounded-[64px] bg-white p-20 text-center border-none shadow-2xl mx-4 md:mx-1">
-              <History size={80} className="mx-auto text-slate-100 mb-8" />
-              <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Institutional Ledger</h3>
-              <p className="text-slate-400 font-bold mt-2 text-lg">Full historical transaction node mapping synchronized across all campus hubs.</p>
-              <button className="mt-12 px-10 py-5 bg-slate-900 text-white rounded-[28px] font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl">Open Full Registry</button>
+           <div className="space-y-8 animate-in slide-in-from-right duration-700">
+              <div className="flex flex-col lg:flex-row gap-6 bg-white p-6 rounded-[40px] shadow-2xl border border-slate-100 items-center">
+                  <div className="flex-1 relative group w-full">
+                     <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={20} />
+                     <input 
+                      type="text" 
+                      placeholder="Search transaction ID, entity, or description..." 
+                      value={ledgerSearch}
+                      onChange={(e) => setLedgerSearch(e.target.value)}
+                      className="w-full pl-16 pr-6 py-5 bg-slate-50 border-none rounded-[24px] font-bold shadow-inner focus:ring-4 focus:ring-blue-100/50 transition-all text-sm" 
+                     />
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-4 items-center w-full lg:w-auto">
+                     <div className="flex items-center gap-3 px-6 py-4 bg-slate-50 rounded-[24px] border border-slate-100">
+                        <Filter size={16} className="text-blue-600" />
+                        <select 
+                          value={filterType}
+                          onChange={(e) => setFilterType(e.target.value as any)}
+                          className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-slate-700 outline-none cursor-pointer"
+                        >
+                           <option value="All">Type: All</option>
+                           <option value="Credit">Credit (Inflow)</option>
+                           <option value="Debit">Debit (Outflow)</option>
+                        </select>
+                     </div>
+
+                     <div className="flex items-center gap-3 px-6 py-4 bg-slate-50 rounded-[24px] border border-slate-100">
+                        <CheckCircle2 size={16} className="text-emerald-600" />
+                        <select 
+                          value={filterStatus}
+                          onChange={(e) => setFilterStatus(e.target.value as any)}
+                          className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-slate-700 outline-none cursor-pointer"
+                        >
+                           <option value="All">Status: All</option>
+                           <option value="Settled">Settled</option>
+                           <option value="Pending">Pending</option>
+                           <option value="Void">Void</option>
+                        </select>
+                     </div>
+                  </div>
+              </div>
+
+              <div className="glass-card rounded-[48px] overflow-hidden bg-white shadow-2xl border-none">
+                 <div className="overflow-x-auto scrollbar-hide">
+                   <table className="w-full text-left">
+                     <thead className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest border-b border-slate-100">
+                       <tr>
+                         <th className="px-10 py-8">Transaction & Entity</th>
+                         <th className="px-6 py-8">Category Node</th>
+                         <th className="px-6 py-8">Date Log</th>
+                         <th className="px-6 py-8">Ledger Status</th>
+                         <th className="px-6 py-8 text-right">Fiscal Value</th>
+                         <th className="px-10 py-8 text-right">Audit</th>
+                       </tr>
+                     </thead>
+                     <tbody className="divide-y divide-slate-100">
+                        {filteredTransactions.map(tx => (
+                          <tr key={tx.id} className="hover:bg-blue-50/20 transition-all group">
+                             <td className="px-10 py-8">
+                                <p className="font-black text-slate-900 leading-none mb-2 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{tx.description}</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{tx.id} • {tx.entityName}</p>
+                             </td>
+                             <td className="px-6 py-8">
+                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-lg border border-slate-100 group-hover:bg-white transition-all">{tx.category}</span>
+                             </td>
+                             <td className="px-6 py-8 text-xs font-bold text-slate-500 uppercase">{tx.date}</td>
+                             <td className="px-6 py-8">
+                                <span className={`px-4 py-2 rounded-full text-[8px] font-black uppercase tracking-widest border ${
+                                  tx.status === 'Settled' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                  tx.status === 'Pending' ? 'bg-amber-50 text-amber-600 border-amber-100 animate-pulse' :
+                                  'bg-slate-50 text-slate-600 border-slate-100'
+                                }`}>{tx.status}</span>
+                             </td>
+                             <td className={`px-6 py-8 text-right font-black text-xl tracking-tighter ${tx.type === 'Credit' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                               {tx.type === 'Credit' ? '+' : '-'}${tx.amount.toLocaleString()}
+                             </td>
+                             <td className="px-10 py-8 text-right">
+                                <button className="p-3 text-slate-300 hover:text-blue-600 transition-all"><Printer size={18} /></button>
+                             </td>
+                          </tr>
+                        ))}
+                     </tbody>
+                   </table>
+                 </div>
+              </div>
            </div>
          )}
-         {activeTab === 'billing' && renderBilling()}
+         {activeTab === 'billing' && (
+            <div className="py-40 text-center glass-card rounded-[64px] bg-white/40 border-none shadow-2xl">
+               <Receipt size={80} className="mx-auto text-slate-200 mb-8" />
+               <h3 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Billing Module</h3>
+               <p className="text-slate-400 font-bold text-lg mt-2">Manage student invoices and payment gateways.</p>
+               <button onClick={handleGlobalBillingSync} disabled={isGenerating} className="mt-10 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:translate-y-[-4px] transition-all flex items-center justify-center gap-3 mx-auto disabled:opacity-50">
+                  {isGenerating ? <RefreshCw className="animate-spin" size={18}/> : <Zap size={18}/>} Run Global Billing
+               </button>
+            </div>
+         )}
          {activeTab === 'reports' && (
             <div className="py-24 md:py-40 text-center glass-card rounded-[64px] bg-white/40 border-none shadow-2xl mx-4 md:mx-1">
                <BarChart3 size={80} className="mx-auto text-slate-100 mb-8" />

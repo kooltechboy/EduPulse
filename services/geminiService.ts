@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Modality, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -277,5 +278,60 @@ export const generateSmartPrep = async (module: any, level: string) => {
     return response.text || "Preparation failed.";
   } catch (error) {
     return "Neural link offline.";
+  }
+};
+
+/**
+ * Generates personalized career pathways based on student academic data.
+ */
+export const generateCareerGuidance = async (studentProfile: any) => {
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      contents: `Analyze this student profile: ${JSON.stringify(studentProfile)}. 
+      Suggest 3 futuristic, high-potential career paths relevant in 2030+. 
+      For each path, provide:
+      1. Job Title
+      2. Match Percentage (0-100)
+      3. Recommended University Major
+      4. "Why it fits" reasoning (1 sentence).
+      
+      Output strictly in JSON format:
+      [{ "title": "...", "match": 95, "major": "...", "reason": "..." }]`,
+      config: { 
+        systemInstruction: "You are an expert Futurist Career Counselor.",
+        responseMimeType: "application/json"
+      }
+    });
+    return JSON.parse(response.text || '[]');
+  } catch (error) {
+    console.error("Career Synthesis Error", error);
+    return [];
+  }
+};
+
+/**
+ * Interprets natural language voice commands and maps them to system actions.
+ */
+export const interpretVoiceCommand = async (transcript: string) => {
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Map this voice command to a system action: "${transcript}".
+      Available Actions:
+      - MARK_ATTENDANCE (requires class/section)
+      - OPEN_GRADEBOOK (requires subject)
+      - BOOK_RESOURCE (requires resource name, time)
+      - VIEW_SCHEDULE
+      
+      Output JSON only: { "action": "MARK_ATTENDANCE", "params": { "class": "12-A" }, "confirmation": "Opening attendance for 12-A" }`,
+      config: { 
+        responseMimeType: "application/json",
+        systemInstruction: "You are the voice command parser for EduPulse. Extract intent and parameters precisely."
+      }
+    });
+    return JSON.parse(response.text || '{}');
+  } catch (error) {
+    return null;
   }
 };

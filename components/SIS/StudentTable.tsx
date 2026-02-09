@@ -6,9 +6,10 @@ import {
   GraduationCap, TrendingUp, Activity, ShieldCheck,
   MessageCircleCode, Phone, Archive, Award, FileDown,
   BookOpen, Heart, Landmark, Edit3, Save, MapPin, Mail,
-  Calendar, User, CheckCircle2
+  Calendar, User, CheckCircle2, UploadCloud, FileText,
+  AlertTriangle, ArrowUpRight
 } from 'lucide-react';
-import { Student, GradeLevel, FinancialStatus, StudentLifecycleStatus } from '../../types';
+import { Student, GradeLevel, FinancialStatus, StudentLifecycleStatus, StudentDocument } from '../../types';
 
 const INITIAL_STUDENTS: Student[] = [
   { 
@@ -109,6 +110,7 @@ const StudentTable: React.FC = () => {
   // Modal States
   const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isRolloverModalOpen, setIsRolloverModalOpen] = useState(false);
   const [activeProfileTab, setActiveProfileTab] = useState<'overview' | 'performance' | 'finance' | 'vault' | 'heritage'>('overview');
   
   // Selection & Editing
@@ -123,6 +125,10 @@ const StudentTable: React.FC = () => {
     status: 'Active',
     enrollmentDate: new Date().toISOString().split('T')[0]
   });
+
+  // Document Upload State
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadType, setUploadType] = useState('Report Card');
 
   useEffect(() => {
     localStorage.setItem('edupulse_students_registry', JSON.stringify(students));
@@ -208,6 +214,49 @@ const StudentTable: React.FC = () => {
     });
   };
 
+  // Document Upload
+  const handleUploadDocument = () => {
+    if (!selectedStudent || !uploadFile) return;
+    
+    const newDoc: StudentDocument = {
+      id: `DOC-${Date.now()}`,
+      name: uploadFile.name,
+      type: uploadType,
+      uploadDate: new Date().toISOString().split('T')[0],
+      status: 'Verified'
+    };
+
+    const updatedStudent = {
+      ...selectedStudent,
+      documents: [...(selectedStudent.documents || []), newDoc]
+    };
+
+    setStudents(prev => prev.map(s => s.id === selectedStudent.id ? updatedStudent : s));
+    setSelectedStudent(updatedStudent);
+    setUploadFile(null);
+  };
+
+  // Grade Rollover Logic
+  const handleGradeRollover = () => {
+    if(!confirm("Initiate Institutional Grade Rollover? This will advance all eligible enrolled students to the next academic tier.")) return;
+
+    setStudents(prev => prev.map(s => {
+      if (s.lifecycleStatus !== StudentLifecycleStatus.ENROLLED) return s;
+
+      // Simple Logic for demonstration
+      if (s.grade === '12th') {
+        return { ...s, lifecycleStatus: StudentLifecycleStatus.GRADUATED, grade: 'Graduated', graduationDate: new Date().toISOString().split('T')[0] };
+      }
+      
+      const gradeMap: Record<string, string> = { 'Nursery': 'Pre-K', 'Pre-K': 'Kindergarten', 'Kindergarten': '1st', '1st': '2nd', '9th': '10th', '10th': '11th', '11th': '12th' };
+      // Fallback increment logic would be needed for a real app
+      const nextGrade = gradeMap[s.grade] || `${parseInt(s.grade) + 1}th`;
+      
+      return { ...s, grade: nextGrade };
+    }));
+    setIsRolloverModalOpen(false);
+  };
+
   return (
     <div className="space-y-8 md:space-y-10 animate-in fade-in duration-700 px-4 md:px-0">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
@@ -216,8 +265,8 @@ const StudentTable: React.FC = () => {
           <p className="text-slate-500 font-bold italic mt-1 uppercase text-[10px] tracking-[0.2em]">Institutional Core Identity & Longitudinal Heritage</p>
         </div>
         <div className="flex gap-4 w-full lg:w-auto">
-          <button onClick={() => setLifecycleFilter(StudentLifecycleStatus.ALUMNI)} className="flex-1 lg:flex-none bg-white border border-slate-200 text-slate-600 px-8 py-5 rounded-[24px] font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
-            <Archive size={18} /> Alumni Node
+          <button onClick={() => setIsRolloverModalOpen(true)} className="hidden lg:flex bg-white border border-slate-200 text-slate-600 px-8 py-5 rounded-[24px] font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all items-center justify-center gap-3">
+            <ArrowUpRight size={18} /> Grade Rollover
           </button>
           <button onClick={() => setIsEnrollModalOpen(true)} className="flex-1 lg:flex-none bg-slate-900 text-white px-10 py-5 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:translate-y-[-4px] transition-all">
             Enroll New Student
@@ -435,7 +484,30 @@ const StudentTable: React.FC = () => {
         </div>
       )}
 
-      {/* Profile Modal - ENHANCED WITH EDIT CAPABILITIES */}
+      {/* ROLLOVER MODAL */}
+      {isRolloverModalOpen && (
+        <div className="fixed inset-0 z-[800] flex items-center justify-center p-4">
+           <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-3xl animate-in fade-in" onClick={() => setIsRolloverModalOpen(false)}></div>
+           <div className="relative w-full max-w-lg bg-white rounded-[48px] shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col">
+              <div className="p-10 text-center">
+                 <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <ArrowUpRight size={40} className="text-blue-600" />
+                 </div>
+                 <h3 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none mb-4">Grade Level Ascension</h3>
+                 <p className="text-slate-500 font-bold text-sm leading-relaxed mb-8">
+                    This protocol will advance all <span className="text-blue-600">Enrolled</span> students to the next sequential grade level. 
+                    <br/><br/>Grade 12 students will be transitioned to <span className="text-indigo-600">Alumni</span> status.
+                 </p>
+                 <div className="flex gap-4">
+                    <button onClick={() => setIsRolloverModalOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-[24px] font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">Cancel</button>
+                    <button onClick={handleGradeRollover} className="flex-1 py-4 bg-slate-900 text-white rounded-[24px] font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl">Execute Rollover</button>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* Profile Modal - ENHANCED WITH VAULT & UPLOAD */}
       {isProfileModalOpen && selectedStudent && (
         <div className="fixed inset-0 z-[700] flex items-center justify-center md:p-4">
            <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-3xl" onClick={() => setIsProfileModalOpen(false)}></div>
@@ -482,14 +554,14 @@ const StudentTable: React.FC = () => {
 
               {/* TABS */}
               <div className="flex bg-slate-50 p-2 border-b border-slate-100 overflow-x-auto scrollbar-hide">
-                {['overview', 'performance', 'finance', 'heritage'].map(tab => (
+                {['overview', 'performance', 'finance', 'vault', 'heritage'].map(tab => (
                   <button key={tab} onClick={() => setActiveProfileTab(tab as any)} className={`flex-1 min-w-[120px] py-4 rounded-[20px] md:rounded-[28px] text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap ${activeProfileTab === tab ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}>{tab} Dossier</button>
                 ))}
               </div>
 
               {/* CONTENT AREA */}
               <div className="flex-1 overflow-y-auto p-6 md:p-14 scrollbar-hide bg-slate-50/20">
-                 {/* OVERVIEW TAB WITH EDITABLE FIELDS */}
+                 {/* OVERVIEW TAB */}
                  {activeProfileTab === 'overview' && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
                        <div className="bg-white p-10 rounded-[48px] shadow-xl border border-slate-100 space-y-8">
@@ -583,6 +655,74 @@ const StudentTable: React.FC = () => {
                              </div>
                           </div>
                        </div>
+                    </div>
+                 )}
+
+                 {/* VAULT TAB */}
+                 {activeProfileTab === 'vault' && (
+                    <div className="space-y-8 animate-in fade-in duration-500">
+                        <div className="glass-card p-10 rounded-[48px] bg-white border border-slate-100 shadow-xl">
+                           <div className="flex justify-between items-center mb-10">
+                              <h4 className="text-xl font-black text-slate-900 uppercase flex items-center gap-3">
+                                 <FileText className="text-indigo-600"/> Digital Document Vault
+                              </h4>
+                              <div className="flex gap-4">
+                                <label className="cursor-pointer bg-slate-900 text-white px-6 py-3 rounded-[20px] font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 transition-all flex items-center gap-2 shadow-xl">
+                                   <UploadCloud size={16} /> Upload Record
+                                   <input type="file" className="hidden" onChange={(e) => setUploadFile(e.target.files?.[0] || null)} />
+                                </label>
+                              </div>
+                           </div>
+
+                           {uploadFile && (
+                              <div className="mb-8 p-6 bg-blue-50 rounded-[24px] border border-blue-100 flex items-center justify-between animate-in slide-in-from-top-4">
+                                 <div>
+                                    <p className="text-xs font-black text-blue-700 uppercase tracking-widest mb-1">Ready to Upload</p>
+                                    <p className="text-sm font-bold text-slate-700">{uploadFile.name}</p>
+                                 </div>
+                                 <div className="flex items-center gap-4">
+                                    <select 
+                                      value={uploadType} 
+                                      onChange={(e) => setUploadType(e.target.value)} 
+                                      className="px-4 py-2 rounded-xl border border-blue-200 text-xs font-bold outline-none"
+                                    >
+                                       <option>Report Card</option>
+                                       <option>Identity Proof</option>
+                                       <option>Medical Record</option>
+                                       <option>Behavioral Log</option>
+                                    </select>
+                                    <button onClick={handleUploadDocument} className="px-6 py-3 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase hover:bg-blue-700 transition-all">Confirm</button>
+                                    <button onClick={() => setUploadFile(null)} className="p-2 text-slate-400 hover:text-rose-500"><X size={18}/></button>
+                                 </div>
+                              </div>
+                           )}
+
+                           <div className="space-y-4">
+                              {selectedStudent.documents?.length === 0 && (
+                                 <div className="p-10 text-center border-2 border-dashed border-slate-200 rounded-[32px]">
+                                    <FileText className="mx-auto text-slate-200 mb-4" size={48} />
+                                    <p className="text-slate-400 font-black uppercase text-xs tracking-widest">No Documents Archived</p>
+                                 </div>
+                              )}
+                              {selectedStudent.documents?.map((doc) => (
+                                 <div key={doc.id} className="flex items-center justify-between p-6 bg-slate-50 rounded-[28px] group hover:bg-white hover:shadow-lg transition-all border border-slate-100">
+                                    <div className="flex items-center gap-6">
+                                       <div className="p-4 bg-indigo-50 text-indigo-600 rounded-2xl">
+                                          <FileText size={20} />
+                                       </div>
+                                       <div>
+                                          <p className="font-black text-slate-900 text-sm uppercase tracking-tight">{doc.name}</p>
+                                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">{doc.type} • Uploaded {doc.uploadDate}</p>
+                                       </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                       <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[8px] font-black uppercase tracking-widest border border-emerald-100">{doc.status}</span>
+                                       <button className="p-3 text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"><FileDown size={18} /></button>
+                                    </div>
+                                 </div>
+                              ))}
+                           </div>
+                        </div>
                     </div>
                  )}
 
