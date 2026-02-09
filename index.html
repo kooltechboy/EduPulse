@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,68 +11,73 @@
         :root {
             --brand-blue: #2563eb; 
             --brand-indigo: #4f46e5;
-            --glass-bg: rgba(255, 255, 255, 1); /* 100% Solid for perfect text reading */
+            --glass-bg: #ffffff; /* Solid for SaaS readability */
             --glass-border: #e2e8f0;
-            --text-primary: #020617; /* Slate-950 */
-            --text-secondary: #334155; /* Slate-700 */
-            --text-muted: #475569; /* Slate-600 */
+            --surface-subtle: #f8fafc;
+            --text-primary: #0f172a; 
+            --text-secondary: #475569; 
+            --text-muted: #64748b;
         }
         body {
             font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-            background: #f8fafc;
+            background: #f1f5f9;
             background-image: 
-                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.05) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.03) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.03) 0px, transparent 50%);
             min-height: 100vh;
             color: var(--text-primary);
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
         .neural-grid {
-            background-size: 30px 30px;
-            background-image: radial-gradient(circle, #cbd5e1 1.5px, transparent 1.5px);
+            background-size: 40px 40px;
+            background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
         }
         .sidebar-dark {
             background-color: #020617;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
         }
+        /* Production SaaS Card - Cleaner, sharper, less "glowing" */
         .glass-card {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .glass-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
         }
         .glass-card-dark {
             background: #0f172a;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         }
-        /* Absolute Visibility Overrides */
-        .text-slate-400 { color: #475569 !important; font-weight: 600; } 
-        .text-slate-500 { color: #334155 !important; font-weight: 600; }
-        .text-slate-300 { color: #64748b !important; font-weight: 500; }
-        .text-slate-900 { color: #020617 !important; }
+        
+        /* Utility overrides for strict visibility */
+        .text-slate-400 { color: #64748b !important; font-weight: 600; } 
+        .text-slate-500 { color: #475569 !important; font-weight: 500; }
+        .text-slate-900 { color: #0f172a !important; font-weight: 800; }
         
         .active-glow {
-            box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
             background: #2563eb !important;
             color: white !important;
         }
 
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #f1f5f9;
+            background: transparent;
         }
         ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
-            border-radius: 20px;
-        }
-        .animate-spin-slow {
-            animation: spin 8s linear infinite;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
         }
     </style>
 <script type="importmap">
