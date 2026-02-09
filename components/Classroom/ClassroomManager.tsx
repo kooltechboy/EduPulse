@@ -407,31 +407,47 @@ const ClassroomManager: React.FC<{ user: User }> = ({ user }) => {
       {view === 'dashboard' ? renderDashboard() : (
         <div className="space-y-8 md:space-y-12 animate-in fade-in duration-500">
            {/* Course Header Node */}
-           <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-10 px-4 md:px-1">
-             <div className="flex items-center gap-10">
-                <button onClick={() => setView('dashboard')} className="p-8 md:p-10 rounded-[32px] md:rounded-[56px] bg-slate-900 text-white shadow-2xl relative overflow-hidden group hover:scale-105 transition-transform active:scale-95">
-                   <div className={`absolute inset-0 bg-gradient-to-tr ${selectedCourse?.bannerColor} opacity-40`}></div>
-                   <ArrowLeft size={32} className="relative z-10" />
+           <div className="flex flex-col xl:flex-row justify-between items-end gap-10 px-4 md:px-0">
+             <div className="flex items-start gap-8 w-full xl:w-auto">
+                <button 
+                  onClick={() => setView('dashboard')} 
+                  className="group relative flex-shrink-0 w-20 h-20 bg-white border-2 border-slate-100 rounded-[28px] text-slate-400 shadow-sm hover:border-blue-500 hover:text-blue-600 transition-all active:scale-95 flex items-center justify-center mt-1"
+                  title="Return to Dashboard"
+                >
+                   <ArrowLeft size={28} className="transition-transform group-hover:-translate-x-1" />
                 </button>
-                <div>
-                   <h2 className="text-4xl md:text-7xl font-black text-slate-900 tracking-tighter leading-none mb-4 uppercase">{selectedCourse?.name}</h2>
-                   <p className="text-slate-500 font-bold italic uppercase text-[10px] md:text-[12px] tracking-[0.4em] flex items-center gap-6">
-                      <span className="text-blue-600 font-black">{selectedCourse?.gradeLevel} Tier</span> • {selectedCourse?.code} • {selectedCourse?.teacherName}
-                   </p>
+                
+                <div className="min-w-0">
+                   <div className="flex flex-wrap items-center gap-3 mb-3">
+                      <span className={`px-4 py-1.5 bg-gradient-to-r ${selectedCourse?.bannerColor} text-white rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm`}>
+                        {selectedCourse?.gradeLevel}
+                      </span>
+                      <span className="px-4 py-1.5 bg-slate-100 text-slate-500 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-200">
+                        {selectedCourse?.code}
+                      </span>
+                      <span className="px-4 py-1.5 bg-white text-slate-500 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-100 flex items-center gap-2">
+                        <UserCheck size={12} className="text-blue-500"/> {selectedCourse?.teacherName}
+                      </span>
+                   </div>
+                   <h2 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter leading-[0.85] uppercase truncate md:whitespace-normal max-w-4xl">
+                     {selectedCourse?.name}
+                   </h2>
                 </div>
              </div>
-             <div className="bg-white/90 backdrop-blur-2xl p-2 rounded-[32px] md:rounded-[40px] shadow-2xl border border-slate-100 flex gap-2 w-full xl:w-auto overflow-x-auto scrollbar-hide">
+
+             <div className="w-full xl:w-auto bg-white p-2 rounded-[32px] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-slate-100 flex gap-1 overflow-x-auto scrollbar-hide">
                 {[
-                  { id: 'stream', label: 'Stream', icon: <MessageSquare size={16} /> },
-                  { id: 'curriculum', label: 'Matrix', icon: <Layers size={16} /> },
-                  { id: 'cohort', label: 'Cohort', icon: <Users2 size={16} /> },
-                  { id: 'assessment', label: 'Assessment', icon: <GraduationCap size={16} /> },
-                  { id: 'neural', label: 'Neural', icon: <Bot size={16} /> },
+                  { id: 'stream', label: 'Stream', icon: <MessageSquare size={18} />, desc: 'Classroom Feed & Announcements' },
+                  { id: 'curriculum', label: 'Matrix', icon: <Layers size={18} />, desc: 'Curriculum & Lesson Plans' },
+                  { id: 'cohort', label: 'Cohort', icon: <Users2 size={18} />, desc: 'Student Roster & Groups' },
+                  { id: 'assessment', label: 'Assessment', icon: <GraduationCap size={18} />, desc: 'Grades, Quizzes & Exams' },
+                  { id: 'neural', label: 'Neural', icon: <Bot size={18} />, desc: 'AI Insights & Analytics' },
                 ].map(tab => (
                   <button 
                     key={tab.id} 
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex-1 md:flex-none px-8 md:px-10 py-4 md:py-5 rounded-[24px] md:rounded-[32px] text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-4 whitespace-nowrap ${activeTab === tab.id ? 'bg-slate-900 text-white shadow-xl' : 'text-slate-400 hover:bg-slate-50'}`}
+                    title={tab.desc}
+                    className={`flex-1 md:flex-none px-8 py-5 rounded-[24px] text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3 whitespace-nowrap ${activeTab === tab.id ? 'bg-slate-900 text-white shadow-xl transform scale-[1.02]' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-600'}`}
                   >
                     {tab.icon} {tab.label}
                   </button>
@@ -520,7 +536,7 @@ const ClassroomManager: React.FC<{ user: User }> = ({ user }) => {
                                  <p className="text-2xl font-black text-blue-600 leading-none">{s.gpa.toFixed(2)}</p>
                                  <p className="text-[8px] font-black text-slate-400 uppercase mt-2">Merit GPA</p>
                               </div>
-                              <button className="p-4 bg-slate-50 text-slate-300 rounded-3xl group-hover:bg-slate-900 group-hover:text-white transition-all"><ChevronRight size={24}/></button>
+                              <button className="p-4 bg-slate-300 text-slate-500 rounded-3xl group-hover:bg-slate-900 group-hover:text-white transition-all"><ChevronRight size={24}/></button>
                            </div>
                         </div>
                       ))}

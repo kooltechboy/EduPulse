@@ -37,8 +37,8 @@ const INITIAL_CANDIDATES: AdmissionsCandidate[] = [
       { id: 'D2', name: 'Official Portrait', type: 'Photo', status: 'Verified', uploadDate: '2026-05-10' }
     ]
   },
-  { id: 'CAN-9902', name: 'Leo Sterling', appliedGrade: GradeLevel.SENIOR_HIGH, status: 'Application', dateApplied: '2026-05-12', parentName: 'Sarah Sterling', sentimentScore: 65, notes: 'Standard application. Pending math proficiency evaluation.' },
-  { id: 'CAN-9903', name: 'Maya Gupta', appliedGrade: GradeLevel.ELEMENTARY, status: 'Offered', dateApplied: '2026-04-20', parentName: 'Anita Gupta', sentimentScore: 88, notes: 'Exceptional creative portfolio. Offered early entry grant.' },
+  { id: 'CAN-9902', name: 'Leo Sterling', appliedGrade: GradeLevel.SENIOR_HIGH, status: 'Application', dateApplied: '2026-05-12', parentName: 'Sarah Sterling', sentimentScore: 65, notes: 'Standard application. Pending math proficiency evaluation.', email: 's.sterling@net.com' },
+  { id: 'CAN-9903', name: 'Maya Gupta', appliedGrade: GradeLevel.ELEMENTARY, status: 'Offered', dateApplied: '2026-04-20', parentName: 'Anita Gupta', sentimentScore: 88, notes: 'Exceptional creative portfolio. Offered early entry grant.', email: 'anita.g@techcorp.io' },
 ];
 
 const STAGES = ['Inquiry', 'Application', 'Interview', 'Offered', 'Enrolled'];
@@ -168,6 +168,15 @@ const AdmissionsPipeline: React.FC = () => {
     setIsDossierOpen(true);
   };
 
+  const handleEmailCandidate = (email: string | undefined, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (email) {
+      window.location.href = `mailto:${email}`;
+    } else {
+      alert("No email address registered for this candidate identity.");
+    }
+  };
+
   return (
     <div className="space-y-10 animate-in fade-in duration-1000">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 px-1">
@@ -281,7 +290,12 @@ const AdmissionsPipeline: React.FC = () => {
                                {processingId === c.id ? 'Syncing...' : `Advance to ${STAGES[currentIndex + 1]}`}
                             </button>
                           )}
-                          <button className="flex-1 py-5 bg-white border-2 border-slate-200 text-slate-700 rounded-[24px] hover:text-blue-600 hover:border-blue-300 transition-all flex items-center justify-center shadow-sm"><Mail size={22} /></button>
+                          <button 
+                            onClick={(e) => handleEmailCandidate(c.email, e)}
+                            className="flex-1 py-5 bg-white border-2 border-slate-200 text-slate-700 rounded-[24px] hover:text-blue-600 hover:border-blue-300 transition-all flex items-center justify-center shadow-sm"
+                          >
+                            <Mail size={22} />
+                          </button>
                       </div>
                     </div>
                   );

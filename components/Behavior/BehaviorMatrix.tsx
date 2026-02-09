@@ -5,7 +5,8 @@ import {
   TrendingUp, Award, Zap, MoreVertical, Plus, 
   ArrowUpRight, Users,
   Activity, X, CheckCircle2, Edit2, Trash2, Eye,
-  Trophy, Crown, Star, ChevronRight, BarChart3, ArrowDownRight
+  Trophy, Crown, Star, ChevronRight, BarChart3, ArrowDownRight,
+  Loader2, Download, FileText
 } from 'lucide-react';
 import { BehavioralIncident } from '../../types';
 
@@ -74,6 +75,10 @@ const BehaviorMatrix: React.FC = () => {
   const [selectedHouse, setSelectedHouse] = useState<typeof HOUSE_DATA[0] | null>(null);
   const [expandedMetric, setExpandedMetric] = useState<number | string | null>(null);
 
+  // Report State
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [reportData, setReportData] = useState<any>(null);
+
   // Form State for New Incident
   const [formData, setFormData] = useState<Partial<BehavioralIncident>>({
     type: 'Merit',
@@ -135,6 +140,35 @@ const BehaviorMatrix: React.FC = () => {
     setIncidents([newIncident, ...incidents]);
     setIsRegisterModalOpen(false);
     setFormData({ type: 'Merit', points: 10, date: new Date().toISOString().split('T')[0] });
+  };
+
+  const handleGenerateReport = () => {
+    setIsGeneratingReport(true);
+    setTimeout(() => {
+      const sortedHouses = [...HOUSE_DATA].sort((a, b) => b.points - a.points);
+      const totalIncidents = incidents.length;
+      const merits = incidents.filter(i => i.type === 'Merit');
+      const demerits = incidents.filter(i => i.type === 'Demerit');
+      
+      setReportData({
+        winner: sortedHouses[0],
+        runnerUp: sortedHouses[1],
+        totalPoints: HOUSE_DATA.reduce((acc, h) => acc + h.points, 0),
+        incidentStats: {
+          total: totalIncidents,
+          merits: merits.length,
+          demerits: demerits.length,
+          net: merits.length - demerits.length
+        },
+        date: new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+      });
+      setIsGeneratingReport(false);
+    }, 2000);
+  };
+
+  const handleDownloadReport = () => {
+    alert("Downloading Encrypted Institutional PDF Report...");
+    setReportData(null);
   };
 
   return (
@@ -274,8 +308,13 @@ const BehaviorMatrix: React.FC = () => {
                    </button>
                  ))}
               </div>
-              <button className="w-full mt-12 py-6 bg-white text-slate-900 rounded-[32px] font-black text-[11px] uppercase tracking-[0.3em] shadow-xl hover:bg-blue-50 transition-all active:scale-95 relative z-10">
-                 Generate Global Report
+              <button 
+                onClick={handleGenerateReport}
+                disabled={isGeneratingReport}
+                className="w-full mt-12 py-6 bg-white text-slate-900 rounded-[32px] font-black text-[11px] uppercase tracking-[0.3em] shadow-xl hover:bg-blue-50 transition-all active:scale-95 relative z-10 flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                 {isGeneratingReport ? <Loader2 className="animate-spin" size={16} /> : <FileText size={16} />}
+                 {isGeneratingReport ? 'Synthesizing...' : 'Generate Global Report'}
               </button>
            </div>
 
@@ -380,6 +419,73 @@ const BehaviorMatrix: React.FC = () => {
                </div>
             </div>
          </div>
+      )}
+
+      {/* REPORT MODAL */}
+      {reportData && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md animate-in fade-in" onClick={() => setReportData(null)}></div>
+            <div className="relative w-full max-w-2xl bg-white rounded-[48px] shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col">
+                {/* Header */}
+                <div className="p-10 bg-slate-950 text-white relative overflow-hidden">
+                    {/* Decorative blob */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-[80px] -mr-20 -mt-20"></div>
+                    <div className="relative z-10 flex justify-between items-start">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <Activity size={20} className="text-blue-400" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-200">Institutional Audit</span>
+                            </div>
+                            <h3 className="text-3xl font-black uppercase tracking-tighter">Global Integrity Report</h3>
+                            <p className="text-slate-400 text-xs font-bold mt-2 uppercase tracking-widest">{reportData.date}</p>
+                        </div>
+                        <button onClick={() => setReportData(null)} className="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all"><X size={20}/></button>
+                    </div>
+                </div>
+                
+                {/* Body */}
+                <div className="p-10 space-y-10">
+                    {/* Winner Card */}
+                    <div className={`p-8 rounded-[32px] ${reportData.winner.bg} text-white relative overflow-hidden shadow-lg`}>
+                        <div className="relative z-10 flex items-center justify-between">
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-80 mb-1">Current Cycle Leader</p>
+                                <h4 className="text-4xl font-black uppercase tracking-tighter">{reportData.winner.name}</h4>
+                                <p className="text-2xl font-black mt-2 opacity-90">{reportData.winner.points.toLocaleString()} PTS</p>
+                            </div>
+                            <div className="bg-white text-slate-900 p-4 rounded-[24px] shadow-xl">
+                                <Trophy size={40} className={reportData.winner.color.replace('text-', 'text-')} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="p-6 bg-slate-50 rounded-[24px] border border-slate-100 text-center">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Merits</p>
+                            <p className="text-3xl font-black text-emerald-500">{reportData.incidentStats.merits}</p>
+                        </div>
+                        <div className="p-6 bg-slate-50 rounded-[24px] border border-slate-100 text-center">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Demerits</p>
+                            <p className="text-3xl font-black text-rose-500">{reportData.incidentStats.demerits}</p>
+                        </div>
+                        <div className="p-6 bg-slate-50 rounded-[24px] border border-slate-100 text-center">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Net Velocity</p>
+                            <p className={`text-3xl font-black ${reportData.incidentStats.net > 0 ? 'text-blue-600' : 'text-slate-900'}`}>
+                                {reportData.incidentStats.net > 0 ? '+' : ''}{reportData.incidentStats.net}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <button onClick={() => setReportData(null)} className="flex-1 py-5 bg-slate-100 text-slate-500 font-black rounded-[24px] text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">Dismiss</button>
+                        <button onClick={handleDownloadReport} className="flex-[2] py-5 bg-slate-900 text-white font-black rounded-[24px] text-[10px] uppercase tracking-[0.3em] hover:bg-blue-600 transition-all flex items-center justify-center gap-3 shadow-xl">
+                            <Download size={18} /> Export Official Ledger
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
       )}
 
       {/* REGISTER INCIDENT MODAL (Same as before) */}
