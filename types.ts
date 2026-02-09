@@ -297,6 +297,7 @@ export interface Student {
   gender?: string;
   dob?: string;
   email?: string;
+  address?: string;
   attendance?: number;
   lastPaymentStatus?: FinancialStatus;
   balanceOwed?: number;
