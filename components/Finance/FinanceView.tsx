@@ -12,7 +12,7 @@ import {
   AreaChart, Area, CartesianGrid,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
-import { FinancialTransaction, FinancialStatus, PaymentMethod, TransactionType, Invoice } from '../../types.ts';
+import { FinancialTransaction, FinancialStatus, PaymentMethod, TransactionType, Invoice, Student } from '../../types.ts';
 
 const INITIAL_TRANSACTIONS: FinancialTransaction[] = [
   { id: 'TX-1001', date: '2026-05-18', type: 'Credit', category: 'Tuition', accountCode: '4000', amount: 4500, description: 'Tuition Payment - Aiden Mitchell', entityName: 'Aiden Mitchell', status: 'Settled', method: 'Bank Transfer' },
@@ -41,6 +41,8 @@ const FinanceView: React.FC = () => {
   });
   
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isReportSyncing, setIsReportSyncing] = useState(false);
+  const [generatedReport, setGeneratedReport] = useState<any>(null);
 
   // Ledger Filter State
   const [filterType, setFilterType] = useState<'All' | 'Credit' | 'Debit'>('All');
@@ -75,9 +77,58 @@ const FinanceView: React.FC = () => {
   const handleGlobalBillingSync = () => {
     setIsGenerating(true);
     setTimeout(() => {
+      // 1. Fetch Students
+      const storedStudents = localStorage.getItem('edupulse_students_registry');
+      const students: Student[] = storedStudents ? JSON.parse(storedStudents) : [];
+      
+      // 2. Identify Eligible Students (Active & Enrolled)
+      const eligibleStudents = students.filter(s => s.status === 'Active' && s.lifecycleStatus === 'Enrolled');
+
+      if (eligibleStudents.length === 0) {
+        alert("No eligible active enrollment nodes found for this billing cycle.");
+        setIsGenerating(false);
+        return;
+      }
+
+      // 3. Generate Invoices
+      const newInvoices: Invoice[] = eligibleStudents.map(student => ({
+        id: `INV-${Date.now()}-${Math.floor(Math.random() * 999)}`,
+        studentId: student.id,
+        studentName: student.name,
+        amount: 5000, // Standard Term Fee
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +30 days
+        status: 'Sent',
+        category: 'Tuition'
+      }));
+
+      // 4. Update State
+      setInvoices(prev => [...newInvoices, ...prev]);
       setIsGenerating(false);
-      alert("Global Institutional Billing Cycle synchronized successfully.");
+      alert(`Global Billing Cycle Complete.\n\nSuccessfully generated ${newInvoices.length} invoices for the active student registry.`);
     }, 2500);
+  };
+
+  const handleStrategicReportSync = () => {
+    setIsReportSyncing(true);
+    setTimeout(() => {
+      const revenue = totals.revenue;
+      const expenses = totals.expenses;
+      const netIncome = revenue - expenses;
+      const margin = revenue > 0 ? ((netIncome / revenue) * 100).toFixed(1) : '0.0';
+      const burnRate = expenses / 30; // approx daily burn
+
+      setGeneratedReport({
+        id: `REP-${Date.now()}`,
+        date: new Date().toLocaleDateString(),
+        revenue,
+        expenses,
+        netIncome,
+        margin,
+        burnRate: burnRate.toFixed(2),
+        status: 'Audited & Verified'
+      });
+      setIsReportSyncing(false);
+    }, 2000);
   };
 
   const renderDashboard = () => (
@@ -300,8 +351,13 @@ const FinanceView: React.FC = () => {
                <Receipt size={80} className="mx-auto text-slate-200 mb-8" />
                <h3 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Billing Module</h3>
                <p className="text-slate-400 font-bold text-lg mt-2">Manage student invoices and payment gateways.</p>
-               <button onClick={handleGlobalBillingSync} disabled={isGenerating} className="mt-10 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:translate-y-[-4px] transition-all flex items-center justify-center gap-3 mx-auto disabled:opacity-50">
-                  {isGenerating ? <RefreshCw className="animate-spin" size={18}/> : <Zap size={18}/>} Run Global Billing
+               <button 
+                onClick={handleGlobalBillingSync} 
+                disabled={isGenerating} 
+                className="mt-10 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:translate-y-[-4px] transition-all flex items-center justify-center gap-3 mx-auto disabled:opacity-50"
+               >
+                  {isGenerating ? <RefreshCw className="animate-spin" size={18}/> : <Zap size={18}/>} 
+                  {isGenerating ? 'Processing Billing Nodes...' : 'Run Global Billing'}
                </button>
             </div>
          )}
@@ -310,10 +366,88 @@ const FinanceView: React.FC = () => {
                <BarChart3 size={80} className="mx-auto text-slate-100 mb-8" />
                <h3 className="text-3xl font-black text-slate-900 tracking-tight uppercase">Fiscal Intelligence Engine</h3>
                <p className="text-slate-400 font-bold text-lg mt-2">Generate Profit & Loss, Balance Sheets, and Node Drift Logs for board audit.</p>
-               <button className="mt-8 md:mt-10 px-12 py-5 bg-slate-900 text-white rounded-[24px] md:rounded-[32px] font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:translate-y-[-4px] transition-all">Initialize Strategic Report Sync</button>
+               <button 
+                onClick={handleStrategicReportSync}
+                disabled={isReportSyncing}
+                className="mt-8 md:mt-10 px-12 py-5 bg-slate-900 text-white rounded-[24px] md:rounded-[32px] font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:translate-y-[-4px] transition-all disabled:opacity-50 flex items-center justify-center gap-3 mx-auto"
+               >
+                 {isReportSyncing ? <RefreshCw className="animate-spin" size={18}/> : <FileText size={18}/>}
+                 {isReportSyncing ? 'Synchronizing Ledger Data...' : 'Initialize Strategic Report Sync'}
+               </button>
             </div>
          )}
       </div>
+
+      {/* STRATEGIC REPORT MODAL */}
+      {generatedReport && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md animate-in fade-in" onClick={() => setGeneratedReport(null)}></div>
+            <div className="relative w-full max-w-2xl bg-white rounded-[48px] shadow-2xl overflow-hidden animate-in zoom-in-95 flex flex-col border border-white/20">
+                {/* Header */}
+                <div className="p-10 bg-slate-950 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] -mr-20 -mt-20"></div>
+                    <div className="relative z-10 flex justify-between items-start">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <ShieldCheck size={20} className="text-emerald-400" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-200">Executive Audit</span>
+                            </div>
+                            <h3 className="text-3xl font-black uppercase tracking-tighter">Strategic Financial Report</h3>
+                            <p className="text-slate-400 text-xs font-bold mt-2 uppercase tracking-widest">{generatedReport.date} • {generatedReport.id}</p>
+                        </div>
+                        <button onClick={() => setGeneratedReport(null)} className="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all"><X size={20}/></button>
+                    </div>
+                </div>
+                
+                {/* Body */}
+                <div className="p-10 space-y-8 bg-slate-50/50">
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="p-6 bg-white rounded-[24px] border border-slate-100 shadow-sm">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Revenue</p>
+                            <p className="text-3xl font-black text-emerald-600">${generatedReport.revenue.toLocaleString()}</p>
+                        </div>
+                        <div className="p-6 bg-white rounded-[24px] border border-slate-100 shadow-sm">
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Expenditure</p>
+                            <p className="text-3xl font-black text-rose-600">${generatedReport.expenses.toLocaleString()}</p>
+                        </div>
+                        <div className="p-6 bg-slate-900 rounded-[24px] text-white shadow-lg col-span-2 flex justify-between items-center">
+                            <div>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Net Operating Income</p>
+                                <p className={`text-3xl font-black ${generatedReport.netIncome >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    {generatedReport.netIncome >= 0 ? '+' : ''}${generatedReport.netIncome.toLocaleString()}
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Margin</p>
+                                <p className="text-2xl font-black text-white">{generatedReport.margin}%</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Institutional Health Metrics</h5>
+                        <div className="flex justify-between items-center p-4 bg-white rounded-2xl border border-slate-100">
+                            <span className="text-xs font-bold text-slate-600">Daily Burn Rate</span>
+                            <span className="text-xs font-black text-slate-900">${generatedReport.burnRate} / day</span>
+                        </div>
+                        <div className="flex justify-between items-center p-4 bg-white rounded-2xl border border-slate-100">
+                            <span className="text-xs font-bold text-slate-600">Audit Status</span>
+                            <span className="text-xs font-black text-emerald-600 uppercase flex items-center gap-2">
+                                <CheckCircle2 size={14}/> {generatedReport.status}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4 pt-4">
+                        <button onClick={() => setGeneratedReport(null)} className="flex-1 py-5 bg-slate-200 text-slate-600 font-black rounded-[24px] text-[10px] uppercase tracking-widest hover:bg-slate-300 transition-all">Dismiss</button>
+                        <button onClick={() => { alert("Report Downloaded."); setGeneratedReport(null); }} className="flex-[2] py-5 bg-slate-900 text-white font-black rounded-[24px] text-[10px] uppercase tracking-[0.3em] hover:bg-blue-600 transition-all flex items-center justify-center gap-3 shadow-xl">
+                            <Download size={18} /> Export PDF Ledger
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };

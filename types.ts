@@ -1,3 +1,4 @@
+
 export enum UserRole {
   ADMIN = 'ADMIN',
   TEACHER = 'TEACHER',
@@ -195,7 +196,7 @@ export interface Assignment {
   dueDate: string;
   maxPoints: number;
   weight: number; 
-  status: 'Active' | 'Upcoming' | 'Draft' | 'Archived';
+  status: 'Active' | 'Upcoming' | 'Draft' | 'Archived' | 'Graded';
   resources: string[];
 }
 
