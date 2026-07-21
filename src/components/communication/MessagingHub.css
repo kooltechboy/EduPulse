@@ -1,0 +1,107 @@
+/* MessagingHub.css - Executive Communication Hub Styling */
+
+.ep-comm {
+  display: flex;
+  height: calc(100vh - 120px);
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  background: var(--color-surface-50);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.ep-comm__sidebar {
+  width: 320px;
+  background: var(--color-surface-50);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.ep-comm__sidebar-header {
+  padding: var(--space-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ep-comm__sidebar-header h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.ep-comm__list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.ep-comm__item {
+  display: flex;
+  padding: var(--space-4);
+  gap: var(--space-3);
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.15s ease;
+}
+
+.ep-comm__item:hover, .ep-comm__item--active {
+  background: var(--color-surface-100);
+}
+
+.ep-comm__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface-0);
+}
+
+.ep-comm__chat-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ep-comm__chat-messages {
+  flex: 1;
+  padding: var(--space-5);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ep-comm__message { display: flex; }
+.ep-comm__message--me { justify-content: flex-end; }
+
+.ep-comm__bubble {
+  max-width: 70%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+}
+
+.ep-comm__message--them .ep-comm__bubble {
+  background: var(--color-surface-100);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.ep-comm__message--me .ep-comm__bubble {
+  background: var(--color-primary-600);
+  color: #ffffff;
+}
+
+.ep-comm__chat-input-area {
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}

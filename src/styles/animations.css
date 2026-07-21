@@ -1,0 +1,164 @@
+/* ============================================================================
+   EDUPULSE — Animation Library
+   ============================================================================ */
+
+/* ── Keyframes ─────────────────────────────────────────────────────────────── */
+
+@keyframes ep-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ep-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes ep-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ep-slide-down {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ep-slide-left {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ep-slide-right {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ep-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ep-scale-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.95); }
+}
+
+@keyframes ep-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ep-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes ep-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes ep-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes ep-glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(99, 102, 241, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.5), 0 0 40px rgba(99, 102, 241, 0.2); }
+}
+
+@keyframes ep-progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+@keyframes ep-count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ep-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ep-drawer-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes ep-drawer-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes ep-modal-in {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── Animation Classes ─────────────────────────────────────────────────────── */
+
+.ep-animate-fade-in {
+  animation: ep-fade-in var(--transition-base) forwards;
+}
+
+.ep-animate-slide-up {
+  animation: ep-slide-up var(--transition-slow) forwards;
+}
+
+.ep-animate-slide-down {
+  animation: ep-slide-down var(--transition-slow) forwards;
+}
+
+.ep-animate-slide-left {
+  animation: ep-slide-left var(--transition-slow) forwards;
+}
+
+.ep-animate-slide-right {
+  animation: ep-slide-right var(--transition-slow) forwards;
+}
+
+.ep-animate-scale-in {
+  animation: ep-scale-in var(--transition-base) forwards;
+}
+
+.ep-animate-spin {
+  animation: ep-spin 1s linear infinite;
+}
+
+.ep-animate-pulse {
+  animation: ep-pulse 2s ease-in-out infinite;
+}
+
+.ep-animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-200) 25%,
+    var(--color-surface-300) 50%,
+    var(--color-surface-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: ep-shimmer 1.5s ease-in-out infinite;
+}
+
+.ep-animate-float {
+  animation: ep-float 3s ease-in-out infinite;
+}
+
+.ep-animate-glow {
+  animation: ep-glow-pulse 2s ease-in-out infinite;
+}
+
+/* ── Staggered Animation Delays ────────────────────────────────────────────── */
+
+.ep-stagger-1 { animation-delay: 50ms; }
+.ep-stagger-2 { animation-delay: 100ms; }
+.ep-stagger-3 { animation-delay: 150ms; }
+.ep-stagger-4 { animation-delay: 200ms; }
+.ep-stagger-5 { animation-delay: 250ms; }
+.ep-stagger-6 { animation-delay: 300ms; }
+.ep-stagger-7 { animation-delay: 350ms; }
+.ep-stagger-8 { animation-delay: 400ms; }

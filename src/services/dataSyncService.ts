@@ -1,0 +1,164 @@
+/* ============================================================================
+   EDUPULSE — Data Synchronization Service
+   Handles background sync operations between local storage/IndexedDB and Supabase.
+   ============================================================================ */
+
+import { storage } from '@/data/storageAdapter';
+import { supabaseDataService } from './supabaseDataService';
+import { isSupabaseConfigured } from './supabaseClient';
+
+// ── Sync Status Types ─────────────────────────────────────────────────────
+
+export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error';
+
+export interface SyncEvent {
+  id: string;
+  type: 'create' | 'update' | 'delete';
+  module: string;
+  entityId: string;
+  timestamp: string;
+  data: unknown;
+  synced: boolean;
+}
+
+// ── Sync Queue ────────────────────────────────────────────────────────────
+
+const SYNC_QUEUE_KEY = 'sync_queue';
+
+/**
+ * Add an event to the sync queue for backend synchronization.
+ */
+export function queueSyncEvent(
+  type: SyncEvent['type'],
+  module: string,
+  entityId: string,
+  data: unknown
+): void {
+  const queue = storage.get<SyncEvent[]>(SYNC_QUEUE_KEY, []);
+  const event: SyncEvent = {
+    id: `sync_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+    type,
+    module,
+    entityId,
+    timestamp: new Date().toISOString(),
+    data,
+    synced: false,
+  };
+  queue.push(event);
+  storage.set(SYNC_QUEUE_KEY, queue);
+
+  // Trigger immediate background sync process if online
+  if (navigator.onLine) {
+    processSyncQueue().catch((err) => console.error('Background sync failed:', err));
+  }
+}
+
+/**
+ * Get pending sync events that haven't been synced to the backend.
+ */
+export function getPendingSyncEvents(): SyncEvent[] {
+  const queue = storage.get<SyncEvent[]>(SYNC_QUEUE_KEY, []);
+  return queue.filter((event) => !event.synced);
+}
+
+/**
+ * Mark sync events as completed.
+ */
+export function markEventsSynced(eventIds: string[]): void {
+  const queue = storage.get<SyncEvent[]>(SYNC_QUEUE_KEY, []);
+  const updated = queue.map((event) =>
+    eventIds.includes(event.id) ? { ...event, synced: true } : event
+  );
+  storage.set(SYNC_QUEUE_KEY, updated);
+}
+
+/**
+ * Clear all synced events from the queue to free space.
+ */
+export function clearSyncedEvents(): void {
+  const queue = storage.get<SyncEvent[]>(SYNC_QUEUE_KEY, []);
+  const pending = queue.filter((event) => !event.synced);
+  storage.set(SYNC_QUEUE_KEY, pending);
+}
+
+/**
+ * Get sync queue statistics.
+ */
+export function getSyncStats(): {
+  total: number;
+  pending: number;
+  synced: number;
+  oldestPending: string | null;
+} {
+  const queue = storage.get<SyncEvent[]>(SYNC_QUEUE_KEY, []);
+  const pending = queue.filter((event) => !event.synced);
+  return {
+    total: queue.length,
+    pending: pending.length,
+    synced: queue.length - pending.length,
+    oldestPending: pending.length > 0 ? pending[0].timestamp : null,
+  };
+}
+
+/**
+ * Process the sync queue — syncs events to Supabase tables when live.
+ */
+export async function processSyncQueue(): Promise<{
+  processed: number;
+  failed: number;
+}> {
+  const pending = getPendingSyncEvents();
+
+  if (pending.length === 0) {
+    return { processed: 0, failed: 0 };
+  }
+
+  if (!isSupabaseConfigured) {
+    // In demo/mock mode, mark all pending as synced immediately
+    const eventIds = pending.map((event) => event.id);
+    markEventsSynced(eventIds);
+    return { processed: pending.length, failed: 0 };
+  }
+
+  let processedCount = 0;
+  let failedCount = 0;
+  const syncedIds: string[] = [];
+
+  for (const event of pending) {
+    try {
+      const tableName = getTableNameForModule(event.module);
+      if (event.type === 'create') {
+        await supabaseDataService.insertRecord(tableName, event.data as any);
+      } else if (event.type === 'update') {
+        await supabaseDataService.updateRecord(tableName, event.entityId, event.data as any);
+      } else if (event.type === 'delete') {
+        await supabaseDataService.deleteRecord(tableName, event.entityId);
+      }
+
+      syncedIds.push(event.id);
+      processedCount++;
+    } catch (err) {
+      console.error(`Failed to sync event ${event.id}:`, err);
+      failedCount++;
+    }
+  }
+
+  if (syncedIds.length > 0) {
+    markEventsSynced(syncedIds);
+  }
+
+  return { processed: processedCount, failed: failedCount };
+}
+
+function getTableNameForModule(module: string): string {
+  const map: Record<string, string> = {
+    sis: 'students',
+    attendance: 'attendance',
+    gradebook: 'gradebook',
+    finance: 'finance_transactions',
+    medical: 'medical_records',
+    transport: 'fleet_vehicles',
+    security: 'security_alerts',
+  };
+  return map[module.toLowerCase()] || 'profiles';
+}

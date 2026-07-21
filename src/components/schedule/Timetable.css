@@ -1,0 +1,119 @@
+/* Timetable.css - Executive Timetable & Class Schedule Styling */
+
+.ep-timetable {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.ep-timetable__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ep-timetable__title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.ep-timetable__subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.ep-timetable__grid {
+  display: flex;
+  background: var(--color-surface-50);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  width: 100%;
+  min-height: 600px;
+}
+
+.ep-timetable__time-col {
+  width: 90px;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-surface-100);
+}
+
+.ep-timetable__day-col {
+  flex: 1;
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.ep-timetable__day-col:last-child {
+  border-right: none;
+}
+
+.ep-timetable__cell--header {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--color-border);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  background: var(--color-surface-100);
+}
+
+.ep-timetable__time-slot {
+  height: 60px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.ep-timetable__day-grid {
+  flex: 1;
+  display: grid;
+  grid-template-rows: repeat(18, 30px);
+  position: relative;
+}
+
+.ep-timetable__session {
+  margin: 2px 4px;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+
+.ep-timetable__session-title {
+  font-weight: 700;
+  font-size: var(--text-xs);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ep-timetable__session-meta {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

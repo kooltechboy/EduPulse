@@ -1,102 +1,17 @@
-
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduPulse | Unified Digital Campus</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --brand-blue: #2563eb; 
-            --brand-indigo: #4f46e5;
-            --glass-bg: #ffffff; /* Solid for SaaS readability */
-            --glass-border: #e2e8f0;
-            --surface-subtle: #f8fafc;
-            --text-primary: #0f172a; 
-            --text-secondary: #475569; 
-            --text-muted: #64748b;
-        }
-        body {
-            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-            background: #f1f5f9;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.03) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.03) 0px, transparent 50%);
-            min-height: 100vh;
-            color: var(--text-primary);
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
-        .neural-grid {
-            background-size: 40px 40px;
-            background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
-        }
-        .sidebar-dark {
-            background-color: #020617;
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        /* Production SaaS Card - Cleaner, sharper, less "glowing" */
-        .glass-card {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-            transition: box-shadow 0.2s ease, border-color 0.2s ease;
-        }
-        .glass-card:hover {
-            border-color: #cbd5e1;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-        }
-        .glass-card-dark {
-            background: #0f172a;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Utility overrides for strict visibility */
-        .text-slate-400 { color: #64748b !important; font-weight: 600; } 
-        .text-slate-500 { color: #475569 !important; font-weight: 500; }
-        .text-slate-900 { color: #0f172a !important; font-weight: 800; }
-        
-        .active-glow {
-            box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
-            background: #2563eb !important;
-            color: white !important;
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-    </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@19",
-    "react-dom": "https://esm.sh/react-dom@19",
-    "react-dom/client": "https://esm.sh/react-dom@19/client",
-    "lucide-react": "https://esm.sh/lucide-react?external=react",
-    "recharts": "https://esm.sh/recharts?external=react",
-    "@google/genai": "https://esm.sh/@google/genai",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/"
-  }
-}
-</script>
-</head>
-<body class="neural-grid">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="EduPulse — Intelligent School, Classroom & Learning Management Platform" />
+    <meta name="theme-color" content="#0f0a2e" />
+    <title>EduPulse — Learning Management Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  </head>
+  <body>
     <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
-</body>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

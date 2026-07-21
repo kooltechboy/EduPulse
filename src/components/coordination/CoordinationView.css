@@ -1,0 +1,86 @@
+/* CoordinationView.css - Executive Coordination Styling */
+
+.ep-coordination {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.ep-coordination__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ep-coordination__title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.ep-coordination__subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.ep-coordination__kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+  width: 100%;
+}
+
+.ep-coordination__kpi-card {
+  background: var(--color-surface-50);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+.ep-coordination__kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ep-coordination__kpi-icon--blue { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.ep-coordination__kpi-icon--green { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.ep-coordination__kpi-icon--amber { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.ep-coordination__kpi-icon--purple { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+
+.ep-coordination__kpi-val {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.ep-coordination__kpi-lbl {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  margin-top: 4px;
+}
+
+@media (max-width: 1024px) {
+  .ep-coordination__kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

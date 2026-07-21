@@ -1,0 +1,155 @@
+/* ============================================================================
+   EDUPULSE — SpeedGrader Workspace CSS
+   ============================================================================ */
+
+.ep-grader__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 10, 46, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 1250;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.ep-grader__drawer {
+  background: var(--color-surface-200, #17123b);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.15));
+  border-radius: 20px;
+  width: 100%;
+  max-width: 1280px;
+  height: 90vh;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ep-grader__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+}
+
+.ep-grader__badge-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  color: white;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ep-grader__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.ep-grader__subtitle {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: var(--color-text-tertiary, #94a3b8);
+}
+
+.ep-grader__body {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.ep-grader__doc-view {
+  padding: 20px;
+  overflow-y: auto;
+  border-right: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ep-grader__doc-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 12px 16px;
+  border-radius: 10px;
+}
+
+.ep-grader__file-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ep-grader__paper {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 400px;
+}
+
+.ep-grader__rubric-panel {
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+.ep-grader__score-banner {
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ep-grader__rubric-section {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ep-grader__rubric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--color-text-secondary, #cbd5e1);
+}
+
+.ep-grader__rubric-item input[type="range"] {
+  accent-color: #8b5cf6;
+}
+
+.ep-grader__ai-feedback-box {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 12px;
+  padding: 14px;
+}

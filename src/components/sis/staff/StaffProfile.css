@@ -1,0 +1,8 @@
+/* StaffProfile.css - Executive Staff Profile Styling */
+
+.ep-staff-profile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+}
