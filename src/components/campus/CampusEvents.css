@@ -655,6 +655,76 @@
   border-top: 1px solid var(--color-border);
 }
 
+/* Broadcast Modal Styling */
+.ep-events__broadcast-modal {
+  max-width: 580px;
+}
+
+.ep-events__channels-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+.ep-events__channel-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-surface-100);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.ep-events__channel-card:hover {
+  background: var(--color-surface-200);
+  border-color: var(--color-primary-400);
+}
+
+/* Share Modal Styling */
+.ep-events__share-modal {
+  max-width: 500px;
+}
+
+.ep-events__share-input-group {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.ep-events__share-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+.ep-events__share-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2);
+  background: var(--color-surface-100);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-primary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ep-events__share-action-card:hover {
+  background: var(--color-surface-200);
+  border-color: var(--color-primary-400);
+  transform: translateY(-2px);
+}
+
 /* Calendar Grid */
 .ep-events__calendar-grid { 
   display: grid; 

@@ -27,7 +27,16 @@ import {
   Bell,
   Send,
   Eye,
-  UserPlus
+  UserPlus,
+  Copy,
+  Check,
+  Printer,
+  QrCode,
+  MessageSquare,
+  Mail,
+  Smartphone,
+  Megaphone,
+  FileText
 } from 'lucide-react';
 import './CampusEvents.css';
 
@@ -172,12 +181,26 @@ export const CampusEvents: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [events, setEvents] = useState<EventItem[]>(INITIAL_EVENTS_DATA);
   
-  // Modals state
+  // Primary Detail Modal state
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [modalTab, setModalTab] = useState<'details' | 'edit' | 'roster'>('details');
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [rosterList, setRosterList] = useState(MOCK_ROSTER);
   const [newAttendeeName, setNewAttendeeName] = useState('');
+
+  // Dedicated Broadcast Modal State
+  const [broadcastEvent, setBroadcastEvent] = useState<EventItem | null>(null);
+  const [broadcastForm, setBroadcastForm] = useState({
+    subject: '',
+    targetAudience: 'All Confirmed Attendees',
+    channels: { email: true, push: true, portalBanner: true, sms: false },
+    message: ''
+  });
+
+  // Dedicated Share Modal State
+  const [shareEvent, setShareEvent] = useState<EventItem | null>(null);
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
+  const [copiedSummary, setCopiedSummary] = useState<boolean>(false);
 
   // Form state for creating or editing
   const [eventForm, setEventForm] = useState({
@@ -412,23 +435,102 @@ export const CampusEvents: React.FC = () => {
     safeAddToast({ type: 'success', title: 'Calendar Exported', message: `Downloaded iCal event file for "${event.title}".` });
   };
 
-  const handleShareEvent = (event: EventItem, e?: React.MouseEvent) => {
+  // --- BROADCAST FUNCTIONALITY ---
+  const handleOpenBroadcast = (event: EventItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    const text = `Campus Event: ${event.title} on ${event.month} ${event.day} @ ${event.location}. (${event.time})`;
+    setBroadcastEvent(event);
+    setBroadcastForm({
+      subject: `Important Update: ${event.title}`,
+      targetAudience: `All ${event.attendees} Confirmed Attendees`,
+      channels: { email: true, push: true, portalBanner: true, sms: false },
+      message: `Dear Attendees,\n\nPlease note the upcoming event details for "${event.title}" on ${event.month} ${event.day} at ${event.location}.\n\nAgenda Summary:\n${event.description || 'We look forward to seeing you there!'}\n\nBest regards,\nCampus Event Management`
+    });
+  };
+
+  const handleExecuteBroadcast = () => {
+    if (!broadcastEvent) return;
+    if (!broadcastForm.message.trim()) {
+      safeAddToast({ type: 'warning', title: 'Empty Message', message: 'Please enter a message for the announcement.' });
+      return;
+    }
+
+    const selectedChannels = Object.entries(broadcastForm.channels)
+      .filter(([_, enabled]) => enabled)
+      .map(([channel]) => channel.toUpperCase())
+      .join(', ');
+
+    safeAddToast({
+      type: 'success',
+      title: 'Broadcast Distributed Successfully',
+      message: `Announcement sent to ${broadcastForm.targetAudience} via ${selectedChannels || 'Portal Banner'}.`
+    });
+
+    setBroadcastEvent(null);
+  };
+
+  // --- SHARE FUNCTIONALITY ---
+  const handleOpenShare = (event: EventItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setShareEvent(event);
+    setCopiedLink(false);
+    setCopiedSummary(false);
+  };
+
+  const handleCopyShareLink = (event: EventItem) => {
+    const url = `${window.location.origin}/events?id=${event.id}`;
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(text);
-      safeAddToast({ type: 'info', title: 'Copied to Clipboard', message: 'Event info link copied.' });
-    } else {
-      safeAddToast({ type: 'info', title: 'Event Link', message: text });
+      navigator.clipboard.writeText(url);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+      safeAddToast({ type: 'info', title: 'Link Copied', message: 'Direct event URL copied to clipboard.' });
     }
   };
 
-  const handleSendBroadcast = (event: EventItem) => {
-    safeAddToast({
-      type: 'success',
-      title: 'Broadcast Notice Sent',
-      message: `Announcement broadcasted to all ${event.attendees} registered attendees for "${event.title}".`
-    });
+  const handleCopySummaryText = (event: EventItem) => {
+    const text = `📌 ${event.title}\n📅 Date: ${event.month} ${event.day} (${event.time})\n📍 Venue: ${event.location}\n🏛️ Organizer: ${event.organizer || 'Campus Admin'}\n👥 Audience: ${event.tier || 'All School'}\n\nSummary:\n${event.description || 'Institutional Campus Event'}\n\nRSVP & Info: ${window.location.origin}/events?id=${event.id}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedSummary(true);
+      setTimeout(() => setCopiedSummary(false), 2500);
+      safeAddToast({ type: 'info', title: 'Summary Copied', message: 'Full event details formatted for messaging.' });
+    }
+  };
+
+  const handlePrintFlyer = (event: EventItem) => {
+    const printWin = window.open('', '_blank');
+    if (!printWin) {
+      safeAddToast({ type: 'warning', title: 'Pop-up Blocked', message: 'Please allow pop-ups to print event flyer.' });
+      return;
+    }
+
+    printWin.document.write(`
+      <html>
+        <head>
+          <title>Event Flyer - ${event.title}</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #1e293b; background: #fff; }
+            .flyer { border: 4px double #6366f1; padding: 32px; border-radius: 16px; max-width: 600px; margin: 0 auto; text-align: center; }
+            .badge { display: inline-block; background: #6366f1; color: white; padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 14px; text-transform: uppercase; }
+            h1 { font-size: 28px; margin: 20px 0 10px 0; color: #0f172a; }
+            .meta { font-size: 16px; color: #475569; margin-bottom: 20px; font-weight: 600; }
+            .desc { font-size: 15px; color: #334155; line-height: 1.6; text-align: left; background: #f8fafc; padding: 16px; border-radius: 8px; border-left: 4px solid #6366f1; }
+            .footer { margin-top: 30px; font-size: 13px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 16px; }
+          </style>
+        </head>
+        <body>
+          <div class="flyer">
+            <span class="badge">${event.category} Event</span>
+            <h1>${event.title}</h1>
+            <div class="meta">📅 ${event.month} ${event.day} | ⏰ ${event.time}<br/>📍 Location: ${event.location}</div>
+            <div class="desc"><strong>About Event:</strong><br/>${event.description || 'Official Institutional Event.'}</div>
+            <div class="footer">Organized by ${event.organizer || 'Campus Administration'} • Target Audience: ${event.tier || 'All School'}</div>
+          </div>
+          <script>window.onload = function() { window.print(); }</script>
+        </body>
+      </html>
+    `);
+    printWin.document.close();
+    safeAddToast({ type: 'success', title: 'Flyer Generator', message: 'Print window opened for event poster.' });
   };
 
   const handleAddRosterAttendee = () => {
@@ -598,6 +700,20 @@ export const CampusEvents: React.FC = () => {
                             </button>
                             <button 
                               className="ep-event-card__action-btn"
+                              title="Broadcast Announcement"
+                              onClick={(e) => handleOpenBroadcast(event, e)}
+                            >
+                              <Send size={14} color="var(--color-primary-400)" />
+                            </button>
+                            <button 
+                              className="ep-event-card__action-btn"
+                              title="Share Event"
+                              onClick={(e) => handleOpenShare(event, e)}
+                            >
+                              <Share2 size={14} color="var(--color-text-secondary)" />
+                            </button>
+                            <button 
+                              className="ep-event-card__action-btn"
                               title="Edit Event Details"
                               onClick={(e) => openEventModal(event.id, 'edit', e)}
                             >
@@ -675,6 +791,12 @@ export const CampusEvents: React.FC = () => {
                             onClick={(evt) => toggleRSVP(e.id, evt)}
                           >
                             {e.isRsvpd ? 'Attending' : 'RSVP'}
+                          </button>
+                          <button className="ep-btn ep-btn--sm ep-btn--secondary" title="Broadcast" onClick={(evt) => handleOpenBroadcast(e, evt)}>
+                            <Send size={14} />
+                          </button>
+                          <button className="ep-btn ep-btn--sm ep-btn--secondary" title="Share" onClick={(evt) => handleOpenShare(e, evt)}>
+                            <Share2 size={14} />
                           </button>
                           <button className="ep-btn ep-btn--sm ep-btn--secondary" title="Edit" onClick={(evt) => openEventModal(e.id, 'edit', evt)}>
                             <Edit3 size={14} />
@@ -853,17 +975,17 @@ export const CampusEvents: React.FC = () => {
                   <button className="ep-btn ep-btn--secondary" onClick={() => setModalTab('edit')}>
                     <Edit3 size={16} /> Edit Form
                   </button>
+                  <button className="ep-btn ep-btn--secondary" onClick={(e) => handleOpenBroadcast(selectedEvent, e)}>
+                    <Send size={16} /> Broadcast
+                  </button>
+                  <button className="ep-btn ep-btn--secondary" onClick={(e) => handleOpenShare(selectedEvent, e)}>
+                    <Share2 size={16} /> Share
+                  </button>
                   <button className="ep-btn ep-btn--secondary" onClick={() => toggleReminder(selectedEvent.id)}>
                     <Bell size={16} /> {selectedEvent.hasReminder ? 'Reminder On' : 'Remind Me'}
                   </button>
                   <button className="ep-btn ep-btn--secondary" onClick={() => handleExportICS(selectedEvent)}>
                     <Download size={16} /> iCal Export
-                  </button>
-                  <button className="ep-btn ep-btn--secondary" onClick={() => handleSendBroadcast(selectedEvent)}>
-                    <Send size={16} /> Broadcast
-                  </button>
-                  <button className="ep-btn ep-btn--secondary" onClick={() => handleShareEvent(selectedEvent)}>
-                    <Share2 size={16} /> Share
                   </button>
                   <button className="ep-btn ep-btn--danger" onClick={() => handleDelete(selectedEvent.id)}>
                     <Trash2 size={16} /> Delete
@@ -1053,6 +1175,173 @@ export const CampusEvents: React.FC = () => {
               </div>
             )}
 
+          </div>
+        </div>
+      )}
+
+      {/* DEDICATED BROADCAST ANNOUNCEMENT MODAL */}
+      {broadcastEvent && (
+        <div className="ep-events__modal-overlay" onClick={() => setBroadcastEvent(null)}>
+          <div className="ep-events__modal ep-events__broadcast-modal" onClick={e => e.stopPropagation()}>
+            <div className="ep-events__modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Megaphone size={20} color="var(--color-primary-400)" />
+                <h3 className="ep-events__modal-title">Broadcast Event Notice</h3>
+              </div>
+              <button className="ep-events__close-btn" onClick={() => setBroadcastEvent(null)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+              Send instant announcements & push notifications to all guests registered for <strong>{broadcastEvent.title}</strong>.
+            </p>
+
+            <div className="ep-events__form-group">
+              <label className="ep-events__form-label">Subject / Announcement Heading</label>
+              <input 
+                type="text"
+                className="ep-events__form-input" 
+                value={broadcastForm.subject}
+                onChange={e => setBroadcastForm({ ...broadcastForm, subject: e.target.value })}
+              />
+            </div>
+
+            <div className="ep-events__form-group">
+              <label className="ep-events__form-label">Target Audience</label>
+              <select 
+                className="ep-events__form-input"
+                value={broadcastForm.targetAudience}
+                onChange={e => setBroadcastForm({ ...broadcastForm, targetAudience: e.target.value })}
+              >
+                <option value={`All ${broadcastEvent.attendees} Confirmed Attendees`}>All {broadcastEvent.attendees} Confirmed Attendees</option>
+                <option value="Faculty & Staff Only">Faculty & Staff Only</option>
+                <option value="Students Only">Students Only</option>
+                <option value="Parents Only">Parents Only</option>
+              </select>
+            </div>
+
+            <div className="ep-events__form-group">
+              <label className="ep-events__form-label">Delivery Channels</label>
+              <div className="ep-events__channels-grid">
+                <label className="ep-events__channel-card">
+                  <input 
+                    type="checkbox" 
+                    checked={broadcastForm.channels.email}
+                    onChange={e => setBroadcastForm({ ...broadcastForm, channels: { ...broadcastForm.channels, email: e.target.checked } })}
+                  />
+                  <Mail size={16} /> Email Blast
+                </label>
+                <label className="ep-events__channel-card">
+                  <input 
+                    type="checkbox" 
+                    checked={broadcastForm.channels.push}
+                    onChange={e => setBroadcastForm({ ...broadcastForm, channels: { ...broadcastForm.channels, push: e.target.checked } })}
+                  />
+                  <Smartphone size={16} /> Mobile Push
+                </label>
+                <label className="ep-events__channel-card">
+                  <input 
+                    type="checkbox" 
+                    checked={broadcastForm.channels.portalBanner}
+                    onChange={e => setBroadcastForm({ ...broadcastForm, channels: { ...broadcastForm.channels, portalBanner: e.target.checked } })}
+                  />
+                  <Globe size={16} /> Portal Banner
+                </label>
+                <label className="ep-events__channel-card">
+                  <input 
+                    type="checkbox" 
+                    checked={broadcastForm.channels.sms}
+                    onChange={e => setBroadcastForm({ ...broadcastForm, channels: { ...broadcastForm.channels, sms: e.target.checked } })}
+                  />
+                  <MessageSquare size={16} /> SMS Alert
+                </label>
+              </div>
+            </div>
+
+            <div className="ep-events__form-group">
+              <label className="ep-events__form-label">Message Content</label>
+              <textarea 
+                rows={5}
+                className="ep-events__form-input"
+                value={broadcastForm.message}
+                onChange={e => setBroadcastForm({ ...broadcastForm, message: e.target.value })}
+              />
+            </div>
+
+            <div className="ep-events__modal-footer">
+              <button className="ep-btn ep-btn--secondary" onClick={() => setBroadcastEvent(null)}>
+                Cancel
+              </button>
+              <button className="ep-btn ep-btn--primary" onClick={handleExecuteBroadcast}>
+                <Send size={14} /> Send Broadcast Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DEDICATED SHARE EVENT DIALOG */}
+      {shareEvent && (
+        <div className="ep-events__modal-overlay" onClick={() => setShareEvent(null)}>
+          <div className="ep-events__modal ep-events__share-modal" onClick={e => e.stopPropagation()}>
+            <div className="ep-events__modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Share2 size={20} color="var(--color-primary-400)" />
+                <h3 className="ep-events__modal-title">Share Event</h3>
+              </div>
+              <button className="ep-events__close-btn" onClick={() => setShareEvent(null)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: '16px', color: 'var(--color-text-primary)' }}>{shareEvent.title}</h4>
+              <span style={{ fontSize: '13px', color: 'var(--color-text-tertiary)' }}>{shareEvent.month} {shareEvent.day} • {shareEvent.location}</span>
+            </div>
+
+            <div className="ep-events__share-section">
+              <label className="ep-events__form-label">Direct Event Link</label>
+              <div className="ep-events__share-input-group">
+                <input 
+                  type="text" 
+                  readOnly 
+                  className="ep-events__form-input" 
+                  value={`${window.location.origin}/events?id=${shareEvent.id}`} 
+                />
+                <button className="ep-btn ep-btn--primary" onClick={() => handleCopyShareLink(shareEvent)}>
+                  {copiedLink ? <Check size={14} /> : <Copy size={14} />} {copiedLink ? 'Copied' : 'Copy Link'}
+                </button>
+              </div>
+            </div>
+
+            <div className="ep-events__share-section" style={{ marginTop: 16 }}>
+              <label className="ep-events__form-label">Copy Formatted Text Summary</label>
+              <button className="ep-btn ep-btn--secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => handleCopySummaryText(shareEvent)}>
+                {copiedSummary ? <Check size={14} /> : <FileText size={14} />} {copiedSummary ? 'Summary Copied to Clipboard!' : 'Copy Summary Snippet'}
+              </button>
+            </div>
+
+            <div className="ep-events__share-actions-grid" style={{ marginTop: 20 }}>
+              <button className="ep-events__share-action-card" onClick={() => handlePrintFlyer(shareEvent)}>
+                <Printer size={20} color="#3b82f6" />
+                <span>Print Poster / Flyer</span>
+              </button>
+              <button className="ep-events__share-action-card" onClick={() => handleExportICS(shareEvent)}>
+                <Download size={20} color="#8b5cf6" />
+                <span>Export iCal (.ics)</span>
+              </button>
+              <button className="ep-events__share-action-card" onClick={() => handleOpenBroadcast(shareEvent)}>
+                <Megaphone size={20} color="#f59e0b" />
+                <span>Broadcast Alert</span>
+              </button>
+            </div>
+
+            <div className="ep-events__modal-footer">
+              <button className="ep-btn ep-btn--secondary" onClick={() => setShareEvent(null)}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
