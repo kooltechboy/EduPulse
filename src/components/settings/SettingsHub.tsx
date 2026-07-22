@@ -22,7 +22,6 @@ export default function SettingsHub() {
     deleteClassroom,
     addMaintenanceRecord,
     resolveMaintenanceRecord,
-    bulkImportClassrooms,
     addGradeThreshold,
     updateGradeThreshold,
     removeGradeThreshold,
@@ -229,7 +228,7 @@ export default function SettingsHub() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `classrooms-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `classrooms-config-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -254,12 +253,6 @@ export default function SettingsHub() {
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  // Calculate Stats
-  const totalCapacity = classrooms.reduce((sum, r) => sum + r.capacity, 0);
-  const availableRooms = classrooms.filter((r) => r.status === 'available').length;
-  const maintenanceCount = classrooms.filter((r) => r.status === 'maintenance').length;
-  const labCount = classrooms.filter((r) => r.roomType.includes('lab')).length;
-
   return (
     <div className="ep-settings">
       {/* Header */}
@@ -267,14 +260,10 @@ export default function SettingsHub() {
         <div className="ep-settings__title-group">
           <h1>
             <Icons.SlidersHorizontal size={28} style={{ color: 'var(--color-primary-400, #818cf8)' }} />
-            System Settings & Governance
+            System Configuration Hub
           </h1>
-          <p>NASA-Grade System Administration: Classrooms, Academic Calendar, Security Policy, Audit Logging & Disaster Recovery.</p>
+          <p>Configure operational parameters, classroom setups, grading scale bounds, school profile details, security rules, and system backups.</p>
         </div>
-        <span className="ep-settings__nasa-badge">
-          <Icons.ShieldCheck size={14} />
-          NASA-GRADE AUDITED
-        </span>
       </div>
 
       {/* Navigation Tabs */}
@@ -284,7 +273,7 @@ export default function SettingsHub() {
           onClick={() => setActiveTab('classrooms')}
         >
           <Icons.Building2 size={18} />
-          Classrooms & Facilities
+          Classroom & Facility Setup
         </button>
 
         <button
@@ -292,7 +281,7 @@ export default function SettingsHub() {
           onClick={() => setActiveTab('academic')}
         >
           <Icons.GraduationCap size={18} />
-          Academic & Grading
+          Academic & Grading Rules
         </button>
 
         <button
@@ -300,7 +289,7 @@ export default function SettingsHub() {
           onClick={() => setActiveTab('profile')}
         >
           <Icons.School size={18} />
-          School Profile
+          School Details
         </button>
 
         <button
@@ -308,7 +297,7 @@ export default function SettingsHub() {
           onClick={() => setActiveTab('notifications')}
         >
           <Icons.Bell size={18} />
-          Notifications
+          Notification Preferences
         </button>
 
         <button
@@ -316,7 +305,7 @@ export default function SettingsHub() {
           onClick={() => setActiveTab('security')}
         >
           <Icons.ShieldCheck size={18} />
-          Security & Permissions
+          Security & Role Permissions
         </button>
 
         <button
@@ -324,7 +313,7 @@ export default function SettingsHub() {
           onClick={() => setActiveTab('integrations')}
         >
           <Icons.Layers size={18} />
-          Integrations & Ping
+          Integrations & Webhooks
         </button>
 
         <button
@@ -332,7 +321,7 @@ export default function SettingsHub() {
           onClick={() => setActiveTab('audit')}
         >
           <Icons.FileText size={18} />
-          Audit Logs ({auditLogs.length})
+          Configuration Audit Trail
         </button>
 
         <button
@@ -340,7 +329,7 @@ export default function SettingsHub() {
           onClick={() => setActiveTab('backup')}
         >
           <Icons.Database size={18} />
-          Backup & Recovery
+          System Backup & Restore
         </button>
       </div>
 
@@ -349,56 +338,13 @@ export default function SettingsHub() {
         {/* 1. CLASSROOMS & FACILITIES TAB */}
         {activeTab === 'classrooms' && (
           <div>
-            {/* Stats Grid */}
-            <div className="ep-settings__stats-grid">
-              <div className="ep-settings__stat-card">
-                <div className="ep-settings__stat-icon">
-                  <Icons.DoorOpen size={24} />
-                </div>
-                <div className="ep-settings__stat-info">
-                  <h4>Total Rooms</h4>
-                  <span>{classrooms.length}</span>
-                </div>
-              </div>
-
-              <div className="ep-settings__stat-card">
-                <div className="ep-settings__stat-icon" style={{ color: '#34d399', background: 'rgba(16, 185, 129, 0.15)' }}>
-                  <Icons.Users size={24} />
-                </div>
-                <div className="ep-settings__stat-info">
-                  <h4>Total Student Capacity</h4>
-                  <span>{totalCapacity}</span>
-                </div>
-              </div>
-
-              <div className="ep-settings__stat-card">
-                <div className="ep-settings__stat-icon" style={{ color: '#fbbf24', background: 'rgba(245, 158, 11, 0.15)' }}>
-                  <Icons.CheckCircle2 size={24} />
-                </div>
-                <div className="ep-settings__stat-info">
-                  <h4>Available Rooms</h4>
-                  <span>{availableRooms}</span>
-                </div>
-              </div>
-
-              <div className="ep-settings__stat-card">
-                <div className="ep-settings__stat-icon" style={{ color: '#f87171', background: 'rgba(239, 68, 68, 0.15)' }}>
-                  <Icons.Wrench size={24} />
-                </div>
-                <div className="ep-settings__stat-info">
-                  <h4>Under Maintenance</h4>
-                  <span>{maintenanceCount}</span>
-                </div>
-              </div>
-            </div>
-
             {/* Controls Bar */}
             <div className="ep-settings__controls-bar">
               <div className="ep-settings__search-box">
                 <Icons.Search size={18} style={{ color: 'var(--color-text-muted)' }} />
                 <input
                   type="text"
-                  placeholder="Search by room #, name, or building..."
+                  placeholder="Search classroom by #, name, or building..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -433,12 +379,12 @@ export default function SettingsHub() {
 
                 <button className="ep-settings__btn-secondary" onClick={handleExportClassroomsCSV} title="Export CSV">
                   <Icons.Download size={16} />
-                  Export CSV
+                  Export Directory
                 </button>
 
                 <button className="ep-settings__btn-primary" onClick={handleOpenAddModal}>
                   <Icons.Plus size={18} />
-                  Add Classroom
+                  New Classroom Config
                 </button>
               </div>
             </div>
@@ -467,7 +413,7 @@ export default function SettingsHub() {
                     </div>
 
                     <div className="ep-settings__detail-item">
-                      <span className="ep-settings__detail-label">Max Capacity</span>
+                      <span className="ep-settings__detail-label">Max Seating</span>
                       <span className="ep-settings__detail-val">{room.capacity} seats</span>
                     </div>
 
@@ -519,14 +465,14 @@ export default function SettingsHub() {
 
                     <button
                       className="ep-settings__icon-btn"
-                      title="Edit Room"
+                      title="Edit Room Config"
                       onClick={() => handleOpenEditModal(room)}
                     >
                       <Icons.Pencil size={16} />
                     </button>
                     <button
                       className="ep-settings__icon-btn ep-settings__icon-btn--danger"
-                      title="Delete Room"
+                      title="Delete Room Config"
                       onClick={() => deleteClassroom(room.id)}
                     >
                       <Icons.Trash2 size={16} />
@@ -545,12 +491,18 @@ export default function SettingsHub() {
               <div className="ep-settings__card-panel-title">
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Icons.Calendar size={20} style={{ color: 'var(--color-primary-400)' }} />
-                  Academic Calendar & Term Management
+                  Academic Calendar & Terms Configuration
                 </span>
-                <button className="ep-settings__btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => setIsTermModalOpen(true)}>
-                  <Icons.Plus size={16} />
-                  Add Term
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button className="ep-settings__btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => setIsTermModalOpen(true)}>
+                    <Icons.Plus size={16} />
+                    Add Term
+                  </button>
+                  <button className="ep-settings__btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => updateAcademicConfig({})}>
+                    <Icons.Save size={16} />
+                    Save Academic Config
+                  </button>
+                </div>
               </div>
 
               <div className="ep-settings__form-grid" style={{ marginBottom: '1.5rem' }}>
@@ -618,12 +570,18 @@ export default function SettingsHub() {
               <div className="ep-settings__card-panel-title">
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Icons.Award size={20} style={{ color: 'var(--color-primary-400)' }} />
-                  Grading Scale Matrix (Editable)
+                  Grading Scale Matrix Configuration
                 </span>
-                <button className="ep-settings__btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => setIsGradeModalOpen(true)}>
-                  <Icons.Plus size={16} />
-                  Add Grade Level
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button className="ep-settings__btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => setIsGradeModalOpen(true)}>
+                    <Icons.Plus size={16} />
+                    Add Grade Tier
+                  </button>
+                  <button className="ep-settings__btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => updateGradingScale({})}>
+                    <Icons.Save size={16} />
+                    Save Grade Matrix
+                  </button>
+                </div>
               </div>
 
               <div className="ep-settings__toggle-row">
@@ -707,8 +665,12 @@ export default function SettingsHub() {
             <div className="ep-settings__card-panel-title">
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Icons.School size={20} style={{ color: 'var(--color-primary-400)' }} />
-                Institution Identity & Contact Information
+                School Profile & Identity Configuration
               </span>
+              <button className="ep-settings__btn-primary" onClick={() => updateSchoolProfile({})}>
+                <Icons.Save size={16} />
+                Save Profile Configuration
+              </button>
             </div>
 
             <div className="ep-settings__form-grid">
@@ -791,8 +753,12 @@ export default function SettingsHub() {
             <div className="ep-settings__card-panel-title">
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Icons.Bell size={20} style={{ color: 'var(--color-primary-400)' }} />
-                Communication & Notification Preferences
+                Notification System Preferences
               </span>
+              <button className="ep-settings__btn-primary" onClick={() => updateNotificationSettings({})}>
+                <Icons.Save size={16} />
+                Save Notification Preferences
+              </button>
             </div>
 
             <div className="ep-settings__toggle-row">
@@ -849,8 +815,12 @@ export default function SettingsHub() {
               <div className="ep-settings__card-panel-title">
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Icons.ShieldCheck size={20} style={{ color: 'var(--color-primary-400)' }} />
-                  Security Policies & Password Rules
+                  Security Policy Controls
                 </span>
+                <button className="ep-settings__btn-primary" onClick={() => updateSecuritySettings({})}>
+                  <Icons.Save size={16} />
+                  Save Security Policy
+                </button>
               </div>
 
               <div className="ep-settings__toggle-row">
@@ -959,7 +929,7 @@ export default function SettingsHub() {
             <div className="ep-settings__card-panel-title">
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Icons.Layers size={20} style={{ color: 'var(--color-primary-400)' }} />
-                External Integrations & Live Ping Diagnostics
+                External Integrations & Webhooks
               </span>
             </div>
 
@@ -971,23 +941,23 @@ export default function SettingsHub() {
             ].map(({ id, title, desc }) => {
               const diag = integrations.diagnostics?.[id];
               return (
-                <div key={id as string} className="ep-settings__toggle-row">
+                <div key={id} className="ep-settings__toggle-row">
                   <div className="ep-settings__toggle-info">
                     <h4>
-                      {title as string}
+                      {title}
                       {diag?.status === 'connected' && (
                         <span className="ep-settings__badge ep-settings__badge--available" style={{ marginLeft: '0.5rem' }}>
                           {diag.latencyMs}ms Ping
                         </span>
                       )}
                     </h4>
-                    <p>{desc as string}</p>
+                    <p>{desc}</p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <button
                       className="ep-settings__btn-secondary"
                       style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
-                      onClick={() => testIntegrationConnection(id as string)}
+                      onClick={() => testIntegrationConnection(id)}
                     >
                       <Icons.Activity size={14} />
                       Test Connection
@@ -1005,7 +975,7 @@ export default function SettingsHub() {
             <div className="ep-settings__card-panel-title">
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Icons.FileText size={20} style={{ color: 'var(--color-primary-400)' }} />
-                System Governance & Audit Trail
+                System Configuration Audit Trail
               </span>
               <span className="ep-settings__badge ep-settings__badge--available">
                 {auditLogs.length} Events Logged
@@ -1051,7 +1021,7 @@ export default function SettingsHub() {
             <div className="ep-settings__card-panel-title">
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Icons.Database size={20} style={{ color: 'var(--color-primary-400)' }} />
-                Disaster Recovery & System Backup
+                System Backup & Restore Controls
               </span>
             </div>
 
