@@ -39,6 +39,8 @@ const CounselingView = lazyWithRetry(() => import('@/components/counseling/Couns
 const CafeteriaView = lazyWithRetry(() => import('@/components/cafeteria/CafeteriaView'), 'CafeteriaView');
 const SecurityDashboard = lazyWithRetry(() => import('@/components/admin/SecurityDashboard'), 'SecurityDashboard');
 const CoordinationView = lazyWithRetry(() => import('@/components/coordination/CoordinationView'), 'CoordinationView');
+const SettingsHub = lazyWithRetry(() => import('@/components/settings/SettingsHub'), 'SettingsHub');
+
 
 // ── Loading Fallback ──────────────────────────────────────────────────────
 
@@ -95,6 +97,7 @@ export function AppRoutes() {
             <Route path="/cafeteria" element={<ErrorBoundary moduleName="Cafeteria"><CafeteriaView /></ErrorBoundary>} />
             <Route path="/security" element={<ErrorBoundary moduleName="Security & Safety"><SecurityDashboard /></ErrorBoundary>} />
             <Route path="/coordination" element={<ErrorBoundary moduleName="Coordination"><CoordinationView /></ErrorBoundary>} />
+            <Route path="/settings" element={<ErrorBoundary moduleName="Settings & Configurations"><SettingsHub /></ErrorBoundary>} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>

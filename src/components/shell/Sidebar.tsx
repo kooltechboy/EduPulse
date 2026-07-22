@@ -62,6 +62,12 @@ export const NAV_CONFIG: NavSection[] = [
       { path: '/security', label: 'Security', icon: 'ShieldCheck', roles: ['admin'] },
       { path: '/coordination', label: 'Coordination', icon: 'Network', roles: ['admin', 'coordinator'] },
     ]
+  },
+  {
+    title: 'System',
+    items: [
+      { path: '/settings', label: 'Settings', icon: 'Settings', roles: ['admin', 'teacher', 'coordinator', 'parent', 'student'] },
+    ]
   }
 ];
 
