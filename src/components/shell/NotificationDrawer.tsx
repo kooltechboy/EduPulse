@@ -1,12 +1,25 @@
-import React from 'react';
-import { X, Check, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Check, CheckCircle2, Bell } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { requestNotificationPermission, getNotificationPermissionStatus, sendLocalNotification } from '@/services/notificationService';
 import './Shell.css';
 
 export const NotificationDrawer: React.FC = () => {
-  const { notificationDrawerOpen, setNotificationDrawerOpen } = useUIStore();
+  const { notificationDrawerOpen, setNotificationDrawerOpen, addToast } = useUIStore();
   const { notifications, markAsRead, markAllAsRead, dismiss } = useNotificationStore();
+  const [pushStatus, setPushStatus] = useState<NotificationPermission>(getNotificationPermissionStatus());
+
+  const handleEnablePush = async () => {
+    const granted = await requestNotificationPermission();
+    setPushStatus(getNotificationPermissionStatus());
+    if (granted) {
+      addToast({ type: 'success', title: 'Push Enabled', message: 'Mobile & browser push notifications enabled!' });
+      sendLocalNotification({ title: 'EDUVERSE OS', body: 'Push notifications are now active on your device!' });
+    } else {
+      addToast({ type: 'warning', title: 'Push Denied', message: 'Notifications were blocked by the browser.' });
+    }
+  };
 
   const handleClearAll = () => {
     notifications.forEach(n => dismiss(n.id));
@@ -54,7 +67,12 @@ export const NotificationDrawer: React.FC = () => {
       <div className={`ep-drawer ${notificationDrawerOpen ? 'ep-drawer--open' : ''}`}>
         <div className="ep-drawer__header">
           <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 600 }}>Notifications</h2>
-          <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+            {pushStatus !== 'granted' && (
+              <button className="ep-btn ep-btn--secondary" onClick={handleEnablePush} style={{ fontSize: 'var(--text-xs)', padding: '4px 8px' }}>
+                <Bell size={12} style={{ marginRight: 4 }} /> Enable Push
+              </button>
+            )}
             <button className="ep-btn ep-btn--text" onClick={handleClearAll} style={{ fontSize: 'var(--text-xs)' }}>
               Clear all
             </button>

@@ -1,0 +1,442 @@
+/* ============================================================================
+   Live Classroom WebRTC Modal Styles (ep-video__ namespace)
+   ============================================================================ */
+
+.ep-video__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+}
+
+.ep-video__container {
+  width: 96vw;
+  height: 94vh;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+
+.ep-video__header {
+  height: 60px;
+  padding: 0 24px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ep-video__header-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ep-video__live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.ep-video__header h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.ep-video__header-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ep-video__meta-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+.ep-video__icon-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.ep-video__icon-btn:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ep-video__body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.ep-video__stage {
+  flex: 1;
+  padding: 16px;
+  background: #090d16;
+  display: flex;
+  flex-direction: column;
+}
+
+.ep-video__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  width: 100%;
+  height: 100%;
+}
+
+.ep-video__tile {
+  position: relative;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ep-video__tile--speaker {
+  border-color: #6366f1;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+}
+
+.ep-video__avatar-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.ep-video__avatar-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #4f46e5;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.ep-video__feed-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+  position: relative;
+}
+
+.ep-video__feed-overlay {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #f8fafc;
+}
+
+.ep-video__hand-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(245, 158, 11, 0.9);
+  color: #0f172a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.ep-video__screen-share-view {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #020617;
+  border-radius: 14px;
+  border: 1px solid #334155;
+}
+
+.ep-video__screen-placeholder {
+  text-align: center;
+  color: #94a3b8;
+}
+
+.ep-video__screen-placeholder h4 {
+  color: #f8fafc;
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.ep-video__sidebar {
+  width: 340px;
+  background: #1e293b;
+  border-left: 1px solid #334155;
+  display: flex;
+  flex-direction: column;
+}
+
+.ep-video__sidebar-tabs {
+  display: flex;
+  border-bottom: 1px solid #334155;
+}
+
+.ep-video__sidebar-tab {
+  flex: 1;
+  padding: 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.ep-video__sidebar-tab--active {
+  color: #818cf8;
+  border-bottom-color: #818cf8;
+}
+
+.ep-video__sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.ep-video__chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ep-video__chat-messages {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.ep-video__chat-msg {
+  background: rgba(15, 23, 42, 0.5);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+}
+
+.ep-video__chat-msg--self {
+  background: rgba(79, 70, 229, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.ep-video__chat-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  margin-bottom: 4px;
+}
+
+.ep-video__chat-meta strong {
+  color: #f8fafc;
+}
+
+.ep-video__chat-meta span {
+  color: #64748b;
+}
+
+.ep-video__chat-msg p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.ep-video__chat-form {
+  padding: 12px;
+  border-top: 1px solid #334155;
+  display: flex;
+  gap: 8px;
+}
+
+.ep-video__chat-form input {
+  flex: 1;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #f8fafc;
+  font-size: 0.85rem;
+}
+
+.ep-video__roster-list {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ep-video__roster-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 8px;
+}
+
+.ep-video__roster-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ep-video__roster-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #4338ca;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.ep-video__roster-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.ep-video__roster-role {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-transform: capitalize;
+}
+
+.ep-video__roster-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ep-video__hand-action {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 0.8rem;
+}
+
+.ep-video__footer {
+  height: 70px;
+  background: #1e293b;
+  border-top: 1px solid #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ep-video__controls {
+  display: flex;
+  gap: 12px;
+}
+
+.ep-video__control-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  color: #f8fafc;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.ep-video__control-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ep-video__control-btn--off {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.ep-video__control-btn--active {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #818cf8;
+}
+
+.ep-video__control-btn--danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+.ep-video__control-btn--danger:hover {
+  background: #b91c1c;
+}
+
+.ep-pulse {
+  animation: epPulse 1.5s infinite;
+}
+
+@keyframes epPulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}

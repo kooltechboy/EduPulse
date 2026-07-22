@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useUIStore } from '@/stores/uiStore';
+import { LiveClassroomModal } from '@/components/classroom/LiveClassroomModal';
+import { Video } from 'lucide-react';
 
 // Mock Data
 const GPA_DATA = [
@@ -98,11 +100,16 @@ export const StudentDashboard: React.FC = () => {
     }, 1000);
   };
 
+  const [showLiveModal, setShowLiveModal] = useState(false);
+
   return (
     <div className="ep-student-dash">
       <header className="ep-student-dash__header">
         <h1>Student Portal</h1>
         <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="ep-btn ep-btn--primary" onClick={() => setShowLiveModal(true)}>
+            <Video size={18} /> Join Live Class
+          </button>
           <button className="ep-btn ep-btn--secondary" onClick={() => setShowSubmitModal(true)}>
             <Upload size={18} /> Submit Assignment
           </button>
@@ -335,6 +342,9 @@ export const StudentDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Live Classroom WebRTC Modal */}
+      <LiveClassroomModal isOpen={showLiveModal} onClose={() => setShowLiveModal(false)} />
     </div>
   );
 };

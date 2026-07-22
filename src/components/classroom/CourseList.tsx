@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Search, Plus, Users, Clock, BookOpen, GraduationCap, CheckCircle, Award, Edit, Archive, Sparkles, Loader } from 'lucide-react';
+import { Search, Plus, Users, Clock, BookOpen, GraduationCap, CheckCircle, Award, Edit, Archive, Sparkles, Loader, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SpeedGraderDrawer } from './SpeedGraderDrawer';
+import { LMSConnectorModal } from './LMSConnectorModal';
 import { useAcademicStore } from '@/stores/academicStore';
 import { useUIStore } from '@/stores/uiStore';
 import { generateLessonPlan } from '@/services/geminiService';
@@ -105,6 +106,8 @@ export const CourseList: React.FC = () => {
     }
   };
 
+  const [isLmsModalOpen, setIsLmsModalOpen] = useState(false);
+
   return (
     <div className="ep-classroom">
       {/* 1. Header */}
@@ -113,9 +116,14 @@ export const CourseList: React.FC = () => {
           <h1 className="ep-classroom__title">Campus Course Catalog</h1>
           <p className="ep-classroom__subtitle">Manage subject curriculums, course sections, enrolled rosters, and class schedules</p>
         </div>
-        <button className="ep-btn ep-btn--primary" onClick={() => { setCourseToEdit(null); setIsFormOpen(true); }}>
-          <Plus size={16} /> + Create New Course
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="ep-btn ep-btn--secondary" onClick={() => setIsLmsModalOpen(true)}>
+            <Share2 size={16} /> LMS Connectors (LTI 1.3)
+          </button>
+          <button className="ep-btn ep-btn--primary" onClick={() => { setCourseToEdit(null); setIsFormOpen(true); }}>
+            <Plus size={16} /> + Create New Course
+          </button>
+        </div>
       </header>
 
       {/* 2. KPI Cards */}
@@ -363,6 +371,9 @@ export const CourseList: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* LMS Connector Modal */}
+      <LMSConnectorModal isOpen={isLmsModalOpen} onClose={() => setIsLmsModalOpen(false)} />
     </div>
   );
 };

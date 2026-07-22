@@ -10,6 +10,8 @@ import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import { useUIStore } from '@/stores/uiStore';
 import { generateLessonPlan } from '@/services/geminiService';
+import { LiveClassroomModal } from '@/components/classroom/LiveClassroomModal';
+import { Video } from 'lucide-react';
 import './TeacherDashboard.css';
 
 const TODAY_SCHEDULE = [
@@ -87,6 +89,8 @@ export const TeacherDashboard: React.FC = () => {
 
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
+  const [showLiveModal, setShowLiveModal] = useState(false);
+
   return (
     <div className="ep-teacher-dash">
       {/* Header */}
@@ -96,6 +100,10 @@ export const TeacherDashboard: React.FC = () => {
           <p className="ep-teacher-dash__subtitle">{currentDate} • Faculty Command Center</p>
         </div>
         <div className="ep-teacher-dash__actions">
+          <button className="ep-btn ep-btn--primary" onClick={() => setShowLiveModal(true)}>
+            <Video size={18} />
+            <span>Launch Live Class</span>
+          </button>
           <button className="ep-btn ep-btn--secondary" onClick={() => setShowGradeModal(true)}>
             <FileText size={18} />
             <span>Quick Grade</span>
@@ -314,6 +322,9 @@ export const TeacherDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Live Classroom WebRTC Modal */}
+      <LiveClassroomModal isOpen={showLiveModal} onClose={() => setShowLiveModal(false)} />
     </div>
   );
 };

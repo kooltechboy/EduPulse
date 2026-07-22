@@ -1,0 +1,203 @@
+/* ============================================================================
+   LMS Connector Modal Styles (ep-lms__ namespace)
+   ============================================================================ */
+
+.ep-lms__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+}
+
+.ep-lms__modal {
+  background: var(--color-surface-50, #1e293b);
+  border: 1px solid var(--color-surface-200, #334155);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 720px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.ep-lms__header {
+  padding: 24px 28px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--color-surface-200, #334155);
+}
+
+.ep-lms__badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.15);
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.ep-lms__header h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #f8fafc);
+  margin: 0 0 4px;
+}
+
+.ep-lms__header p {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #94a3b8);
+  margin: 0;
+}
+
+.ep-lms__tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 28px;
+  background: rgba(15, 23, 42, 0.3);
+  border-bottom: 1px solid var(--color-surface-200, #334155);
+}
+
+.ep-lms__tab {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, #94a3b8);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ep-lms__tab:hover {
+  color: var(--color-text-primary, #f8fafc);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.ep-lms__tab--active {
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.ep-lms__body {
+  padding: 20px 28px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ep-lms__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  color: var(--color-text-secondary, #94a3b8);
+}
+
+.ep-lms__course-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ep-lms__course-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid var(--color-surface-200, #334155);
+  border-radius: 12px;
+}
+
+.ep-lms__course-info h4 {
+  margin: 6px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #f8fafc);
+}
+
+.ep-lms__platform-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.ep-lms__platform-tag--google_classroom {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+.ep-lms__platform-tag--canvas {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.ep-lms__platform-tag--moodle {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.ep-lms__course-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #94a3b8);
+}
+
+.ep-lms__course-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ep-lms__connected-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4ade80;
+  padding: 4px 10px;
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: 6px;
+}
+
+.ep-lms__footer {
+  padding: 16px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.4);
+  border-top: 1px solid var(--color-surface-200, #334155);
+}
+
+.ep-lms__security-note {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary, #94a3b8);
+}
+
+.ep-spin {
+  animation: epSpin 1s linear infinite;
+}
+
+@keyframes epSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
