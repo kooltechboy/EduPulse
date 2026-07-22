@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Shield, TrendingDown, Star, Plus, CheckCircle, AlertTriangle, Award, Printer, X, FileText } from 'lucide-react';
+import { useUIStore } from '@/stores/uiStore';
 import './BehaviorMatrix.css';
 
 interface Incident {
@@ -29,9 +30,42 @@ const HOUSE_DATA = [
 export const BehaviorMatrix: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'incidents' | 'houses' | 'reports'>('incidents');
   const [certificateIncident, setCertificateIncident] = useState<Incident | null>(null);
+  
+  const [incidents, setIncidents] = useState<Incident[]>(MOCK_INCIDENTS);
+  const [houses, setHouses] = useState(HOUSE_DATA);
+  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [newIncident, setNewIncident] = useState<Partial<Incident>>({ type: 'merit', points: 5 });
+  
+  const addToast = useUIStore(s => s.addToast);
 
   const handlePrintCertificate = () => {
     window.print();
+  };
+
+  const handleSaveRecord = () => {
+    if (!newIncident.student || !newIncident.category) return;
+    const points = newIncident.type === 'merit' ? Math.abs(newIncident.points || 5) : -Math.abs(newIncident.points || 5);
+    const incident: Incident = {
+      id: Date.now().toString(),
+      date: new Date().toISOString().split('T')[0],
+      student: newIncident.student,
+      type: newIncident.type as 'merit' | 'demerit',
+      category: newIncident.category,
+      points,
+      reportedBy: newIncident.reportedBy || 'Staff'
+    };
+    setIncidents([incident, ...incidents]);
+    addToast({ type: 'success', title: 'Conduct Logged', message: 'Conduct record logged successfully.' });
+    setIsLogModalOpen(false);
+    setNewIncident({ type: 'merit', points: 5 });
+  };
+
+  const updateHousePoints = (houseName: string, delta: number) => {
+    setHouses(prev => {
+      const next = prev.map(h => h.name === houseName ? { ...h, points: h.points + delta } : h);
+      return next.sort((a, b) => b.points - a.points);
+    });
+    addToast({ type: 'success', title: 'Points Updated', message: `House points updated (${delta > 0 ? '+' : ''}${delta}).` });
   };
 
   return (
@@ -63,7 +97,7 @@ export const BehaviorMatrix: React.FC = () => {
               <TrendingDown size={14} style={{ marginRight: 4 }} /> Behavioral Trends
             </button>
           </div>
-          <button className="ep-btn ep-btn--primary">
+          <button className="ep-btn ep-btn--primary" onClick={() => setIsLogModalOpen(true)}>
             <Plus size={16} /> + Log Conduct Record
           </button>
         </div>
@@ -129,7 +163,7 @@ export const BehaviorMatrix: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {MOCK_INCIDENTS.map(inc => (
+                {incidents.map(inc => (
                   <tr key={inc.id}>
                     <td>{inc.date}</td>
                     <td style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>{inc.student}</td>
@@ -164,10 +198,14 @@ export const BehaviorMatrix: React.FC = () => {
         {activeTab === 'houses' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-              {HOUSE_DATA.map(h => (
+              {houses.map(h => (
                 <div key={h.name} className="ep-card" style={{ borderTop: `4px solid ${h.color}`, padding: '20px', textAlign: 'center' }}>
                   <h3 style={{ margin: '0 0 4px 0', fontSize: '18px' }}>{h.name}</h3>
                   <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--color-text-primary)' }}>{h.points} pts</div>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '12px' }}>
+                    <button className="ep-btn ep-btn--ghost ep-btn--sm" onClick={() => updateHousePoints(h.name, -5)}>-5</button>
+                    <button className="ep-btn ep-btn--primary ep-btn--sm" onClick={() => updateHousePoints(h.name, 5)}>+5</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -176,7 +214,7 @@ export const BehaviorMatrix: React.FC = () => {
               <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 16px 0' }}>House Standings Comparison</h3>
               <div style={{ width: '100%', height: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={HOUSE_DATA}>
+                  <BarChart data={houses}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
                     <XAxis dataKey="name" stroke="var(--color-text-tertiary)" />
                     <YAxis stroke="var(--color-text-tertiary)" />
@@ -185,6 +223,28 @@ export const BehaviorMatrix: React.FC = () => {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            </div>
+          </div>
+        )}
+        {activeTab === 'reports' && (
+          <div className="ep-card" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 16px 0' }}>Incident Distribution by Category</h3>
+            <div style={{ width: '100%', height: 400 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={Object.entries(incidents.reduce((acc, curr) => {
+                    acc[curr.category] = (acc[curr.category] || 0) + 1;
+                    return acc;
+                  }, {} as Record<string, number>)).map(([name, count]) => ({ name, count }))}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                  <XAxis dataKey="name" stroke="var(--color-text-tertiary)" angle={-45} textAnchor="end" height={80} interval={0} fontSize={12} />
+                  <YAxis stroke="var(--color-text-tertiary)" allowDecimals={false} />
+                  <Tooltip contentStyle={{ backgroundColor: 'var(--color-surface-50)', borderColor: 'var(--color-border)', borderRadius: '8px' }} />
+                  <Bar dataKey="count" fill="var(--color-primary-500)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         )}
@@ -250,6 +310,52 @@ export const BehaviorMatrix: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Log Conduct Modal */}
+      {isLogModalOpen && (
+        <div className="ep-behavior__modal-overlay">
+          <div className="ep-behavior__modal">
+            <header className="ep-behavior__modal-header">
+              <h2 style={{ fontSize: '18px', margin: 0, color: 'var(--color-text-primary)' }}>Log Conduct Record</h2>
+              <button className="ep-btn ep-btn--ghost" onClick={() => setIsLogModalOpen(false)}>✕</button>
+            </header>
+            <div className="ep-behavior__modal-body">
+              <div className="ep-behavior__form-row">
+                <label>Student Name</label>
+                <input type="text" className="ep-input" value={newIncident.student || ''} onChange={e => setNewIncident({...newIncident, student: e.target.value})} />
+              </div>
+              <div className="ep-behavior__form-row">
+                <label>Type</label>
+                <select className="ep-input" value={newIncident.type} onChange={e => setNewIncident({...newIncident, type: e.target.value as any})}>
+                  <option value="merit">Merit</option>
+                  <option value="demerit">Demerit</option>
+                </select>
+              </div>
+              <div className="ep-behavior__form-row">
+                <label>Category / Reason</label>
+                <input type="text" className="ep-input" value={newIncident.category || ''} onChange={e => setNewIncident({...newIncident, category: e.target.value})} placeholder="e.g. Academic Excellence" />
+              </div>
+              <div className="ep-behavior__form-row">
+                <label>Points</label>
+                <input type="number" className="ep-input" value={Math.abs(newIncident.points || 0)} onChange={e => setNewIncident({...newIncident, points: Number(e.target.value)})} />
+                <span style={{ fontSize: '12px', color: 'var(--color-text-tertiary)' }}>{newIncident.type === 'merit' ? '(Will be added as positive)' : '(Will be recorded as negative)'}</span>
+              </div>
+              <div className="ep-behavior__form-row">
+                <label>Reported By</label>
+                <input type="text" className="ep-input" value={newIncident.reportedBy || ''} onChange={e => setNewIncident({...newIncident, reportedBy: e.target.value})} />
+              </div>
+              <div className="ep-behavior__form-row">
+                <label>Notes (Optional)</label>
+                <textarea className="ep-input" rows={3}></textarea>
+              </div>
+            </div>
+            <footer className="ep-behavior__modal-actions">
+              <button className="ep-btn ep-btn--ghost" onClick={() => setIsLogModalOpen(false)}>Cancel</button>
+              <button className="ep-btn ep-btn--primary" onClick={handleSaveRecord}>Save Record</button>
+            </footer>
           </div>
         </div>
       )}

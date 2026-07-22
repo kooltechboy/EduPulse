@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { DollarSign, FileText, PieChart as ChartIcon, Plus, Search, CheckCircle, Clock, AlertCircle, TrendingUp, TrendingDown, Wallet, CreditCard, ShieldCheck, Download, Award } from 'lucide-react';
+import { useUIStore } from '@/stores/uiStore';
 import './FinanceView.css';
 
 interface Transaction {
@@ -60,7 +61,14 @@ export const FinanceView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'ledger' | 'invoices' | 'reports'>('ledger');
   const [searchTerm, setSearchTerm] = useState('');
   const [invoices, setInvoices] = useState<Invoice[]>(INITIAL_INVOICES);
+  const [transactions, setTransactions] = useState<Transaction[]>(MOCK_TRANSACTIONS);
   const [selectedPayInvoice, setSelectedPayInvoice] = useState<Invoice | null>(null);
+  
+  const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
+  const [newTx, setNewTx] = useState({ type: 'income', category: '', description: '', amount: 0, method: 'card', date: new Date().toISOString().split('T')[0] });
+  const [invoiceFilter, setInvoiceFilter] = useState<'all' | 'paid' | 'overdue' | 'sent'>('all');
+
+  const addToast = useUIStore(s => s.addToast);
 
   const [paymentPlan, setPaymentPlan] = useState<'full' | 'semester' | 'monthly'>('full');
   const [payMethod, setPayMethod] = useState<'card' | 'ach' | 'voucher'>('card');
@@ -72,9 +80,40 @@ export const FinanceView: React.FC = () => {
     setTimeout(() => {
       setInvoices(prev => prev.map(inv => inv.id === selectedPayInvoice.id ? { ...inv, status: 'paid' } : inv));
       setIsProcessing(false);
-      alert(`Payment of $${selectedPayInvoice.amount} successfully processed for ${selectedPayInvoice.studentName}!`);
+      addToast({ type: 'success', title: 'Payment Processed', message: `Payment of $${selectedPayInvoice.amount} successfully processed for ${selectedPayInvoice.studentName}.` });
       setSelectedPayInvoice(null);
     }, 1000);
+  };
+
+  const handleSaveTransaction = () => {
+    const transaction: Transaction = {
+      id: Date.now().toString(),
+      date: newTx.date,
+      description: newTx.description,
+      category: newTx.category,
+      type: newTx.type as 'income' | 'expense',
+      amount: Number(newTx.amount),
+      reference: `REF-${Date.now().toString().slice(-4)}`
+    };
+    setTransactions([transaction, ...transactions]);
+    addToast({ type: 'success', title: 'Transaction Saved', message: 'Transaction recorded successfully.' });
+    setIsTransactionModalOpen(false);
+  };
+
+  const handleExportCSV = () => {
+    let csv = 'Date,Description,Category,Type,Amount,Reference\n';
+    transactions.forEach(t => {
+      csv += `${t.date},"${t.description}","${t.category}",${t.type},${t.amount},"${t.reference}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Ledger_Export_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    addToast({ type: 'success', title: 'Exported', message: 'Ledger exported to CSV.' });
   };
 
   return (
@@ -106,8 +145,8 @@ export const FinanceView: React.FC = () => {
               <ChartIcon size={14} style={{ marginRight: 4 }} /> Reports
             </button>
           </div>
-          <button className="ep-btn ep-btn--primary">
-            <Plus size={16} /> + New Transaction
+          <button className="ep-btn ep-btn--primary" onClick={() => setIsTransactionModalOpen(true)}>
+            <Plus size={16} /> + Add Transaction
           </button>
         </div>
       </header>
@@ -170,8 +209,7 @@ export const FinanceView: React.FC = () => {
                 />
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button className="ep-btn ep-btn--secondary ep-btn--sm">Export CSV</button>
-                <button className="ep-btn ep-btn--secondary ep-btn--sm">Filter Category</button>
+                <button className="ep-btn ep-btn--secondary ep-btn--sm" onClick={handleExportCSV}><Download size={14} style={{ marginRight: 4 }}/> Export CSV</button>
               </div>
             </div>
 
@@ -188,7 +226,7 @@ export const FinanceView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {MOCK_TRANSACTIONS.filter(t => t.description.toLowerCase().includes(searchTerm.toLowerCase())).map(t => (
+                  {transactions.filter(t => t.description.toLowerCase().includes(searchTerm.toLowerCase()) || t.category.toLowerCase().includes(searchTerm.toLowerCase()) || t.reference.toLowerCase().includes(searchTerm.toLowerCase())).map(t => (
                     <tr key={t.id}>
                       <td style={{ fontWeight: 600, color: 'var(--color-text-secondary)' }}>{t.date}</td>
                       <td style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{t.description}</td>
@@ -217,8 +255,20 @@ export const FinanceView: React.FC = () => {
                 <Search size={16} color="var(--color-text-tertiary)" />
                 <input type="text" placeholder="Search student invoices..." />
               </div>
+              <div className="ep-tabs" style={{ padding: '2px', background: 'transparent' }}>
+                {(['all', 'paid', 'overdue', 'sent'] as const).map(status => (
+                  <button 
+                    key={status}
+                    className={`ep-tab ${invoiceFilter === status ? 'ep-tab--active' : ''}`}
+                    onClick={() => setInvoiceFilter(status)}
+                    style={{ textTransform: 'capitalize' }}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
               <button className="ep-btn ep-btn--primary">
-                <Plus size={16} /> + Generate Student Invoice
+                <Plus size={16} /> Generate Student Invoice
               </button>
             </div>
 
@@ -237,7 +287,7 @@ export const FinanceView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {invoices.map(inv => (
+                  {invoices.filter(inv => invoiceFilter === 'all' || inv.status === invoiceFilter).map(inv => (
                     <tr key={inv.id}>
                       <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-primary-400)' }}>{inv.id}</td>
                       <td style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{inv.studentName}</td>
@@ -431,6 +481,57 @@ export const FinanceView: React.FC = () => {
                 <ShieldCheck size={16} style={{ marginRight: 6 }} /> {isProcessing ? 'Processing Payment...' : `Authorize & Pay $${selectedPayInvoice.amount}`}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Transaction Modal */}
+      {isTransactionModalOpen && (
+        <div className="ep-finance__modal-overlay">
+          <div className="ep-finance__modal">
+            <header className="ep-finance__modal-header">
+              <h2 style={{ fontSize: '18px', margin: 0, color: 'var(--color-text-primary)' }}>Add Transaction</h2>
+              <button className="ep-btn ep-btn--ghost" onClick={() => setIsTransactionModalOpen(false)}>✕</button>
+            </header>
+            <div className="ep-finance__modal-body">
+              <div className="ep-finance__form-row">
+                <label>Type</label>
+                <select className="ep-input" value={newTx.type} onChange={e => setNewTx({...newTx, type: e.target.value})}>
+                  <option value="income">Income</option>
+                  <option value="expense">Expense</option>
+                  <option value="refund">Refund</option>
+                </select>
+              </div>
+              <div className="ep-finance__form-row">
+                <label>Category</label>
+                <input type="text" className="ep-input" value={newTx.category} onChange={e => setNewTx({...newTx, category: e.target.value})} placeholder="e.g. Tuition" />
+              </div>
+              <div className="ep-finance__form-row">
+                <label>Description</label>
+                <input type="text" className="ep-input" value={newTx.description} onChange={e => setNewTx({...newTx, description: e.target.value})} placeholder="Description" />
+              </div>
+              <div className="ep-finance__form-row">
+                <label>Amount</label>
+                <input type="number" className="ep-input" value={newTx.amount} onChange={e => setNewTx({...newTx, amount: Number(e.target.value)})} />
+              </div>
+              <div className="ep-finance__form-row">
+                <label>Payment Method</label>
+                <select className="ep-input" value={newTx.method} onChange={e => setNewTx({...newTx, method: e.target.value})}>
+                  <option value="card">Card</option>
+                  <option value="cash">Cash</option>
+                  <option value="bank">Bank Transfer</option>
+                  <option value="online">Online</option>
+                </select>
+              </div>
+              <div className="ep-finance__form-row">
+                <label>Date</label>
+                <input type="date" className="ep-input" value={newTx.date} onChange={e => setNewTx({...newTx, date: e.target.value})} />
+              </div>
+            </div>
+            <footer className="ep-finance__modal-actions">
+              <button className="ep-btn ep-btn--ghost" onClick={() => setIsTransactionModalOpen(false)}>Cancel</button>
+              <button className="ep-btn ep-btn--primary" onClick={handleSaveTransaction}>Save Transaction</button>
+            </footer>
           </div>
         </div>
       )}

@@ -292,3 +292,10 @@
     grid-template-columns: 1fr;
   }
 }
+
+.ep-teacher-dash__modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000; }
+.ep-teacher-dash__modal { background:var(--color-surface-50); border-radius:12px; padding:28px; min-width:420px; max-width:560px; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+.ep-teacher-dash__modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.ep-teacher-dash__modal-title { font-size:1.1rem; font-weight:700; color:var(--color-text-primary); }
+.ep-teacher-dash__modal-body { display:flex; flex-direction:column; gap:14px; }
+.ep-teacher-dash__modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; }

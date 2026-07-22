@@ -3,8 +3,10 @@ import './StudentDashboard.css';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { 
   GraduationCap, Calendar, Clock, BookOpen, Send, Bot, 
-  CheckCircle, AlertCircle, FileText, User, QrCode
+  CheckCircle, AlertCircle, FileText, User, QrCode, Upload, Library
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useUIStore } from '@/stores/uiStore';
 
 // Mock Data
 const GPA_DATA = [
@@ -47,6 +49,28 @@ export const StudentDashboard: React.FC = () => {
     { id: 1, role: 'ai', text: 'Hi! I am your AI Study Assistant. How can I help you today?' }
   ]);
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
+  const navigate = useNavigate();
+  const { addToast, setAiCopilotOpen } = useUIStore();
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [submitData, setSubmitData] = useState({ assignment: '', file: '', notes: '' });
+  const [deadlines, setDeadlines] = useState(DEADLINES);
+
+  const handleSubmitAssignment = () => {
+    addToast({ type: 'success', title: 'Assignment Submitted', message: 'Your assignment was successfully submitted.' });
+    setDeadlines(prev => prev.map(d => d.task === submitData.assignment ? { ...d, status: 'submitted', urgency: 'amber' } : d));
+    setShowSubmitModal(false);
+    setSubmitData({ assignment: '', file: '', notes: '' });
+  };
+  
+  const handleAITutor = () => {
+    setAiCopilotOpen(true);
+    addToast({ type: 'info', title: 'AI Tutor', message: 'Opening your personal AI tutor...' });
+  };
+
+  const handleLibrary = () => {
+    addToast({ type: 'info', title: 'Library', message: 'Opening Digital Library...' });
+    navigate('/library');
+  };
 
   const handleIdHover = (e: MouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget;
@@ -78,6 +102,17 @@ export const StudentDashboard: React.FC = () => {
     <div className="ep-student-dash">
       <header className="ep-student-dash__header">
         <h1>Student Portal</h1>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="ep-btn ep-btn--secondary" onClick={() => setShowSubmitModal(true)}>
+            <Upload size={18} /> Submit Assignment
+          </button>
+          <button className="ep-btn ep-btn--secondary" onClick={handleAITutor}>
+            <Bot size={18} /> AI Tutor
+          </button>
+          <button className="ep-btn ep-btn--secondary" onClick={handleLibrary}>
+            <Library size={18} /> Library
+          </button>
+        </div>
       </header>
       
       <div className="ep-student-dash__grid">
@@ -118,7 +153,7 @@ export const StudentDashboard: React.FC = () => {
               <div className="ep-student-dash__stat-val">3.9 GPA</div>
               <div className="ep-student-dash__stat-label">Current • A Average</div>
             </div>
-            <div className="ep-student-dash__stat-card">
+            <div className="ep-student-dash__stat-card" onClick={() => navigate('/attendance')} style={{ cursor: 'pointer' }}>
               <Calendar size={24} className="ep-student-dash__stat-icon" />
               <div className="ep-student-dash__stat-val">98%</div>
               <div className="ep-student-dash__stat-label">Attendance • 15 days streak</div>
@@ -155,7 +190,7 @@ export const StudentDashboard: React.FC = () => {
             <h3 className="ep-student-dash__panel-title">Course Progress</h3>
             <div className="ep-student-dash__course-grid">
               {COURSES.map(course => (
-                <div key={course.id} className="ep-student-dash__course-card">
+                <div key={course.id} className="ep-student-dash__course-card" onClick={() => navigate('/gradebook')} style={{ cursor: 'pointer' }}>
                   <div className="ep-student-dash__course-header">
                     <h4>{course.name}</h4>
                     <span className="ep-student-dash__course-grade">{course.grade}</span>
@@ -203,7 +238,7 @@ export const StudentDashboard: React.FC = () => {
           <div className="ep-student-dash__panel">
             <h3 className="ep-student-dash__panel-title">Upcoming Deadlines</h3>
             <ul className="ep-student-dash__deadline-list">
-              {DEADLINES.map(d => (
+              {deadlines.map(d => (
                 <li key={d.id} className={`ep-student-dash__deadline-item ep-student-dash__deadline-item--${d.urgency}`}>
                   <div className="ep-student-dash__deadline-icon">
                     <FileText size={20} />
@@ -214,7 +249,7 @@ export const StudentDashboard: React.FC = () => {
                   </div>
                   <div className="ep-student-dash__deadline-actions">
                     {d.status === 'pending' ? (
-                      <button className="ep-student-dash__btn-submit">Submit</button>
+                      <button className="ep-student-dash__btn-submit" onClick={() => { setSubmitData({...submitData, assignment: d.task}); setShowSubmitModal(true); }}>Submit</button>
                     ) : (
                       <span className="ep-student-dash__badge-submitted">Submitted</span>
                     )}
@@ -272,6 +307,34 @@ export const StudentDashboard: React.FC = () => {
 
         </div>
       </div>
+
+      {showSubmitModal && (
+        <div className="ep-student-dash__modal-overlay" onClick={() => setShowSubmitModal(false)}>
+          <div className="ep-student-dash__modal" onClick={e => e.stopPropagation()}>
+            <div className="ep-student-dash__modal-header">
+              <h2 className="ep-student-dash__modal-title">Submit Assignment</h2>
+              <button className="ep-btn ep-btn--text" onClick={() => setShowSubmitModal(false)}>X</button>
+            </div>
+            <div className="ep-student-dash__modal-body">
+              <label>Assignment</label>
+              <select className="ep-input" value={submitData.assignment} onChange={e => setSubmitData({...submitData, assignment: e.target.value})}>
+                <option value="">Select Assignment</option>
+                {deadlines.filter(d => d.status === 'pending').map(d => (
+                  <option key={d.id} value={d.task}>{d.task}</option>
+                ))}
+              </select>
+              <label>File Upload</label>
+              <input type="text" className="ep-input" placeholder="Enter file name (simulating upload)" value={submitData.file} onChange={e => setSubmitData({...submitData, file: e.target.value})} />
+              <label>Notes</label>
+              <textarea className="ep-input" rows={3} value={submitData.notes} onChange={e => setSubmitData({...submitData, notes: e.target.value})}></textarea>
+            </div>
+            <div className="ep-student-dash__modal-actions">
+              <button className="ep-btn ep-btn--secondary" onClick={() => setShowSubmitModal(false)}>Cancel</button>
+              <button className="ep-btn ep-btn--primary" onClick={handleSubmitAssignment}>Submit</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

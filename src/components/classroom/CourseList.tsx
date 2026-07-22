@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
-import { Search, Plus, Users, Clock, BookOpen, GraduationCap, CheckCircle, Award } from 'lucide-react';
+import { Search, Plus, Users, Clock, BookOpen, GraduationCap, CheckCircle, Award, Edit, Archive, Sparkles, Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SpeedGraderDrawer } from './SpeedGraderDrawer';
+import { useAcademicStore } from '@/stores/academicStore';
+import { useUIStore } from '@/stores/uiStore';
+import { generateLessonPlan } from '@/services/geminiService';
+import { Button } from '@/components/ui';
 import './CourseList.css';
 
 interface Course {
@@ -33,14 +37,73 @@ export const CourseList: React.FC = () => {
   const [filterGrade, setFilterGrade] = useState('');
   const [speedGraderCourse, setSpeedGraderCourse] = useState<string | null>(null);
 
-  const filteredCourses = mockCourses.filter(course => {
+  const academicStore = useAcademicStore();
+  const { addToast } = useUIStore();
+
+  const [courses, setCourses] = useState<Course[]>(mockCourses);
+
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [courseToEdit, setCourseToEdit] = useState<Course | null>(null);
+  
+  const [enrollmentOpen, setEnrollmentOpen] = useState<string | null>(null);
+  
+  const [aiPlanOpen, setAiPlanOpen] = useState<string | null>(null);
+  const [aiPlanContent, setAiPlanContent] = useState('');
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  const filteredCourses = courses.filter(course => {
     const matchesSearch = course.name.toLowerCase().includes(searchTerm.toLowerCase()) || course.code.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTier = filterTier ? course.tier === filterTier : true;
     const matchesGrade = filterGrade ? course.grade === filterGrade : true;
     return matchesSearch && matchesTier && matchesGrade;
   });
 
-  const totalEnrolled = mockCourses.reduce((sum, course) => sum + course.enrolled, 0);
+  const totalEnrolled = courses.reduce((sum, course) => sum + course.enrolled, 0);
+
+  const handleSaveCourse = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = Object.fromEntries(formData.entries());
+    
+    const courseData = {
+      ...data,
+      enrolled: Number(data.enrolled) || 0,
+      capacity: Number(data.capacity) || 30
+    } as unknown as Course;
+
+    if (courseToEdit) {
+      setCourses(prev => prev.map(c => c.id === courseToEdit.id ? { ...c, ...courseData } : c));
+      addToast({ type: 'success', title: 'Success', message: 'Course updated successfully' });
+    } else {
+      const newCourse = { ...courseData, id: `crs-${Date.now()}` };
+      setCourses(prev => [...prev, newCourse]);
+      addToast({ type: 'success', title: 'Success', message: 'Course created successfully' });
+    }
+    setIsFormOpen(false);
+    setCourseToEdit(null);
+  };
+
+  const handleArchive = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCourses(prev => prev.map(c => c.id === id ? { ...c, status: 'archived' } : c));
+    academicStore.updateCourse(id, { status: 'archived' });
+    addToast({ type: 'warning', title: 'Archived', message: 'Course archived.' });
+  };
+
+  const handleGenerateLessonPlan = async (course: Course, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setAiPlanOpen(course.id);
+    setIsAiLoading(true);
+    try {
+      const result = await generateLessonPlan(course.name, 'Introduction to the subject', course.grade, '45 Minutes');
+      setAiPlanContent(result.success && result.content ? result.content : (result.error || 'Could not generate lesson plan.'));
+    } catch (error) {
+      addToast({ type: 'error', title: 'Error', message: 'Failed to generate lesson plan.' });
+      setAiPlanOpen(null);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   return (
     <div className="ep-classroom">
@@ -50,7 +113,7 @@ export const CourseList: React.FC = () => {
           <h1 className="ep-classroom__title">Campus Course Catalog</h1>
           <p className="ep-classroom__subtitle">Manage subject curriculums, course sections, enrolled rosters, and class schedules</p>
         </div>
-        <button className="ep-btn ep-btn--primary">
+        <button className="ep-btn ep-btn--primary" onClick={() => { setCourseToEdit(null); setIsFormOpen(true); }}>
           <Plus size={16} /> + Create New Course
         </button>
       </header>
@@ -62,7 +125,7 @@ export const CourseList: React.FC = () => {
             <BookOpen size={22} />
           </div>
           <div>
-            <div className="ep-classroom__kpi-val">{mockCourses.length}</div>
+            <div className="ep-classroom__kpi-val">{courses.length}</div>
             <div className="ep-classroom__kpi-lbl">Total Active Courses</div>
           </div>
         </div>
@@ -129,8 +192,15 @@ export const CourseList: React.FC = () => {
         {filteredCourses.map(course => (
           <div key={course.id} className="ep-course-card" onClick={() => navigate(`/classroom/${course.id}`)}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className="ep-badge ep-badge--primary">{course.tier}</span>
-              <span className="ep-badge ep-badge--success">{course.status}</span>
+              <div>
+                <span className="ep-badge ep-badge--primary">{course.tier}</span>
+                <span className="ep-badge ep-badge--success" style={{ marginLeft: 8 }}>{course.status}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 4 }} onClick={e => e.stopPropagation()}>
+                <Button variant="ghost" size="sm" icon={<Sparkles size={14} color="#a855f7" />} onClick={(e) => handleGenerateLessonPlan(course, e)} />
+                <Button variant="ghost" size="sm" icon={<Edit size={14} />} onClick={(e) => { e.stopPropagation(); setCourseToEdit(course); setIsFormOpen(true); }} />
+                <Button variant="ghost" size="sm" icon={<Archive size={14} />} onClick={(e) => handleArchive(course.id, e)} />
+              </div>
             </div>
             <div>
               <h3 style={{ fontSize: '18px', fontWeight: 700, margin: '4px 0 2px 0', color: 'var(--color-text-primary)' }}>{course.name}</h3>
@@ -142,13 +212,20 @@ export const CourseList: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><GraduationCap size={14} /> Instructor: {course.teacher}</div>
             </div>
             
-            <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '10px', marginTop: '6px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid var(--color-border)', paddingTop: '10px', marginTop: '6px' }} onClick={e => e.stopPropagation()}>
               <button 
                 className="ep-btn ep-btn--secondary" 
-                style={{ width: '100%', fontSize: '12px' }}
+                style={{ flex: 1, fontSize: '12px' }}
                 onClick={() => setSpeedGraderCourse(course.name)}
               >
-                <Award size={14} style={{ marginRight: 6 }} /> SpeedGrader™ Submissions
+                <Award size={14} style={{ marginRight: 6 }} /> SpeedGrader™
+              </button>
+              <button 
+                className="ep-btn ep-btn--secondary" 
+                style={{ flex: 1, fontSize: '12px' }}
+                onClick={() => setEnrollmentOpen(course.id)}
+              >
+                <Users size={14} style={{ marginRight: 6 }} /> Enroll Students
               </button>
             </div>
           </div>
@@ -161,6 +238,130 @@ export const CourseList: React.FC = () => {
           isOpen={!!speedGraderCourse}
           onClose={() => setSpeedGraderCourse(null)}
         />
+      )}
+
+      {isFormOpen && (
+        <div className="ep-course__modal-overlay">
+          <div className="ep-course__modal">
+            <h2 className="ep-course__modal-title">{courseToEdit ? 'Edit Course' : 'Create Course'}</h2>
+            <form onSubmit={handleSaveCourse} className="ep-course__modal-form">
+              <div className="ep-course__modal-grid">
+                <div className="ep-course__modal-field">
+                  <label className="ep-course__modal-label">Course Name</label>
+                  <input name="name" defaultValue={courseToEdit?.name} required className="ep-course__modal-input" />
+                </div>
+                <div className="ep-course__modal-field">
+                  <label className="ep-course__modal-label">Course Code</label>
+                  <input name="code" defaultValue={courseToEdit?.code} required className="ep-course__modal-input" placeholder="e.g. MATH401" />
+                </div>
+                <div className="ep-course__modal-field">
+                  <label className="ep-course__modal-label">Subject Area / Tier</label>
+                  <select name="tier" defaultValue={courseToEdit?.tier || 'Standard'} className="ep-course__modal-select">
+                    <option value="Standard">Standard</option>
+                    <option value="Honors">Honors</option>
+                    <option value="AP">AP</option>
+                  </select>
+                </div>
+                <div className="ep-course__modal-field">
+                  <label className="ep-course__modal-label">Grade Level</label>
+                  <select name="grade" defaultValue={courseToEdit?.grade || '10'} className="ep-course__modal-select">
+                    <option value="9">Grade 9</option>
+                    <option value="10">Grade 10</option>
+                    <option value="11">Grade 11</option>
+                    <option value="12">Grade 12</option>
+                  </select>
+                </div>
+                <div className="ep-course__modal-field">
+                  <label className="ep-course__modal-label">Teacher</label>
+                  <select name="teacher" defaultValue={courseToEdit?.teacher} className="ep-course__modal-select">
+                    <option value="Dr. Smith">Dr. Smith</option>
+                    <option value="Prof. Johnson">Prof. Johnson</option>
+                    <option value="Mr. Davis">Mr. Davis</option>
+                    <option value="Ms. Wilson">Ms. Wilson</option>
+                  </select>
+                </div>
+                <div className="ep-course__modal-field">
+                  <label className="ep-course__modal-label">Credits/Units</label>
+                  <input name="credits" type="number" defaultValue={3} className="ep-course__modal-input" />
+                </div>
+                <div className="ep-course__modal-field">
+                  <label className="ep-course__modal-label">Max Enrollment</label>
+                  <input name="capacity" type="number" defaultValue={courseToEdit?.capacity || 30} className="ep-course__modal-input" />
+                </div>
+                <div className="ep-course__modal-field">
+                  <label className="ep-course__modal-label">Status</label>
+                  <select name="status" defaultValue={courseToEdit?.status || 'active'} className="ep-course__modal-select">
+                    <option value="active">Active</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
+              </div>
+              <div className="ep-course__modal-field" style={{ gridColumn: '1 / -1', marginTop: 12 }}>
+                <label className="ep-course__modal-label">Description</label>
+                <textarea name="description" className="ep-course__modal-textarea" rows={3}></textarea>
+              </div>
+              <div className="ep-course__modal-actions">
+                <Button variant="ghost" type="button" onClick={() => setIsFormOpen(false)}>Cancel</Button>
+                <Button variant="primary" type="submit">Save Course</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {enrollmentOpen && (
+        <div className="ep-course__modal-overlay">
+          <div className="ep-course__modal">
+            <h2 className="ep-course__modal-title">Enroll Students</h2>
+            <div className="ep-course__modal-grid" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {academicStore.students.length > 0 ? (
+                academicStore.students.map(s => (
+                  <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <input type="checkbox" defaultChecked={Math.random() > 0.7} /> {s.firstName} {s.lastName} (Grade {s.gradeLevel})
+                  </label>
+                ))
+              ) : (
+                <div style={{ color: 'var(--color-text-secondary)' }}>No students in store. Please add students first.</div>
+              )}
+            </div>
+            <div className="ep-course__modal-actions">
+              <Button variant="ghost" onClick={() => setEnrollmentOpen(null)}>Cancel</Button>
+              <Button variant="primary" onClick={() => {
+                setEnrollmentOpen(null);
+                addToast({ type: 'success', title: 'Success', message: 'Enrollment updated' });
+              }}>Save Enrollment</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {aiPlanOpen && (
+        <div className="ep-course__modal-overlay">
+          <div className="ep-course__modal" style={{ maxWidth: 800 }}>
+            <h2 className="ep-course__modal-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Sparkles size={20} color="#a855f7" /> AI Lesson Plan Generator
+            </h2>
+            {isAiLoading ? (
+              <div className="ep-course__lesson-loader">
+                <Loader size={32} className="ep-spin" style={{ animation: 'spin 2s linear infinite' }} />
+                <p>Generating a custom lesson plan...</p>
+              </div>
+            ) : (
+              <div style={{ whiteSpace: 'pre-wrap', fontFamily: 'var(--font-mono)', fontSize: 13, background: 'var(--color-surface-100)', padding: 16, borderRadius: 8 }}>
+                {aiPlanContent}
+              </div>
+            )}
+            <div className="ep-course__modal-actions">
+              {!isAiLoading && (
+                <Button variant="outline" onClick={() => navigator.clipboard.writeText(aiPlanContent).then(() => addToast({ type: 'info', title: 'Copied', message: 'Copied to clipboard' }))}>
+                  Copy Plan
+                </Button>
+              )}
+              <Button variant="ghost" onClick={() => setAiPlanOpen(null)}>Close</Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

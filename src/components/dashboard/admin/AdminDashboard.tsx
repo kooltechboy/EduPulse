@@ -8,6 +8,9 @@ import {
   Bell, CheckCircle, AlertTriangle, BookOpen, FileText, ChevronRight, Bus
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useUIStore } from '@/stores/uiStore';
+import { useAcademicStore } from '@/stores/academicStore';
+import { useNavigate } from 'react-router-dom';
 import './AdminDashboard.css';
 
 const ENROLLMENT_TREND = [
@@ -70,6 +73,31 @@ const ALERTS = [
 export const AdminDashboard: React.FC = () => {
   const { user } = useAuthStore();
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const navigate = useNavigate();
+  const { addToast } = useUIStore();
+  const { addAdmission } = useAcademicStore();
+
+  const [admissionModalOpen, setAdmissionModalOpen] = React.useState(false);
+  const [formData, setFormData] = React.useState({
+    firstName: '', lastName: '', email: '', gradeLevel: '', guardianName: '', guardianPhone: '', notes: ''
+  });
+
+  const handleExportAudit = () => {
+    const rows = RECENT_ACTIVITY.map(a => `${a.id},"${a.message}","${a.time}"`);
+    const csv = ['ID,Message,Time', ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'audit-log.csv'; a.click();
+  };
+
+  const handleAdmissionSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    addAdmission(formData);
+    addToast({ type: 'success', title: 'Admission Created', message: 'New admission added successfully.' });
+    setAdmissionModalOpen(false);
+    setFormData({ firstName: '', lastName: '', email: '', gradeLevel: '', guardianName: '', guardianPhone: '', notes: '' });
+  };
 
   return (
     <div className="ep-admin-dash">
@@ -80,8 +108,8 @@ export const AdminDashboard: React.FC = () => {
           <p className="ep-admin-dash__subtitle">{currentDate} • Executive Command Center</p>
         </div>
         <div className="ep-admin-dash__actions">
-          <button className="ep-btn ep-btn--secondary">Export Audit</button>
-          <button className="ep-btn ep-btn--primary">+ New Admission</button>
+          <button className="ep-btn ep-btn--secondary" onClick={handleExportAudit}>Export Audit</button>
+          <button className="ep-btn ep-btn--primary" onClick={() => setAdmissionModalOpen(true)}>+ New Admission</button>
         </div>
       </header>
 
@@ -270,7 +298,7 @@ export const AdminDashboard: React.FC = () => {
         <div className="ep-admin-dash__card">
           <div className="ep-admin-dash__card-header">
             <h2 className="ep-admin-dash__card-title">Recent Activity</h2>
-            <button className="ep-btn ep-btn--text">View All Audit Logs</button>
+            <button className="ep-btn ep-btn--text" onClick={() => navigate('/security')}>View All Audit Logs</button>
           </div>
           <div className="ep-admin-dash__activity-list">
             {RECENT_ACTIVITY.map((act) => {
@@ -294,7 +322,16 @@ export const AdminDashboard: React.FC = () => {
           </div>
           <div className="ep-admin-dash__alerts-list">
             {ALERTS.map((alert) => (
-              <div key={alert.id} className={`ep-admin-dash__alert-card ep-admin-dash__alert-card--${alert.severity}`}>
+              <div 
+                key={alert.id} 
+                className={`ep-admin-dash__alert-card ep-admin-dash__alert-card--${alert.severity}`}
+                onClick={() => {
+                  if (alert.title === 'Overdue Invoices') navigate('/finance');
+                  else if (alert.title === 'Low Attendance') navigate('/students');
+                  else if (alert.title === 'Pending Admissions') navigate('/admissions');
+                }}
+                style={{ cursor: 'pointer' }}
+              >
                 <Bell size={20} style={{ color: 'var(--color-text-secondary)', flexShrink: 0 }} />
                 <div className="ep-admin-dash__alert-info">
                   <h4 className="ep-admin-dash__alert-title">{alert.title}</h4>
@@ -341,6 +378,26 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
       </footer>
+      {admissionModalOpen && (
+        <div className="ep-modal-overlay" onClick={() => setAdmissionModalOpen(false)}>
+          <div className="ep-modal" onClick={e => e.stopPropagation()} style={{ width: '400px', backgroundColor: 'var(--color-surface-50)', padding: 'var(--space-6)', borderRadius: 'var(--radius-lg)' }}>
+            <h2 style={{ marginBottom: 'var(--space-4)' }}>New Admission</h2>
+            <form onSubmit={handleAdmissionSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+              <input className="ep-input" placeholder="First Name" required value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} />
+              <input className="ep-input" placeholder="Last Name" required value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} />
+              <input className="ep-input" placeholder="Email" type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+              <input className="ep-input" placeholder="Grade Level" required value={formData.gradeLevel} onChange={e => setFormData({ ...formData, gradeLevel: e.target.value })} />
+              <input className="ep-input" placeholder="Guardian Name" required value={formData.guardianName} onChange={e => setFormData({ ...formData, guardianName: e.target.value })} />
+              <input className="ep-input" placeholder="Guardian Phone" required value={formData.guardianPhone} onChange={e => setFormData({ ...formData, guardianPhone: e.target.value })} />
+              <textarea className="ep-input" placeholder="Notes" rows={3} value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })}></textarea>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'flex-end', marginTop: 'var(--space-2)' }}>
+                <button type="button" className="ep-btn ep-btn--text" onClick={() => setAdmissionModalOpen(false)}>Cancel</button>
+                <button type="submit" className="ep-btn ep-btn--primary">Submit Admission</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

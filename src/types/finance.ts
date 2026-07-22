@@ -15,6 +15,9 @@ export interface Transaction {
   status: TransactionStatus;
 }
 
+/** Alias used by operationsStore & supabaseDataService */
+export type FinanceTransaction = Transaction;
+
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 
 export interface InvoiceItem {

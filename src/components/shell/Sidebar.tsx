@@ -4,6 +4,7 @@ import * as Icons from 'lucide-react';
 import { useAuthStore, UserRole } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { useNavigate } from 'react-router-dom';
 import './Shell.css';
 
 interface NavItem {
@@ -69,6 +70,7 @@ export const Sidebar: React.FC = () => {
   const { sidebarCollapsed, sidebarOpen, setSidebarOpen, toggleSidebarCollapse } = useUIStore();
   const { openTab } = useWorkspaceStore();
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (!user) return null;
 
@@ -110,9 +112,11 @@ export const Sidebar: React.FC = () => {
                       to={item.path}
                       className={`ep-sidebar__item ${isActive ? 'ep-sidebar__item--active' : ''}`}
                       title={sidebarCollapsed ? item.label : undefined}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
                         setSidebarOpen(false);
                         openTab(item.path, item.label, item.icon, item.path !== '/dashboard');
+                        navigate(item.path);
                       }}
                     >
                       <IconComponent className="ep-sidebar__item-icon" size={20} />

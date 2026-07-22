@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Search, CheckCircle, XCircle, AlertCircle, Clock, UserCheck, Users } from 'lucide-react';
+import { Save, Search, CheckCircle, XCircle, AlertCircle, Clock, UserCheck, Users, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import { useUIStore } from '@/stores/uiStore';
+import { useAcademicStore } from '@/stores/academicStore';
 import './AttendanceMarking.css';
 
 type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused' | 'none';
@@ -9,19 +11,24 @@ interface Student {
   name: string;
   avatar: string;
   status: AttendanceStatus;
+  notes?: string;
 }
 
 export const AttendanceMarking: React.FC = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [course, setCourse] = useState('MATH401');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const addToast = useUIStore(s => s.addToast);
+  const markAttendance = useAcademicStore(s => s.markAttendance);
+  const [expandedNotesId, setExpandedNotesId] = useState<string | null>(null);
   
   const [students, setStudents] = useState<Student[]>([
-    { id: '1', name: 'Alice Johnson', avatar: 'https://ui-avatars.com/api/?name=Alice+Johnson', status: 'none' },
-    { id: '2', name: 'Bob Smith', avatar: 'https://ui-avatars.com/api/?name=Bob+Smith', status: 'none' },
-    { id: '3', name: 'Charlie Davis', avatar: 'https://ui-avatars.com/api/?name=Charlie+Davis', status: 'none' },
-    { id: '4', name: 'Diana Prince', avatar: 'https://ui-avatars.com/api/?name=Diana+Prince', status: 'none' },
-    { id: '5', name: 'Edward Norton', avatar: 'https://ui-avatars.com/api/?name=Edward+Norton', status: 'none' },
+    { id: '1', name: 'Alice Johnson', avatar: 'https://ui-avatars.com/api/?name=Alice+Johnson', status: 'none', notes: '' },
+    { id: '2', name: 'Bob Smith', avatar: 'https://ui-avatars.com/api/?name=Bob+Smith', status: 'none', notes: '' },
+    { id: '3', name: 'Charlie Davis', avatar: 'https://ui-avatars.com/api/?name=Charlie+Davis', status: 'none', notes: '' },
+    { id: '4', name: 'Diana Prince', avatar: 'https://ui-avatars.com/api/?name=Diana+Prince', status: 'none', notes: '' },
+    { id: '5', name: 'Edward Norton', avatar: 'https://ui-avatars.com/api/?name=Edward+Norton', status: 'none', notes: '' },
   ]);
 
   useEffect(() => {
@@ -29,21 +36,61 @@ export const AttendanceMarking: React.FC = () => {
     if (saved) {
       setStudents(JSON.parse(saved));
     } else {
-      setStudents(s => s.map(student => ({ ...student, status: 'none' })));
+      setStudents(s => s.map(student => ({ ...student, status: 'none', notes: '' })));
     }
   }, [course, date]);
 
-  const markStudent = (id: string, status: AttendanceStatus) => {
-    setStudents(prev => prev.map(s => s.id === id ? { ...s, status } : s));
+  const cycleStatus = (id: string) => {
+    const sequence: AttendanceStatus[] = ['present', 'absent', 'late', 'excused', 'present'];
+    setStudents(prev => prev.map(s => {
+      if (s.id === id) {
+        const nextStatus = s.status === 'none' ? 'present' : sequence[sequence.indexOf(s.status) + 1] || 'present';
+        return { ...s, status: nextStatus };
+      }
+      return s;
+    }));
+  };
+
+  const updateNotes = (id: string, notes: string) => {
+    setStudents(prev => prev.map(s => s.id === id ? { ...s, notes } : s));
   };
 
   const markAll = (status: AttendanceStatus) => {
     setStudents(prev => prev.map(s => ({ ...s, status })));
+    addToast({ type: 'success', title: 'Marked', message: `All students marked as ${status}.` });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setIsSaving(true);
     localStorage.setItem(`attendance_${course}_${date}`, JSON.stringify(students));
-    alert('Attendance saved successfully!');
+    try {
+      if (markAttendance) {
+        students.forEach(s => {
+          if (s.status !== 'none') {
+          markAttendance({
+            id: `att_${s.id}_${date}`,
+            studentId: s.id,
+            courseId: course,
+            date,
+            status: s.status as 'present' | 'absent' | 'late' | 'excused',
+            notes: s.notes,
+            markedBy: 'current_user',
+          });
+          }
+        });
+      }
+      addToast({ type: 'success', title: 'Saved', message: `Attendance for ${date} saved successfully.` });
+    } catch (e) {
+      addToast({ type: 'error', title: 'Save Failed', message: 'Failed to save attendance.' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const navigateDate = (days: number) => {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    setDate(d.toISOString().split('T')[0]);
   };
 
   const stats = {
@@ -66,19 +113,18 @@ export const AttendanceMarking: React.FC = () => {
           <p className="ep-attendance__subtitle">Record classroom attendance, late arrivals, and excused absence notes</p>
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <input 
-            type="date" 
-            className="ep-input" 
-            value={date} 
-            onChange={(e) => setDate(e.target.value)} 
-            style={{ width: '160px' }}
-          />
+          <button className="ep-btn ep-btn--secondary ep-btn--sm" onClick={() => navigateDate(-1)}><ChevronLeft size={16} /></button>
+          <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
+            {new Date(date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+          </span>
+          <button className="ep-btn ep-btn--secondary ep-btn--sm" onClick={() => navigateDate(1)}><ChevronRight size={16} /></button>
+          
           <select className="ep-input" value={course} onChange={(e) => setCourse(e.target.value)} style={{ width: '220px' }}>
             <option value="MATH401">Advanced Mathematics (MATH401)</option>
             <option value="PHY301">Physics I (PHY301)</option>
           </select>
-          <button className="ep-btn ep-btn--primary" onClick={handleSave}>
-            <Save size={16} /> Save Roll Call
+          <button className="ep-btn ep-btn--primary" onClick={handleSave} disabled={isSaving}>
+            <Save size={16} /> {isSaving ? 'Saving...' : 'Save Roll Call'}
           </button>
         </div>
       </header>
@@ -145,32 +191,41 @@ export const AttendanceMarking: React.FC = () => {
               <img src={student.avatar} alt={student.name} style={{ width: 40, height: 40, borderRadius: '50%' }} />
               <span style={{ fontWeight: 700, color: 'var(--color-text-primary)' }}>{student.name}</span>
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button 
-                className={`ep-btn ep-btn--sm ${student.status === 'present' ? 'ep-btn--success' : 'ep-btn--secondary'}`}
-                onClick={() => markStudent(student.id, 'present')}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                className={`ep-btn ep-btn--sm ${student.status === 'present' ? 'ep-btn--success' : student.status === 'absent' ? 'ep-btn--danger' : student.status === 'late' ? 'ep-btn--warning' : student.status === 'excused' ? 'ep-btn--primary' : 'ep-btn--secondary'}`}
+                onClick={() => cycleStatus(student.id)}
+                style={{ width: '120px', textTransform: 'capitalize' }}
               >
-                <CheckCircle size={14} style={{ marginRight: 4 }} /> Present
+                {student.status === 'present' && <CheckCircle size={14} style={{ marginRight: 4 }} />}
+                {student.status === 'absent' && <XCircle size={14} style={{ marginRight: 4 }} />}
+                {student.status === 'late' && <Clock size={14} style={{ marginRight: 4 }} />}
+                {student.status === 'excused' && <AlertCircle size={14} style={{ marginRight: 4 }} />}
+                {student.status === 'none' ? 'Mark' : student.status}
               </button>
+              
               <button 
-                className={`ep-btn ep-btn--sm ${student.status === 'late' ? 'ep-btn--warning' : 'ep-btn--secondary'}`}
-                onClick={() => markStudent(student.id, 'late')}
+                className="ep-btn ep-btn--ghost ep-btn--sm"
+                onClick={() => setExpandedNotesId(expandedNotesId === student.id ? null : student.id)}
+                title="Add notes"
               >
-                <Clock size={14} style={{ marginRight: 4 }} /> Late
-              </button>
-              <button 
-                className={`ep-btn ep-btn--sm ${student.status === 'absent' ? 'ep-btn--danger' : 'ep-btn--secondary'}`}
-                onClick={() => markStudent(student.id, 'absent')}
-              >
-                <XCircle size={14} style={{ marginRight: 4 }} /> Absent
-              </button>
-              <button 
-                className={`ep-btn ep-btn--sm ${student.status === 'excused' ? 'ep-btn--primary' : 'ep-btn--secondary'}`}
-                onClick={() => markStudent(student.id, 'excused')}
-              >
-                <AlertCircle size={14} style={{ marginRight: 4 }} /> Excused
+                <FileText size={16} />
               </button>
             </div>
+            
+            {expandedNotesId === student.id && (
+              <div style={{ width: '100%', marginTop: '8px' }}>
+                <input 
+                  type="text" 
+                  className="ep-input" 
+                  style={{ width: '100%' }}
+                  placeholder="Add attendance note..."
+                  value={student.notes || ''}
+                  onChange={(e) => updateNotes(student.id, e.target.value)}
+                  autoFocus
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>

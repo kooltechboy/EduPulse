@@ -1,19 +1,37 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { Search, ArrowRight, UserPlus, FileText, CheckCircle } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useNavigate } from 'react-router-dom';
 import './CommandPalette.css';
 
-const ACTIONS = [
-  { id: '1', label: 'Add Student', icon: UserPlus, path: '/students' },
-  { id: '2', label: 'Create Invoice', icon: FileText, path: '/finance' },
-  { id: '3', label: 'Mark Attendance', icon: CheckCircle, path: '/attendance' },
-  { id: '4', label: 'Go to Dashboard', icon: ArrowRight, path: '/dashboard' },
-  { id: '5', label: 'View Schedule', icon: ArrowRight, path: '/schedule' }
+const COMMANDS_BASE = [
+  { id: 'nav-dashboard', label: 'Go to Dashboard', icon: 'LayoutDashboard', action: (nav: any, t: any, a: any) => nav('/dashboard') },
+  { id: 'nav-students', label: 'Student Directory', icon: 'Users', action: (nav: any, t: any, a: any) => nav('/students') },
+  { id: 'nav-gradebook', label: 'Open Gradebook', icon: 'BookOpen', action: (nav: any, t: any, a: any) => nav('/gradebook') },
+  { id: 'nav-finance', label: 'Finance & Billing', icon: 'DollarSign', action: (nav: any, t: any, a: any) => nav('/finance') },
+  { id: 'nav-attendance', label: 'Mark Attendance', icon: 'Calendar', action: (nav: any, t: any, a: any) => nav('/attendance') },
+  { id: 'nav-behavior', label: 'Behavior Matrix', icon: 'Shield', action: (nav: any, t: any, a: any) => nav('/behavior') },
+  { id: 'nav-hr', label: 'HR Management', icon: 'UserCheck', action: (nav: any, t: any, a: any) => nav('/hr') },
+  { id: 'nav-library', label: 'Digital Library', icon: 'Book', action: (nav: any, t: any, a: any) => nav('/library') },
+  { id: 'nav-health', label: 'Medical Clinic', icon: 'Heart', action: (nav: any, t: any, a: any) => nav('/health') },
+  { id: 'nav-security', label: 'Security & Audit', icon: 'Lock', action: (nav: any, t: any, a: any) => nav('/security') },
+  { id: 'nav-events', label: 'Campus Events', icon: 'Calendar', action: (nav: any, t: any, a: any) => nav('/events') },
+  { id: 'nav-transport', label: 'Fleet Transport', icon: 'Bus', action: (nav: any, t: any, a: any) => nav('/transport') },
+  { id: 'nav-cafeteria', label: 'Cafeteria', icon: 'Coffee', action: (nav: any, t: any, a: any) => nav('/cafeteria') },
+  { id: 'nav-counseling', label: 'Counseling', icon: 'MessageCircle', action: (nav: any, t: any, a: any) => nav('/counseling') },
+  { id: 'nav-coordination', label: 'Coordination', icon: 'BarChart', action: (nav: any, t: any, a: any) => nav('/coordination') },
+  { id: 'action-ai', label: 'Open AI Copilot', icon: 'Sparkles', action: (nav: any, t: any, a: any) => t() },
+  { id: 'action-theme', label: 'Toggle Dark/Light Mode', icon: 'Sun', action: (nav: any, t: any, a: any) => a() },
 ];
 
+import { useAcademicStore } from '@/stores/academicStore';
+import { useAuthStore } from '@/stores/authStore';
+import * as Icons from 'lucide-react';
+
 export const CommandPalette: React.FC = () => {
-  const { commandPaletteOpen, setCommandPaletteOpen } = useUIStore();
+  const { commandPaletteOpen, setCommandPaletteOpen, toggleAiCopilot } = useUIStore();
+  const { toggleTheme } = useAuthStore();
+  const { students, courses } = useAcademicStore();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
@@ -43,7 +61,18 @@ export const CommandPalette: React.FC = () => {
 
   if (!commandPaletteOpen) return null;
 
-  const results = ACTIONS.filter(a => a.label.toLowerCase().includes(query.toLowerCase()));
+  const COMMANDS = useMemo(() => {
+    let cmds = [...COMMANDS_BASE];
+    students?.forEach(s => {
+      cmds.push({ id: `student-${s.id}`, label: `Student: ${s.firstName} ${s.lastName}`, icon: 'User', action: (nav) => nav(`/students/${s.id}`) });
+    });
+    courses?.forEach(c => {
+      cmds.push({ id: `course-${c.id}`, label: `Course: ${c.name}`, icon: 'BookOpen', action: (nav) => nav(`/classroom/${c.id}`) });
+    });
+    return cmds;
+  }, [students, courses]);
+
+  const results = COMMANDS.filter(a => a.label.toLowerCase().includes(query.toLowerCase()));
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
@@ -55,7 +84,7 @@ export const CommandPalette: React.FC = () => {
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (results[selectedIndex]) {
-        navigate(results[selectedIndex].path);
+        results[selectedIndex].action(navigate, toggleAiCopilot, toggleTheme);
         setCommandPaletteOpen(false);
       }
     }
@@ -81,20 +110,22 @@ export const CommandPalette: React.FC = () => {
         </div>
         <div className="ep-command-palette__results">
           {results.length > 0 ? (
-            results.map((action, idx) => (
+            results.map((action, idx) => {
+              const IconComp = (Icons as any)[action.icon as any] || Icons.ArrowRight;
+              return (
               <div
                 key={action.id}
                 className={`ep-command-palette__item ${idx === selectedIndex ? 'ep-command-palette__item--selected' : ''}`}
                 onClick={() => {
-                  navigate(action.path);
+                  action.action(navigate, toggleAiCopilot, toggleTheme);
                   setCommandPaletteOpen(false);
                 }}
                 onMouseEnter={() => setSelectedIndex(idx)}
               >
-                <action.icon size={18} />
+                <IconComp size={18} />
                 <span>{action.label}</span>
               </div>
-            ))
+            )})
           ) : (
             <div className="ep-command-palette__empty">
               No results found for "{query}"

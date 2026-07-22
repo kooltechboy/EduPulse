@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Sparkles, CheckCircle, FileText, ChevronRight, ChevronLeft, Award, User, Clock, Send } from 'lucide-react';
 import { getAITutorResponse } from '@/services/geminiService';
+import { useUIStore } from '@/stores/uiStore';
 import './SpeedGraderDrawer.css';
 
 interface StudentSubmission {
@@ -68,6 +69,7 @@ export const SpeedGraderDrawer: React.FC<SpeedGraderDrawerProps> = ({ courseName
   const [submissions, setSubmissions] = useState<StudentSubmission[]>(MOCK_SUBMISSIONS);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const addToast = useUIStore(s => s.addToast);
 
   if (!isOpen) return null;
 
@@ -104,11 +106,31 @@ export const SpeedGraderDrawer: React.FC<SpeedGraderDrawerProps> = ({ courseName
 
   const handleSaveAndNext = () => {
     setSubmissions(prev => prev.map((sub, i) => i === currentIndex ? { ...sub, status: 'graded', score: currentTotalScore } : sub));
-    if (currentIndex < submissions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+    addToast({ type: 'success', title: 'Grade Submitted', message: `Grade submitted for ${current.studentName}.` });
+    
+    // Find next ungraded
+    const nextIndex = submissions.findIndex((s, i) => i > currentIndex && s.status !== 'graded');
+    if (nextIndex !== -1) {
+      setCurrentIndex(nextIndex);
     } else {
-      alert('All submissions in queue have been graded!');
+      // search from start
+      const wrapIndex = submissions.findIndex(s => s.status !== 'graded');
+      if (wrapIndex !== -1 && wrapIndex !== currentIndex) {
+        setCurrentIndex(wrapIndex);
+      } else {
+        addToast({ type: 'info', title: 'All Done', message: 'No more ungraded submissions.' });
+      }
     }
+  };
+
+  const navigatePrev = () => {
+    if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
+    else addToast({ type: 'info', title: 'Start of List', message: 'No previous submissions.' });
+  };
+
+  const navigateNext = () => {
+    if (currentIndex < submissions.length - 1) setCurrentIndex(currentIndex + 1);
+    else addToast({ type: 'info', title: 'End of List', message: 'No more submissions.' });
   };
 
   return (
@@ -126,10 +148,10 @@ export const SpeedGraderDrawer: React.FC<SpeedGraderDrawerProps> = ({ courseName
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button className="ep-btn ep-btn--ghost" disabled={currentIndex === 0} onClick={() => setCurrentIndex(currentIndex - 1)}>
+            <button className="ep-btn ep-btn--ghost" disabled={currentIndex === 0} onClick={navigatePrev}>
               <ChevronLeft size={16} /> Prev
             </button>
-            <button className="ep-btn ep-btn--ghost" disabled={currentIndex === submissions.length - 1} onClick={() => setCurrentIndex(currentIndex + 1)}>
+            <button className="ep-btn ep-btn--ghost" disabled={currentIndex === submissions.length - 1} onClick={navigateNext}>
               Next <ChevronRight size={16} />
             </button>
             <button className="ep-btn ep-btn--ghost" onClick={onClose}>

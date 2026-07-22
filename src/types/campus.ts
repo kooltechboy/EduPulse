@@ -73,6 +73,8 @@ export interface TransportRoute {
 export type BorrowStatus = 'borrowed' | 'returned' | 'overdue';
 
 export interface BorrowRecord {
+  id?: string;
+  bookId: string;
   studentId: string;
   studentName: string;
   borrowDate: string;

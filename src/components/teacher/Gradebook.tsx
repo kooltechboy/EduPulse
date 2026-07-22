@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Download, Save, ChevronDown, ChevronUp, Award, BookOpen, Users, TrendingUp, Sparkles, Upload, FileCheck, Layers, FileText } from 'lucide-react';
 import { getPerformanceInsights, isAIAvailable } from '@/services/geminiService';
 import { ReportCardModal } from '@/components/sis/reports/ReportCardModal';
+import { useUIStore } from '@/stores/uiStore';
 import './Gradebook.css';
 
 interface Assignment {
@@ -42,6 +43,14 @@ export const Gradebook: React.FC = () => {
   const [generatingAiId, setGeneratingAiId] = useState<string | null>(null);
   const [reportCardStudent, setReportCardStudent] = useState<any | null>(null);
 
+  const [isCurveModalOpen, setIsCurveModalOpen] = useState(false);
+  const [curveType, setCurveType] = useState<'add'|'multiply'>('add');
+  const [curveValue, setCurveValue] = useState(0);
+  const [isPreviewingCurve, setIsPreviewingCurve] = useState(false);
+  const [editingCell, setEditingCell] = useState<{studentId: string, assignmentId: string} | null>(null);
+
+  const addToast = useUIStore(s => s.addToast);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -59,7 +68,25 @@ export const Gradebook: React.FC = () => {
 
   const handleSave = () => {
     localStorage.setItem(`gradebook_${course}`, JSON.stringify({ assignments, studentGrades }));
-    alert('Gradebook saved successfully to local telemetry store!');
+    addToast({ type: 'success', title: 'Saved', message: 'Gradebook saved successfully.' });
+  };
+
+  const handleApplyCurve = () => {
+    setStudentGrades(prev => prev.map(student => {
+      const newGrades = { ...student.grades };
+      Object.keys(newGrades).forEach(key => {
+        if (newGrades[key] !== null) {
+          let val = newGrades[key] as number;
+          if (curveType === 'add') val += curveValue;
+          else if (curveType === 'multiply') val *= curveValue;
+          newGrades[key] = Math.min(100, Math.max(0, Math.round(val)));
+        }
+      });
+      return { ...student, grades: newGrades };
+    }));
+    addToast({ type: 'success', title: 'Curve Applied', message: `Curve applied: ${curveType === 'add' ? '+' : 'x'}${curveValue}` });
+    setIsCurveModalOpen(false);
+    setIsPreviewingCurve(false);
   };
 
   const handleAddAssignment = () => {
@@ -161,6 +188,7 @@ export const Gradebook: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    addToast({ type: 'success', title: 'Exported', message: 'Gradebook CSV exported successfully.' });
   };
 
   const handleCsvImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,7 +220,7 @@ export const Gradebook: React.FC = () => {
 
       if (newStudents.length > 0) {
         setStudentGrades(newStudents);
-        alert(`Successfully imported ${newStudents.length} student grade records!`);
+        addToast({ type: 'success', title: 'Imported', message: `Successfully imported ${newStudents.length} student grade records.` });
       }
     };
     reader.readAsText(file);
@@ -262,6 +290,14 @@ export const Gradebook: React.FC = () => {
           
           <button className="ep-btn ep-btn--secondary" onClick={handleAddAssignment}>
             <Plus size={16} /> Column
+          </button>
+
+          <button className="ep-btn ep-btn--secondary" onClick={() => setIsCurveModalOpen(true)}>
+            <TrendingUp size={16} /> Apply Curve
+          </button>
+          
+          <button className="ep-btn ep-btn--secondary" onClick={() => window.print()} title="Print Gradebook">
+            <FileText size={16} /> Print
           </button>
 
           <button className="ep-btn ep-btn--secondary" onClick={exportCSV} title="Export Gradebook CSV">
@@ -357,15 +393,43 @@ export const Gradebook: React.FC = () => {
                   {assignments.map(a => (
                     <td key={a.id} style={{ textAlign: 'center', padding: '6px' }}>
                       {gradingMode === 'traditional' ? (
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={student.grades[a.id] ?? ''}
-                          onChange={(e) => updateGrade(student.studentId, a.id, e.target.value)}
-                          className="grade-input"
-                          style={{ background: 'var(--color-surface-100)', border: '1px solid var(--color-border)', borderRadius: '6px', width: '64px', margin: '0 auto' }}
-                        />
+                        editingCell?.studentId === student.studentId && editingCell?.assignmentId === a.id ? (
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            autoFocus
+                            defaultValue={student.grades[a.id] ?? ''}
+                            onBlur={(e) => {
+                              updateGrade(student.studentId, a.id, e.target.value);
+                              setEditingCell(null);
+                              addToast({ type: 'success', title: 'Saved', message: 'Grade saved.' });
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                updateGrade(student.studentId, a.id, e.currentTarget.value);
+                                setEditingCell(null);
+                                addToast({ type: 'success', title: 'Saved', message: 'Grade saved.' });
+                              }
+                            }}
+                            className="grade-input"
+                            style={{ background: 'var(--color-surface-100)', border: '1px solid var(--color-border)', borderRadius: '6px', width: '64px', margin: '0 auto' }}
+                          />
+                        ) : (
+                          <div 
+                            onClick={() => setEditingCell({studentId: student.studentId, assignmentId: a.id})}
+                            style={{ width: '64px', height: '32px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'text', border: '1px solid transparent' }}
+                            className="grade-display"
+                          >
+                            {isPreviewingCurve && curveValue ? (
+                              <span style={{ color: 'var(--color-primary-400)', fontWeight: 'bold' }}>
+                                {Math.min(100, Math.max(0, Math.round((student.grades[a.id] ?? 0) + (curveType === 'add' ? curveValue : (student.grades[a.id] ?? 0) * (curveValue - 1)))))}
+                              </span>
+                            ) : (
+                              student.grades[a.id] ?? '-'
+                            )}
+                          </div>
+                        )
                       ) : (
                         <select
                           value={student.sbgMastery?.[a.id] || 3}
@@ -448,6 +512,38 @@ export const Gradebook: React.FC = () => {
           isOpen={!!reportCardStudent}
           onClose={() => setReportCardStudent(null)}
         />
+      )}
+
+      {/* Curve Modal */}
+      {isCurveModalOpen && (
+        <div className="ep-modal-overlay">
+          <div className="ep-modal">
+            <header className="ep-modal-header">
+              <h2>Apply Grade Curve</h2>
+              <button onClick={() => setIsCurveModalOpen(false)}>×</button>
+            </header>
+            <div className="ep-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label>Curve Type:</label>
+                <select className="ep-input" value={curveType} onChange={(e) => setCurveType(e.target.value as any)}>
+                  <option value="add">Add Points</option>
+                  <option value="multiply">Multiply by Factor</option>
+                </select>
+              </div>
+              <div>
+                <label>Value:</label>
+                <input type="number" className="ep-input" value={curveValue} onChange={(e) => setCurveValue(Number(e.target.value))} />
+              </div>
+            </div>
+            <footer className="ep-modal-actions">
+              <button className="ep-btn ep-btn--ghost" onClick={() => setIsCurveModalOpen(false)}>Cancel</button>
+              <button className="ep-btn ep-btn--secondary" onMouseDown={() => setIsPreviewingCurve(true)} onMouseUp={() => setIsPreviewingCurve(false)} onMouseLeave={() => setIsPreviewingCurve(false)}>
+                Hold to Preview
+              </button>
+              <button className="ep-btn ep-btn--primary" onClick={handleApplyCurve}>Apply</button>
+            </footer>
+          </div>
+        </div>
       )}
     </div>
   );

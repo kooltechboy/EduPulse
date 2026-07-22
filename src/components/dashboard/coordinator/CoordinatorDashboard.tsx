@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './CoordinatorDashboard.css';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { Users, BookOpen, TrendingUp, CheckSquare, AlertCircle, Calendar } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useUIStore } from '@/stores/uiStore';
 
 const DEPARTMENTS = [
   { subject: 'Math', coverage: 85 },
@@ -34,6 +36,44 @@ const EVALUATIONS = [
 ];
 
 export const CoordinatorDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const { addToast } = useUIStore();
+  const [curriculumItems, setCurriculumItems] = useState([
+    { id: 1, title: 'New Math Standard', status: 'pending' },
+    { id: 2, title: 'Revised Science Labs', status: 'pending' }
+  ]);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [approvalItem, setApprovalItem] = useState<{id: number, title: string, status: string} | null>(null);
+
+  const [showEvalModal, setShowEvalModal] = useState(false);
+  const [evalData, setEvalData] = useState({ teacher: '', rating: '5', strengths: '', improvements: '' });
+
+  const [showSubModal, setShowSubModal] = useState(false);
+  const [subData, setSubData] = useState({ absent: '', subject: '', date: '', sub: '' });
+
+  const handleApprove = () => {
+    if (!approvalItem) return;
+    setCurriculumItems(curriculumItems.map(i => i.id === approvalItem.id ? { ...i, status: 'approved' } : i));
+    addToast({ type: 'success', title: 'Curriculum Approved', message: `${approvalItem.title} was approved.` });
+    setShowApprovalModal(false);
+  };
+  const handleReject = () => {
+    if (!approvalItem) return;
+    setCurriculumItems(curriculumItems.map(i => i.id === approvalItem.id ? { ...i, status: 'rejected' } : i));
+    addToast({ type: 'warning', title: 'Curriculum Rejected', message: `${approvalItem.title} was rejected.` });
+    setShowApprovalModal(false);
+  };
+  
+  const handleSubmitEval = () => {
+    addToast({ type: 'success', title: 'Evaluation Submitted', message: `Saved evaluation for ${evalData.teacher}.` });
+    setShowEvalModal(false);
+  };
+
+  const handleAssignSub = () => {
+    addToast({ type: 'success', title: 'Substitute Assigned', message: `Assigned ${subData.sub} for ${subData.absent}.` });
+    setShowSubModal(false);
+  };
+
   return (
     <div className="ep-coord-dash">
       <header className="ep-coord-dash__header">
@@ -42,28 +82,28 @@ export const CoordinatorDashboard: React.FC = () => {
 
       {/* Overview Stats */}
       <div className="ep-coord-dash__stats-grid">
-        <div className="ep-coord-dash__stat-card">
+        <div className="ep-coord-dash__stat-card" onClick={() => navigate('/staff')} style={{ cursor: 'pointer' }}>
           <Users size={24} className="ep-coord-dash__stat-icon" />
           <div className="ep-coord-dash__stat-content">
             <span className="ep-coord-dash__stat-val">42</span>
             <span className="ep-coord-dash__stat-label">Teachers</span>
           </div>
         </div>
-        <div className="ep-coord-dash__stat-card">
+        <div className="ep-coord-dash__stat-card" onClick={() => navigate('/curriculum')} style={{ cursor: 'pointer' }}>
           <BookOpen size={24} className="ep-coord-dash__stat-icon" />
           <div className="ep-coord-dash__stat-content">
             <span className="ep-coord-dash__stat-val">128</span>
             <span className="ep-coord-dash__stat-label">Active Courses</span>
           </div>
         </div>
-        <div className="ep-coord-dash__stat-card">
+        <div className="ep-coord-dash__stat-card" onClick={() => navigate('/reports')} style={{ cursor: 'pointer' }}>
           <TrendingUp size={24} className="ep-coord-dash__stat-icon" />
           <div className="ep-coord-dash__stat-content">
             <span className="ep-coord-dash__stat-val">86%</span>
             <span className="ep-coord-dash__stat-label">Avg Student Perf</span>
           </div>
         </div>
-        <div className="ep-coord-dash__stat-card ep-coord-dash__stat-card--alert">
+        <div className="ep-coord-dash__stat-card ep-coord-dash__stat-card--alert" onClick={() => setShowEvalModal(true)} style={{ cursor: 'pointer' }}>
           <CheckSquare size={24} className="ep-coord-dash__stat-icon" />
           <div className="ep-coord-dash__stat-content">
             <span className="ep-coord-dash__stat-val">5</span>
@@ -142,6 +182,7 @@ export const CoordinatorDashboard: React.FC = () => {
                   <span className={`ep-coord-dash__badge ep-coord-dash__badge--${req.status === 'Approved' ? 'success' : 'pending'}`}>
                     {req.status}
                   </span>
+                  <button className="ep-btn ep-btn--secondary" style={{ padding: '2px 8px', fontSize: '12px' }} onClick={() => { setSubData({ ...subData, absent: req.person, date: req.dates }); setShowSubModal(true); }}>Assign Sub</button>
                 </li>
               ))}
             </ul>
@@ -150,6 +191,17 @@ export const CoordinatorDashboard: React.FC = () => {
           {/* Schedule Conflicts */}
           <div className="ep-coord-dash__panel">
             <h3 className="ep-coord-dash__panel-title">Schedule Conflicts</h3>
+            <div style={{ marginBottom: '10px' }}>
+              <h4>Curriculum Approval Needs</h4>
+              <ul className="ep-coord-dash__list" style={{ marginBottom: '20px' }}>
+                {curriculumItems.map(item => (
+                  <li key={item.id} className="ep-coord-dash__list-item">
+                    <span>{item.title} - {item.status}</span>
+                    {item.status === 'pending' && <button className="ep-btn ep-btn--primary" style={{ padding: '2px 8px', fontSize: '12px' }} onClick={() => { setApprovalItem(item); setShowApprovalModal(true); }}>Review</button>}
+                  </li>
+                ))}
+              </ul>
+            </div>
             {CONFLICTS.length > 0 ? (
               <ul className="ep-coord-dash__list">
                 {CONFLICTS.map(c => (
@@ -185,6 +237,77 @@ export const CoordinatorDashboard: React.FC = () => {
 
         </div>
       </div>
+
+      {showApprovalModal && (
+        <div className="ep-coord-dash__modal-overlay" onClick={() => setShowApprovalModal(false)}>
+          <div className="ep-coord-dash__modal" onClick={e => e.stopPropagation()}>
+            <div className="ep-coord-dash__modal-header">
+              <h2 className="ep-coord-dash__modal-title">Approve Curriculum?</h2>
+              <button className="ep-btn ep-btn--text" onClick={() => setShowApprovalModal(false)}>X</button>
+            </div>
+            <div className="ep-coord-dash__modal-body">
+              <p>Approve {approvalItem?.title}?</p>
+            </div>
+            <div className="ep-coord-dash__modal-actions">
+              <button className="ep-btn ep-btn--secondary" style={{ color: 'var(--color-danger-500)' }} onClick={handleReject}>Reject</button>
+              <button className="ep-btn ep-btn--primary" onClick={handleApprove}>Approve</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEvalModal && (
+        <div className="ep-coord-dash__modal-overlay" onClick={() => setShowEvalModal(false)}>
+          <div className="ep-coord-dash__modal" onClick={e => e.stopPropagation()}>
+            <div className="ep-coord-dash__modal-header">
+              <h2 className="ep-coord-dash__modal-title">Submit Faculty Evaluation</h2>
+              <button className="ep-btn ep-btn--text" onClick={() => setShowEvalModal(false)}>X</button>
+            </div>
+            <div className="ep-coord-dash__modal-body">
+              <label>Teacher</label>
+              <select className="ep-input" value={evalData.teacher} onChange={e => setEvalData({...evalData, teacher: e.target.value})}>
+                <option value="">Select Teacher</option>
+                {TEACHERS.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+              </select>
+              <label>Rating (1-5)</label>
+              <input type="number" min="1" max="5" className="ep-input" value={evalData.rating} onChange={e => setEvalData({...evalData, rating: e.target.value})} />
+              <label>Strengths</label>
+              <textarea className="ep-input" rows={2} value={evalData.strengths} onChange={e => setEvalData({...evalData, strengths: e.target.value})}></textarea>
+              <label>Areas for Improvement</label>
+              <textarea className="ep-input" rows={2} value={evalData.improvements} onChange={e => setEvalData({...evalData, improvements: e.target.value})}></textarea>
+            </div>
+            <div className="ep-coord-dash__modal-actions">
+              <button className="ep-btn ep-btn--secondary" onClick={() => setShowEvalModal(false)}>Cancel</button>
+              <button className="ep-btn ep-btn--primary" onClick={handleSubmitEval}>Submit</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSubModal && (
+        <div className="ep-coord-dash__modal-overlay" onClick={() => setShowSubModal(false)}>
+          <div className="ep-coord-dash__modal" onClick={e => e.stopPropagation()}>
+            <div className="ep-coord-dash__modal-header">
+              <h2 className="ep-coord-dash__modal-title">Assign Substitute</h2>
+              <button className="ep-btn ep-btn--text" onClick={() => setShowSubModal(false)}>X</button>
+            </div>
+            <div className="ep-coord-dash__modal-body">
+              <label>Absent Teacher</label>
+              <input type="text" className="ep-input" value={subData.absent} disabled />
+              <label>Date</label>
+              <input type="text" className="ep-input" value={subData.date} onChange={e => setSubData({...subData, date: e.target.value})} />
+              <label>Subject</label>
+              <input type="text" className="ep-input" value={subData.subject} onChange={e => setSubData({...subData, subject: e.target.value})} placeholder="e.g. Math" />
+              <label>Substitute Name</label>
+              <input type="text" className="ep-input" value={subData.sub} onChange={e => setSubData({...subData, sub: e.target.value})} />
+            </div>
+            <div className="ep-coord-dash__modal-actions">
+              <button className="ep-btn ep-btn--secondary" onClick={() => setShowSubModal(false)}>Cancel</button>
+              <button className="ep-btn ep-btn--primary" onClick={handleAssignSub}>Assign</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,16 +1,34 @@
 import React, { useState } from 'react';
-import { Sparkles, X, Send, BookOpen, TrendingUp, GraduationCap, Compass, FileText, Bot, CheckCircle, AlertCircle } from 'lucide-react';
+import { Sparkles, X, Send, BookOpen, TrendingUp, GraduationCap, Compass, FileText, Bot, CheckCircle, AlertCircle, Copy, Trash2 } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
-import { generateLessonPlan, getPerformanceInsights, getAITutorResponse, generateCareerGuidance, generateCounselingDraft } from '@/services/geminiService';
+import { generateLessonPlan, getPerformanceInsights, getAITutorResponse, generateCareerGuidance, generateCounselingDraft, performAIResearch, getCampusSummary } from '@/services/geminiService';
 import './AICopilotModal.css';
 
 export const AICopilotModal: React.FC = () => {
-  const { aiCopilotOpen, setAiCopilotOpen } = useUIStore();
+  const { aiCopilotOpen, setAiCopilotOpen, addToast } = useUIStore();
   const [prompt, setPrompt] = useState('');
   const [mode, setMode] = useState<'chat' | 'lesson' | 'insights' | 'tutor' | 'career' | 'counseling'>('chat');
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const copyToClipboard = () => {
+    if (!response) return;
+    navigator.clipboard.writeText(response).then(() => {
+      addToast({ type: 'success', title: 'Copied', message: 'AI response copied to clipboard.' });
+    }).catch(() => {
+      addToast({ type: 'error', title: 'Copy Failed', message: 'Could not copy to clipboard.' });
+    });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (prompt.trim() && !loading) {
+        handleSubmitCustom(e as unknown as React.FormEvent);
+      }
+    }
+  };
 
   if (!aiCopilotOpen) return null;
 
@@ -46,6 +64,14 @@ export const AICopilotModal: React.FC = () => {
         const res = await generateCareerGuidance(['Robotics', 'Game Design', 'Physics'], ['Mathematics', 'Computer Science'], 'Grade 11');
         if (res.success) setResponse(res.content);
         else setError(res.error || 'Career guidance service unavailable.');
+      } else if (action === 'research') {
+        const res = await performAIResearch('Impact of AI in Education', 'brief');
+        if (res.success) setResponse(res.content);
+        else setError(res.error || 'Failed to research topic.');
+      } else if (action === 'summary') {
+        const res = await getCampusSummary({ studentCount: 1247, staffCount: 89, attendanceRate: 94.2 });
+        if (res.success) setResponse(res.content);
+        else setError(res.error || 'Failed to get campus summary.');
       } else if (action === 'counseling') {
         const res = await generateCounselingDraft('Academic Progress Note', 'Alex Rivera (Grade 10)', 'Sudden drop in mid-term Physics attendance.');
         if (res.success) setResponse(res.content);
@@ -104,32 +130,40 @@ export const AICopilotModal: React.FC = () => {
           <button className="ep-copilot__action-card" onClick={() => handleQuickAction('lesson')}>
             <BookOpen size={18} className="ep-copilot__card-icon ep-copilot__card-icon--blue" />
             <div>
-              <div className="ep-copilot__card-title">Lesson Planner</div>
+              <div className="ep-copilot__card-title">Lesson Plan</div>
               <div className="ep-copilot__card-desc">Generate standards-aligned lesson plans</div>
             </div>
           </button>
 
-          <button className="ep-copilot__action-card" onClick={() => handleQuickAction('insights')}>
-            <TrendingUp size={18} className="ep-copilot__card-icon ep-copilot__card-icon--green" />
+          <button className="ep-copilot__action-card" onClick={() => handleQuickAction('research')}>
+            <FileText size={18} className="ep-copilot__card-icon ep-copilot__card-icon--green" />
             <div>
-              <div className="ep-copilot__card-title">Class Analytics</div>
-              <div className="ep-copilot__card-desc">Predictive insights & student trends</div>
+              <div className="ep-copilot__card-title">Research Topic</div>
+              <div className="ep-copilot__card-desc">Comprehensive analysis of topics</div>
             </div>
           </button>
 
-          <button className="ep-copilot__action-card" onClick={() => handleQuickAction('tutor')}>
-            <GraduationCap size={18} className="ep-copilot__card-icon ep-copilot__card-icon--purple" />
+          <button className="ep-copilot__action-card" onClick={() => handleQuickAction('summary')}>
+            <TrendingUp size={18} className="ep-copilot__card-icon ep-copilot__card-icon--purple" />
             <div>
-              <div className="ep-copilot__card-title">AI Tutor Assistant</div>
-              <div className="ep-copilot__card-desc">Step-by-step academic explanations</div>
+              <div className="ep-copilot__card-title">Campus Summary</div>
+              <div className="ep-copilot__card-desc">Executive summary of campus metrics</div>
             </div>
           </button>
 
           <button className="ep-copilot__action-card" onClick={() => handleQuickAction('career')}>
             <Compass size={18} className="ep-copilot__card-icon ep-copilot__card-icon--amber" />
             <div>
-              <div className="ep-copilot__card-title">Career Counselor</div>
+              <div className="ep-copilot__card-title">Career Guidance</div>
               <div className="ep-copilot__card-desc">Personalized student pathway mapping</div>
+            </div>
+          </button>
+
+          <button className="ep-copilot__action-card" onClick={() => handleQuickAction('counseling')}>
+            <GraduationCap size={18} className="ep-copilot__card-icon ep-copilot__card-icon--blue" />
+            <div>
+              <div className="ep-copilot__card-title">Counseling Draft</div>
+              <div className="ep-copilot__card-desc">Draft progress notes and reports</div>
             </div>
           </button>
         </div>
@@ -151,9 +185,19 @@ export const AICopilotModal: React.FC = () => {
             </div>
           ) : response ? (
             <div className="ep-copilot__response-box">
-              <div className="ep-copilot__response-header">
-                <Bot size={18} />
-                <span>EduPulse AI Response</span>
+              <div className="ep-copilot__response-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Bot size={18} />
+                  <span>EduPulse AI Response</span>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button className="ep-btn ep-btn--text" onClick={copyToClipboard} title="Copy Response">
+                    <Copy size={16} />
+                  </button>
+                  <button className="ep-btn ep-btn--text" onClick={() => { setResponse(null); setPrompt(''); }} title="Clear">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
               <div className="ep-copilot__response-body">
                 {response.split('\n').map((line, idx) => (
@@ -178,6 +222,7 @@ export const AICopilotModal: React.FC = () => {
             placeholder="Ask AI anything (e.g., 'Draft a parent notification email regarding upcoming exams')..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={handleKeyDown}
             disabled={loading}
           />
           <button type="submit" className="ep-btn ep-btn--primary" disabled={loading || !prompt.trim()}>

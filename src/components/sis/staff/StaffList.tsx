@@ -11,11 +11,11 @@ import {
   Select,
   type Column
 } from '@/components/ui';
-import { Plus, Eye, Edit, Trash2, Users, Briefcase, UserCheck, Clock, LayoutGrid, List as ListIcon } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, Users, Briefcase, UserCheck, Clock, LayoutGrid, List as ListIcon, Download } from 'lucide-react';
 import { StaffProfile } from './StaffProfile';
-import { StaffForm } from './StaffForm';
 import { usePagination } from '@/hooks/usePagination';
 import { useSearch } from '@/hooks/useSearch';
+import { useUIStore } from '@/stores/uiStore';
 import './StaffList.css';
 
 interface StaffMember {
@@ -52,6 +52,7 @@ export const StaffList: React.FC = () => {
   const [staffToEdit, setStaffToEdit] = useState<StaffMember | null>(null);
   const [staffToDelete, setStaffToDelete] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const { addToast } = useUIStore();
 
   const [deptFilter, setDeptFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -80,17 +81,42 @@ export const StaffList: React.FC = () => {
     if (staffToDelete) {
       setStaff(prev => prev.filter(s => s.id !== staffToDelete));
       setStaffToDelete(null);
+      addToast({ type: 'warning', title: 'Deleted', message: 'Staff member removed.' });
     }
   };
 
-  const handleSaveStaff = (staffData: any) => {
+  const handleSaveStaff = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = Object.fromEntries(formData.entries());
+    
     if (staffToEdit) {
-      setStaff(prev => prev.map(s => s.id === staffData.id ? staffData : s));
+      setStaff(prev => prev.map(s => s.id === staffToEdit.id ? { ...s, ...data } as unknown as StaffMember : s));
+      addToast({ type: 'success', title: 'Success', message: 'Staff updated successfully' });
     } else {
-      setStaff(prev => [...prev, { ...staffData, id: `stf-${Date.now()}` }]);
+      setStaff(prev => [...prev, { ...data, id: `stf-${crypto.randomUUID()}` } as unknown as StaffMember]);
+      addToast({ type: 'success', title: 'Success', message: 'Staff added successfully' });
     }
     setIsFormOpen(false);
     setStaffToEdit(null);
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Name', 'Email', 'Department', 'Position', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredStaff.map(s => `"${s.firstName} ${s.lastName}","${s.email}","${s.department}","${s.position}","${s.status}"`)
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'staff_list.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const columns = useMemo<Column<StaffMember>[]>(() => [
@@ -165,6 +191,9 @@ export const StaffList: React.FC = () => {
               <ListIcon size={14} style={{ marginRight: 6 }} /> List View
             </button>
           </div>
+          <Button variant="ghost" icon={<Download size={16} />} onClick={handleExportCSV}>
+            Export CSV
+          </Button>
           <Button variant="primary" icon={<Plus size={16} />} onClick={() => { setStaffToEdit(null); setIsFormOpen(true); }}>
             + Add Staff Member
           </Button>
@@ -230,9 +259,12 @@ export const StaffList: React.FC = () => {
             options={[
               { label: 'All Departments', value: '' },
               { label: 'Administration', value: 'Administration' },
+              { label: 'Admin', value: 'Admin' },
+              { label: 'Academic', value: 'Academic' },
               { label: 'Support', value: 'Support' },
+              { label: 'Finance', value: 'Finance' },
+              { label: 'HR', value: 'HR' },
               { label: 'IT', value: 'IT' },
-              { label: 'Maintenance', value: 'Maintenance' },
             ]}
           />
           <Select 
@@ -326,12 +358,60 @@ export const StaffList: React.FC = () => {
       )}
 
       {isFormOpen && (
-        <StaffForm 
-          staff={staffToEdit} 
-          isOpen={isFormOpen} 
-          onClose={() => setIsFormOpen(false)} 
-          onSave={handleSaveStaff} 
-        />
+        <div className="ep-staff__modal-overlay">
+          <div className="ep-staff__modal">
+            <h2 className="ep-staff__modal-title">{staffToEdit ? 'Edit Staff' : 'Add Staff Member'}</h2>
+            <form onSubmit={handleSaveStaff} className="ep-staff__modal-form">
+              <div className="ep-staff__modal-grid">
+                <div className="ep-staff__modal-field">
+                  <label className="ep-staff__modal-label">First Name</label>
+                  <input name="firstName" defaultValue={staffToEdit?.firstName} required className="ep-staff__modal-input" />
+                </div>
+                <div className="ep-staff__modal-field">
+                  <label className="ep-staff__modal-label">Last Name</label>
+                  <input name="lastName" defaultValue={staffToEdit?.lastName} required className="ep-staff__modal-input" />
+                </div>
+                <div className="ep-staff__modal-field">
+                  <label className="ep-staff__modal-label">Email</label>
+                  <input name="email" type="email" defaultValue={staffToEdit?.email} required className="ep-staff__modal-input" />
+                </div>
+                <div className="ep-staff__modal-field">
+                  <label className="ep-staff__modal-label">Phone</label>
+                  <input name="phone" defaultValue={staffToEdit?.phone} required className="ep-staff__modal-input" />
+                </div>
+                <div className="ep-staff__modal-field">
+                  <label className="ep-staff__modal-label">Department</label>
+                  <select name="department" defaultValue={staffToEdit?.department || 'Admin'} className="ep-staff__modal-select">
+                    <option value="Admin">Admin</option>
+                    <option value="Academic">Academic</option>
+                    <option value="Support">Support</option>
+                    <option value="Finance">Finance</option>
+                    <option value="HR">HR</option>
+                  </select>
+                </div>
+                <div className="ep-staff__modal-field">
+                  <label className="ep-staff__modal-label">Position</label>
+                  <input name="position" defaultValue={staffToEdit?.position} required className="ep-staff__modal-input" />
+                </div>
+                <div className="ep-staff__modal-field">
+                  <label className="ep-staff__modal-label">Hire Date</label>
+                  <input name="hireDate" type="date" defaultValue={staffToEdit?.hireDate} required className="ep-staff__modal-input" />
+                </div>
+                <div className="ep-staff__modal-field">
+                  <label className="ep-staff__modal-label">Status</label>
+                  <select name="status" defaultValue={staffToEdit?.status || 'active'} className="ep-staff__modal-select">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+              <div className="ep-staff__modal-actions">
+                <Button variant="ghost" type="button" onClick={() => setIsFormOpen(false)}>Cancel</Button>
+                <Button variant="primary" type="submit">Save Staff</Button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       <ConfirmDialog

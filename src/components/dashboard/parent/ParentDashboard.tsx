@@ -4,8 +4,10 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer 
 } from 'recharts';
 import { 
-  Mail, Award, AlertTriangle, ChevronLeft, ChevronRight, User, FileText
+  Mail, Award, AlertTriangle, ChevronLeft, ChevronRight, User, FileText, CreditCard
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useUIStore } from '@/stores/uiStore';
 
 // Mock Data
 const CHILDREN = [
@@ -49,6 +51,30 @@ const ANNOUNCEMENTS = [
 
 export const ParentDashboard: React.FC = () => {
   const [activeChild, setActiveChild] = useState(CHILDREN[0]);
+  const navigate = useNavigate();
+  const { addToast } = useUIStore();
+  
+  const [invoices, setInvoices] = useState([
+    { id: 1, desc: 'Lab Fee', amount: 50, due: 'Oct 31', status: 'pending' },
+    { id: 2, desc: 'Field Trip', amount: 25, due: 'Nov 15', status: 'pending' }
+  ]);
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [payData, setPayData] = useState({ invoiceId: 0, method: 'Card' });
+
+  const handleMessageTeacher = () => {
+    addToast({ type: 'info', title: 'Messaging', message: 'Opening message composer...' });
+    navigate('/messaging');
+  };
+  
+  const handleViewReportCard = () => {
+    navigate('/students');
+  };
+
+  const handlePayInvoice = () => {
+    setInvoices(invoices.map(inv => inv.id === payData.invoiceId ? { ...inv, status: 'paid' } : inv));
+    addToast({ type: 'success', title: 'Payment Successful', message: 'Your payment was processed successfully.' });
+    setShowPayModal(false);
+  };
 
   return (
     <div className="ep-parent-dash">
@@ -85,6 +111,7 @@ export const ParentDashboard: React.FC = () => {
               </div>
               <div className="ep-parent-dash__summary-titles">
                 <h2>{activeChild.name}</h2>
+                <button className="ep-btn ep-btn--secondary" onClick={handleViewReportCard} style={{ marginTop: '5px', fontSize: '12px' }}>View Report Card</button>
                 <p>{activeChild.grade} • Section B • Homeroom: Mr. Wilson</p>
                 <span className="ep-parent-dash__status-badge ep-parent-dash__status-badge--ontrack">On Track</span>
               </div>
@@ -151,7 +178,7 @@ export const ParentDashboard: React.FC = () => {
                       <p>{teacher.subject}</p>
                     </div>
                   </div>
-                  <button className="ep-parent-dash__btn-message">
+                  <button className="ep-parent-dash__btn-message" onClick={handleMessageTeacher}>
                     <Mail size={16} /> Message
                   </button>
                 </div>
@@ -203,14 +230,14 @@ export const ParentDashboard: React.FC = () => {
               <h2>$450.00</h2>
             </div>
             <div className="ep-parent-dash__finance-details">
-              <div>
-                <strong>Upcoming:</strong> Lab Fee ($50) due Oct 31
-              </div>
-              <div>
-                <strong>Last Payment:</strong> $1,200 on Sep 1
-              </div>
+              {invoices.filter(i => i.status === 'pending').map(inv => (
+                <div key={inv.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span><strong>{inv.desc}</strong>: ${inv.amount} due {inv.due}</span>
+                  <button className="ep-parent-dash__btn-pay" style={{ width: 'auto', padding: '4px 12px', fontSize: '12px' }} onClick={() => { setPayData({ ...payData, invoiceId: inv.id }); setShowPayModal(true); }}>Pay Now</button>
+                </div>
+              ))}
+              {invoices.filter(i => i.status === 'paid').length > 0 && <div><strong>Last Payment:</strong> Success</div>}
             </div>
-            <button className="ep-parent-dash__btn-pay">Pay Now</button>
           </div>
 
           {/* Behavior & Notes */}
@@ -246,6 +273,30 @@ export const ParentDashboard: React.FC = () => {
 
         </div>
       </div>
+
+      {showPayModal && (
+        <div className="ep-parent-dash__modal-overlay" onClick={() => setShowPayModal(false)}>
+          <div className="ep-parent-dash__modal" onClick={e => e.stopPropagation()}>
+            <div className="ep-parent-dash__modal-header">
+              <h2 className="ep-parent-dash__modal-title">Pay Invoice</h2>
+              <button className="ep-btn ep-btn--text" onClick={() => setShowPayModal(false)}>X</button>
+            </div>
+            <div className="ep-parent-dash__modal-body">
+              <p>Paying invoice for {activeChild.name}</p>
+              <label>Payment Method</label>
+              <select className="ep-input" value={payData.method} onChange={e => setPayData({...payData, method: e.target.value})}>
+                <option value="Card">Credit Card</option>
+                <option value="ACH">ACH Transfer</option>
+                <option value="Voucher">Voucher</option>
+              </select>
+            </div>
+            <div className="ep-parent-dash__modal-actions">
+              <button className="ep-btn ep-btn--secondary" onClick={() => setShowPayModal(false)}>Cancel</button>
+              <button className="ep-btn ep-btn--primary" onClick={handlePayInvoice}>Confirm Payment</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

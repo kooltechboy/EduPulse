@@ -7,3 +7,4 @@ export * from './communication';
 export * from './medical';
 export * from './cafeteria';
 export * from './common';
+export * from './operations';

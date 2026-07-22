@@ -17,6 +17,7 @@ import { StudentForm } from './StudentForm';
 import { ReportCardModal } from '../reports/ReportCardModal';
 import { usePagination } from '@/hooks/usePagination';
 import { useSearch } from '@/hooks/useSearch';
+import { useUIStore } from '@/stores/uiStore';
 import './StudentList.css';
 
 interface Student {
@@ -65,6 +66,8 @@ export const StudentList: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [reportCardStudent, setReportCardStudent] = useState<Student | null>(null);
 
+  const addToast = useUIStore(s => s.addToast);
+
   const [gradeFilter, setGradeFilter] = useState('');
   const [tierFilter, setTierFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -101,14 +104,17 @@ export const StudentList: React.FC = () => {
     if (studentToDelete) {
       setStudents(prev => prev.filter(s => s.id !== studentToDelete));
       setStudentToDelete(null);
+      addToast({ type: 'success', title: 'Deleted', message: 'Student deleted successfully.' });
     }
   };
 
   const handleSaveStudent = (studentData: any) => {
     if (studentToEdit) {
       setStudents(prev => prev.map(s => s.id === studentData.id ? studentData : s));
+      addToast({ type: 'success', title: 'Updated', message: 'Student updated successfully.' });
     } else {
       setStudents(prev => [...prev, { ...studentData, id: `std-${Date.now()}` }]);
+      addToast({ type: 'success', title: 'Created', message: 'Student created successfully.' });
     }
     setIsFormOpen(false);
     setStudentToEdit(null);
@@ -147,6 +153,7 @@ export const StudentList: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    addToast({ type: 'success', title: 'Exported', message: 'CSV exported successfully.' });
   };
 
   const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,7 +193,7 @@ export const StudentList: React.FC = () => {
 
       if (imported.length > 0) {
         setStudents(prev => [...imported, ...prev]);
-        alert(`Successfully imported ${imported.length} student records into the directory!`);
+        addToast({ type: 'success', title: 'Imported', message: `Successfully imported ${imported.length} student records.` });
       }
     };
     reader.readAsText(file);
@@ -201,7 +208,7 @@ export const StudentList: React.FC = () => {
       }
       return s;
     }));
-    alert(`Promoted ${selectedIds.size} students to the next academic grade level!`);
+    addToast({ type: 'success', title: 'Promoted', message: `Promoted ${selectedIds.size} students to the next grade level.` });
     setSelectedIds(new Set());
   };
 

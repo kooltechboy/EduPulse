@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Search, Plus, User, FileText, Calendar, TrendingUp, Users, CheckCircle } from 'lucide-react';
+import { Search, Plus, User, FileText, Calendar, TrendingUp, Users, CheckCircle, XCircle } from 'lucide-react';
+import { useUIStore } from '@/stores/uiStore';
 import './AdmissionsPipeline.css';
 
 const STAGES = ['Inquiry', 'Applied', 'Under Review', 'Accepted', 'Enrolled'];
@@ -15,6 +16,11 @@ const MOCK_CANDIDATES = [
 export const AdmissionsPipeline: React.FC = () => {
   const [candidates, setCandidates] = useState(MOCK_CANDIDATES);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newCandidate, setNewCandidate] = useState({ name: '', grade: 'Grade 9', source: 'Website Inquiry' });
+
+  const addToast = useUIStore(s => s.addToast);
 
   const filteredCandidates = candidates.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
@@ -23,10 +29,33 @@ export const AdmissionsPipeline: React.FC = () => {
       if (c.id === id) {
         const currentIndex = STAGES.indexOf(c.stage);
         const newIndex = direction === 'next' ? Math.min(currentIndex + 1, STAGES.length - 1) : Math.max(currentIndex - 1, 0);
+        addToast({ type: 'success', title: 'Stage Updated', message: `Moved ${c.name} to ${STAGES[newIndex]}.` });
         return { ...c, stage: STAGES[newIndex] };
       }
       return c;
     }));
+  };
+
+  const handleRegister = () => {
+    if (!newCandidate.name) return;
+    const candidate = {
+      id: Date.now().toString(),
+      name: newCandidate.name,
+      grade: newCandidate.grade,
+      date: new Date().toISOString().split('T')[0],
+      source: newCandidate.source,
+      stage: 'Inquiry'
+    };
+    setCandidates([candidate, ...candidates]);
+    addToast({ type: 'success', title: 'Applicant Registered', message: 'New applicant registered successfully.' });
+    setIsModalOpen(false);
+    setNewCandidate({ name: '', grade: 'Grade 9', source: 'Website Inquiry' });
+  };
+
+  const rejectCandidate = (id: string) => {
+    const candidate = candidates.find(c => c.id === id);
+    setCandidates(candidates.filter(c => c.id !== id));
+    addToast({ type: 'warning', title: 'Rejected', message: `Applicant ${candidate?.name} has been rejected.` });
   };
 
   return (
@@ -37,7 +66,7 @@ export const AdmissionsPipeline: React.FC = () => {
           <h1 className="ep-admissions__title">Student Admissions Kanban Pipeline</h1>
           <p className="ep-admissions__subtitle">Manage applicant lifecycle from initial web inquiry to formal enrollment</p>
         </div>
-        <button className="ep-btn ep-btn--primary">
+        <button className="ep-btn ep-btn--primary" onClick={() => setIsModalOpen(true)}>
           <Plus size={16} /> + Register New Applicant
         </button>
       </header>
@@ -49,7 +78,7 @@ export const AdmissionsPipeline: React.FC = () => {
             <Users size={22} />
           </div>
           <div>
-            <div className="ep-admissions__kpi-val">45</div>
+            <div className="ep-admissions__kpi-val">{candidates.length}</div>
             <div className="ep-admissions__kpi-lbl">Total Pipeline Applicants</div>
           </div>
         </div>
@@ -69,7 +98,7 @@ export const AdmissionsPipeline: React.FC = () => {
             <CheckCircle size={22} />
           </div>
           <div>
-            <div className="ep-admissions__kpi-val">12</div>
+            <div className="ep-admissions__kpi-val">{candidates.filter(c => c.stage === 'Accepted').length}</div>
             <div className="ep-admissions__kpi-lbl">Accepted Offers Sent</div>
           </div>
         </div>
@@ -79,7 +108,7 @@ export const AdmissionsPipeline: React.FC = () => {
             <Calendar size={22} />
           </div>
           <div>
-            <div className="ep-admissions__kpi-val">8</div>
+            <div className="ep-admissions__kpi-val">{candidates.filter(c => c.stage === 'Under Review').length}</div>
             <div className="ep-admissions__kpi-lbl">Pending Interviews</div>
           </div>
         </div>
@@ -108,7 +137,12 @@ export const AdmissionsPipeline: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {filteredCandidates.filter(c => c.stage === stage).map(candidate => (
                 <div key={candidate.id} className="ep-admissions__card">
-                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--color-text-primary)' }}>{candidate.name}</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--color-text-primary)' }}>{candidate.name}</h4>
+                    <button className="ep-btn ep-btn--ghost ep-btn--sm" onClick={() => rejectCandidate(candidate.id)} style={{ padding: '4px', color: 'var(--color-danger-500)' }} title="Reject Applicant">
+                      <XCircle size={14} />
+                    </button>
+                  </div>
                   <div style={{ fontSize: '12px', color: 'var(--color-text-tertiary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><User size={12} /> {candidate.grade}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={12} /> {candidate.date}</div>
@@ -138,6 +172,46 @@ export const AdmissionsPipeline: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* New Applicant Modal */}
+      {isModalOpen && (
+        <div className="ep-admissions__modal-overlay">
+          <div className="ep-admissions__modal">
+            <header className="ep-admissions__modal-header">
+              <h2 style={{ fontSize: '18px', margin: 0, color: 'var(--color-text-primary)' }}>Register New Applicant</h2>
+              <button className="ep-btn ep-btn--ghost" onClick={() => setIsModalOpen(false)}>✕</button>
+            </header>
+            <div className="ep-admissions__modal-body">
+              <div className="ep-admissions__form-row">
+                <label>Applicant Name</label>
+                <input type="text" className="ep-input" value={newCandidate.name} onChange={e => setNewCandidate({...newCandidate, name: e.target.value})} placeholder="Full Name" />
+              </div>
+              <div className="ep-admissions__form-row">
+                <label>Applying For Grade</label>
+                <select className="ep-input" value={newCandidate.grade} onChange={e => setNewCandidate({...newCandidate, grade: e.target.value})}>
+                  <option value="Grade 9">Grade 9</option>
+                  <option value="Grade 10">Grade 10</option>
+                  <option value="Grade 11">Grade 11</option>
+                  <option value="Grade 12">Grade 12</option>
+                </select>
+              </div>
+              <div className="ep-admissions__form-row">
+                <label>Source</label>
+                <select className="ep-input" value={newCandidate.source} onChange={e => setNewCandidate({...newCandidate, source: e.target.value})}>
+                  <option value="Website Inquiry">Website Inquiry</option>
+                  <option value="Parent Referral">Parent Referral</option>
+                  <option value="Open House Event">Open House Event</option>
+                  <option value="Campus Tour Walk-in">Campus Tour Walk-in</option>
+                </select>
+              </div>
+            </div>
+            <footer className="ep-admissions__modal-actions">
+              <button className="ep-btn ep-btn--ghost" onClick={() => setIsModalOpen(false)}>Cancel</button>
+              <button className="ep-btn ep-btn--primary" onClick={handleRegister}>Register</button>
+            </footer>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

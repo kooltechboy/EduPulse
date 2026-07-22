@@ -117,3 +117,85 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.ep-timetable__empty-slot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 100%;
+  border: 1px dashed transparent;
+  cursor: pointer;
+  z-index: 5;
+  transition: all 0.2s;
+}
+
+.ep-timetable__empty-slot:hover {
+  border-color: var(--color-primary-400);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.ep-timetable__modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.ep-timetable__modal {
+  background: var(--color-surface-50);
+  border-radius: var(--radius-xl);
+  width: 90%;
+  max-width: 400px;
+  padding: var(--space-6);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.ep-timetable__modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ep-timetable__modal-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.ep-timetable__modal-input,
+.ep-timetable__modal-select {
+  padding: 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-100);
+  color: var(--color-text-primary);
+}
+
+.ep-timetable__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+@media print {
+  .ep-sidebar, .ep-header, .ep-timetable__nav, .ep-timetable__filters, button {
+    display: none !important;
+  }
+  .ep-timetable {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}

@@ -7,6 +7,9 @@ import {
   Clock, Calendar, MessageSquare, BookOpen, Send, Sparkles, ChevronRight
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
+import { useNavigate } from 'react-router-dom';
+import { useUIStore } from '@/stores/uiStore';
+import { generateLessonPlan } from '@/services/geminiService';
 import './TeacherDashboard.css';
 
 const TODAY_SCHEDULE = [
@@ -43,7 +46,38 @@ const PENDING_ACTIONS = [
 
 export const TeacherDashboard: React.FC = () => {
   const { user } = useAuthStore();
+  const { addToast, setAiCopilotOpen } = useUIStore();
+  const navigate = useNavigate();
   const [prompt, setPrompt] = useState('');
+
+  const [showGradeModal, setShowGradeModal] = useState(false);
+  const [gradeData, setGradeData] = useState({ student: '', assignment: '', score: '' });
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+
+  const handleLaunchAttendance = () => {
+    addToast({ type: 'info', title: 'Attendance', message: 'Opening attendance marking...' });
+    navigate('/attendance');
+  };
+
+  const handleSaveGrade = () => {
+    addToast({ type: 'success', title: 'Grade Saved', message: `Saved score ${gradeData.score} for ${gradeData.student}` });
+    setShowGradeModal(false);
+    setGradeData({ student: '', assignment: '', score: '' });
+  };
+
+  const handleAILessonPlan = async () => {
+    setIsGeneratingPlan(true);
+    addToast({ type: 'info', title: 'AI Lesson Plan', message: 'Generating lesson plan...' });
+    try {
+      await generateLessonPlan('Physics', 'Kinematics', 'Grade 10', '45 mins');
+      setAiCopilotOpen(true);
+      addToast({ type: 'success', title: 'Lesson Plan Ready', message: 'AI Copilot opened with your lesson plan.' });
+    } catch (e) {
+      addToast({ type: 'error', title: 'Error', message: 'Failed to generate plan.' });
+    } finally {
+      setIsGeneratingPlan(false);
+    }
+  };
 
   const handleAskAI = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +96,18 @@ export const TeacherDashboard: React.FC = () => {
           <p className="ep-teacher-dash__subtitle">{currentDate} • Faculty Command Center</p>
         </div>
         <div className="ep-teacher-dash__actions">
+          <button className="ep-btn ep-btn--secondary" onClick={() => setShowGradeModal(true)}>
+            <FileText size={18} />
+            <span>Quick Grade</span>
+          </button>
+          <button className="ep-btn ep-btn--secondary" onClick={handleLaunchAttendance}>
+            <Clock size={18} />
+            <span>Attendance</span>
+          </button>
+          <button className="ep-btn ep-btn--secondary" onClick={handleAILessonPlan} disabled={isGeneratingPlan}>
+            <Sparkles size={18} />
+            <span>{isGeneratingPlan ? 'Generating...' : 'AI Plan'}</span>
+          </button>
           <button className="ep-btn ep-btn--secondary">
             <Calendar size={18} />
             <span>Schedule</span>
@@ -93,7 +139,7 @@ export const TeacherDashboard: React.FC = () => {
 
       {/* Metric Cards */}
       <section className="ep-teacher-dash__kpi-grid">
-        <div className="ep-teacher-dash__kpi-card">
+        <div className="ep-teacher-dash__kpi-card" onClick={() => navigate('/students')} style={{ cursor: 'pointer' }}>
           <div className="ep-teacher-dash__kpi-icon ep-teacher-dash__kpi-icon--blue">
             <Users size={22} />
           </div>
@@ -103,7 +149,7 @@ export const TeacherDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="ep-teacher-dash__kpi-card">
+        <div className="ep-teacher-dash__kpi-card" onClick={() => navigate('/attendance')} style={{ cursor: 'pointer' }}>
           <div className="ep-teacher-dash__kpi-icon ep-teacher-dash__kpi-icon--purple">
             <Activity size={22} />
           </div>
@@ -113,7 +159,7 @@ export const TeacherDashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="ep-teacher-dash__kpi-card">
+        <div className="ep-teacher-dash__kpi-card" onClick={() => navigate('/gradebook')} style={{ cursor: 'pointer' }}>
           <div className="ep-teacher-dash__kpi-icon ep-teacher-dash__kpi-icon--yellow">
             <FileText size={22} />
           </div>
@@ -241,6 +287,33 @@ export const TeacherDashboard: React.FC = () => {
           </form>
         </div>
       </section>
+
+      {showGradeModal && (
+        <div className="ep-teacher-dash__modal-overlay" onClick={() => setShowGradeModal(false)}>
+          <div className="ep-teacher-dash__modal" onClick={e => e.stopPropagation()}>
+            <div className="ep-teacher-dash__modal-header">
+              <h2 className="ep-teacher-dash__modal-title">Quick Grade</h2>
+              <button className="ep-btn ep-btn--text" onClick={() => setShowGradeModal(false)}>X</button>
+            </div>
+            <div className="ep-teacher-dash__modal-body">
+              <label>Student Name</label>
+              <select className="ep-input" value={gradeData.student} onChange={e => setGradeData({...gradeData, student: e.target.value})}>
+                <option value="">Select Student</option>
+                <option value="Alice Smith">Alice Smith</option>
+                <option value="Bob Jones">Bob Jones</option>
+              </select>
+              <label>Assignment</label>
+              <input type="text" className="ep-input" value={gradeData.assignment} onChange={e => setGradeData({...gradeData, assignment: e.target.value})} placeholder="e.g. Midterm" />
+              <label>Score (0-100)</label>
+              <input type="number" className="ep-input" value={gradeData.score} onChange={e => setGradeData({...gradeData, score: e.target.value})} />
+            </div>
+            <div className="ep-teacher-dash__modal-actions">
+              <button className="ep-btn ep-btn--secondary" onClick={() => setShowGradeModal(false)}>Cancel</button>
+              <button className="ep-btn ep-btn--primary" onClick={handleSaveGrade}>Save Grade</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

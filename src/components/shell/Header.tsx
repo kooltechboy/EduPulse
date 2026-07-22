@@ -4,13 +4,15 @@ import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useLocation } from 'react-router-dom';
+import { UserRole } from '@/stores/authStore';
 import './Shell.css';
 
 export const Header: React.FC = () => {
-  const { theme, toggleTheme } = useAuthStore();
+  const { theme, toggleTheme, user, switchRole, logout } = useAuthStore();
   const { toggleSidebar, setCommandPaletteOpen, setNotificationDrawerOpen, toggleAiCopilot } = useUIStore();
   const { notifications } = useNotificationStore();
   const location = useLocation();
+  const [profileOpen, setProfileOpen] = React.useState(false);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -90,9 +92,33 @@ export const Header: React.FC = () => {
           {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
         </button>
 
-        <button className="ep-header__icon-btn">
-          <User size={20} />
+        <button className="ep-header__icon-btn" onClick={() => setProfileOpen(!profileOpen)}>
+          {user?.avatar ? <img src={user.avatar} alt="Avatar" style={{ width: 24, height: 24, borderRadius: '50%' }} /> : <User size={20} />}
         </button>
+        {profileOpen && (
+          <div style={{ position: 'absolute', top: '100%', right: '16px', backgroundColor: 'var(--color-surface-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: 'var(--space-2)', minWidth: '160px', zIndex: 100, boxShadow: 'var(--shadow-lg)' }}>
+            <div style={{ padding: 'var(--space-2)', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-2)' }}>
+              <div style={{ fontWeight: 600 }}>{user?.name}</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', textTransform: 'capitalize' }}>{user?.role}</div>
+            </div>
+            <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--color-text-secondary)', padding: 'var(--space-2)', textTransform: 'uppercase' }}>Switch Role</div>
+            {['admin', 'teacher', 'student', 'parent', 'coordinator'].map(role => (
+              <button 
+                key={role}
+                className="ep-btn ep-btn--text" 
+                style={{ width: '100%', textAlign: 'left', padding: 'var(--space-2)', fontSize: 'var(--text-sm)', justifyContent: 'flex-start' }}
+                onClick={() => { switchRole(role as UserRole); setProfileOpen(false); }}
+              >
+                {role.charAt(0).toUpperCase() + role.slice(1)}
+              </button>
+            ))}
+            <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-2)', paddingTop: 'var(--space-2)' }}>
+              <button className="ep-btn ep-btn--text" style={{ width: '100%', textAlign: 'left', padding: 'var(--space-2)', fontSize: 'var(--text-sm)', color: 'var(--color-danger-500)', justifyContent: 'flex-start' }} onClick={() => { logout(); setProfileOpen(false); }}>
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );
