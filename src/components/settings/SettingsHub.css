@@ -31,13 +31,28 @@
   margin: 0;
 }
 
+/* NASA Badge */
+.ep-settings__nasa-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.2), rgba(16, 185, 129, 0.2));
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
 /* Tabs Bar */
 .ep-settings__tabs {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   overflow-x: auto;
-  padding: 0.25rem;
+  padding: 0.35rem;
   background-color: var(--color-surface-800, rgba(30, 41, 59, 0.7));
   border: 1px solid var(--color-surface-700, rgba(51, 65, 85, 0.5));
   border-radius: var(--radius-lg, 0.75rem);
@@ -161,6 +176,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .ep-settings__select {
@@ -201,6 +217,20 @@
   background-color: var(--color-surface-700, #334155);
   color: var(--color-text-main, #f8fafc);
   border: 1px solid var(--color-surface-600, #475569);
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-md, 0.5rem);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.ep-settings__btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: #ffffff;
+  border: none;
   padding: 0.6rem 1.2rem;
   border-radius: var(--radius-md, 0.5rem);
   font-weight: 600;
@@ -401,7 +431,7 @@
   margin: 0 0 1rem 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
 }
 
 /* Toggle Switch Component */
@@ -477,7 +507,7 @@ input:checked + .ep-settings__slider:before {
 .ep-settings__modal-backdrop {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(4px);
   z-index: 1000;
   display: flex;
@@ -491,7 +521,7 @@ input:checked + .ep-settings__slider:before {
   border: 1px solid var(--color-surface-700, #334155);
   border-radius: var(--radius-xl, 1rem);
   width: 100%;
-  max-width: 600px;
+  max-width: 650px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
@@ -523,7 +553,7 @@ input:checked + .ep-settings__slider:before {
   border-top: 1px solid var(--color-surface-700, #334155);
 }
 
-/* Grading Table */
+/* Tables */
 .ep-settings__table {
   width: 100%;
   border-collapse: collapse;
@@ -547,4 +577,16 @@ input:checked + .ep-settings__slider:before {
 .ep-settings__table td {
   color: var(--color-text-main, #f8fafc);
   font-size: 0.9rem;
+}
+
+/* Permissions Matrix Table */
+.ep-settings__matrix-table th {
+  text-align: center;
+}
+.ep-settings__matrix-table td {
+  text-align: center;
+}
+.ep-settings__matrix-table td:first-child {
+  text-align: left;
+  font-weight: 600;
 }

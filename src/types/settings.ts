@@ -10,6 +10,17 @@ export type ClassroomType =
 
 export type RoomStatus = 'available' | 'occupied' | 'maintenance';
 
+export interface MaintenanceRecord {
+  id: string;
+  roomId: string;
+  roomNumber: string;
+  date: string;
+  reason: string;
+  technician: string;
+  expectedCompletionDate?: string;
+  status: 'active' | 'resolved';
+}
+
 export interface Classroom {
   id: string;
   roomNumber: string;
@@ -22,6 +33,8 @@ export interface Classroom {
   status: RoomStatus;
   primaryTeacherName?: string;
   homeroomGrade?: string;
+  maintenanceHistory?: MaintenanceRecord[];
+  notes?: string;
 }
 
 export interface AcademicTerm {
@@ -39,6 +52,7 @@ export interface AcademicConfig {
 }
 
 export interface GradeThreshold {
+  id: string;
   grade: string;
   minPercentage: number;
   maxPercentage: number;
@@ -81,6 +95,15 @@ export interface SecuritySettingsConfig {
   passwordMinLength: number;
   allowStudentSelfRegistration: boolean;
   enforceIpRestriction: boolean;
+  ipWhitelist: string;
+  requireSpecialChar: boolean;
+  requireNumber: boolean;
+}
+
+export interface ServiceDiagnostic {
+  status: 'connected' | 'error' | 'testing' | 'disconnected';
+  latencyMs?: number;
+  lastTestedAt?: string;
 }
 
 export interface IntegrationConfig {
@@ -89,4 +112,30 @@ export interface IntegrationConfig {
   stripePaymentsEnabled: boolean;
   supabaseConnected: boolean;
   smsGatewayEnabled: boolean;
+  canvasWebhookUrl?: string;
+  googleClassroomDomain?: string;
+  stripePublishableKey?: string;
+  diagnostics?: Record<string, ServiceDiagnostic>;
 }
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  userName: string;
+  userRole: string;
+  action: string;
+  module: 'Classrooms' | 'Academic' | 'Profile' | 'Notifications' | 'Security' | 'Integrations' | 'System';
+  details: string;
+}
+
+export type RolePermissionKey = 
+  | 'viewDashboard'
+  | 'manageStudents'
+  | 'manageClassrooms'
+  | 'manageGrading'
+  | 'manageFinance'
+  | 'manageStaff'
+  | 'manageSettings'
+  | 'accessAuditLogs';
+
+export type RolePermissionsMap = Record<string, Record<RolePermissionKey, boolean>>;
