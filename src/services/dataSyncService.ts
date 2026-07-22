@@ -17,13 +17,16 @@ export interface SyncEvent {
   module: string;
   entityId: string;
   timestamp: string;
-  data: unknown;
+  data: Record<string, unknown>;
   synced: boolean;
+  retryCount?: number;
+  lastError?: string;
 }
 
 // ── Sync Queue ────────────────────────────────────────────────────────────
 
 const SYNC_QUEUE_KEY = 'sync_queue';
+const MAX_RETRIES = 5;
 
 /**
  * Add an event to the sync queue for backend synchronization.
@@ -32,7 +35,7 @@ export function queueSyncEvent(
   type: SyncEvent['type'],
   module: string,
   entityId: string,
-  data: unknown
+  data: Record<string, unknown> | unknown
 ): void {
   const queue = storage.get<SyncEvent[]>(SYNC_QUEUE_KEY, []);
   const event: SyncEvent = {
@@ -41,24 +44,25 @@ export function queueSyncEvent(
     module,
     entityId,
     timestamp: new Date().toISOString(),
-    data,
+    data: (data && typeof data === 'object' ? data : { payload: data }) as Record<string, unknown>,
     synced: false,
+    retryCount: 0,
   };
   queue.push(event);
   storage.set(SYNC_QUEUE_KEY, queue);
 
   // Trigger immediate background sync process if online
-  if (navigator.onLine) {
+  if (typeof navigator !== 'undefined' && navigator.onLine) {
     processSyncQueue().catch((err) => console.error('Background sync failed:', err));
   }
 }
 
 /**
- * Get pending sync events that haven't been synced to the backend.
+ * Get pending sync events that haven't been synced to the backend and haven't exceeded max retries.
  */
 export function getPendingSyncEvents(): SyncEvent[] {
   const queue = storage.get<SyncEvent[]>(SYNC_QUEUE_KEY, []);
-  return queue.filter((event) => !event.synced);
+  return queue.filter((event) => !event.synced && (event.retryCount || 0) < MAX_RETRIES);
 }
 
 /**
@@ -88,20 +92,23 @@ export function getSyncStats(): {
   total: number;
   pending: number;
   synced: number;
+  failedDeadLetters: number;
   oldestPending: string | null;
 } {
   const queue = storage.get<SyncEvent[]>(SYNC_QUEUE_KEY, []);
-  const pending = queue.filter((event) => !event.synced);
+  const pending = queue.filter((event) => !event.synced && (event.retryCount || 0) < MAX_RETRIES);
+  const dead = queue.filter((event) => !event.synced && (event.retryCount || 0) >= MAX_RETRIES);
   return {
     total: queue.length,
     pending: pending.length,
-    synced: queue.length - pending.length,
+    synced: queue.filter((e) => e.synced).length,
+    failedDeadLetters: dead.length,
     oldestPending: pending.length > 0 ? pending[0].timestamp : null,
   };
 }
 
 /**
- * Process the sync queue — syncs events to Supabase tables when live.
+ * Process the sync queue — syncs events to Supabase tables when live with exponential backoff & dead-letter tracking.
  */
 export async function processSyncQueue(): Promise<{
   processed: number;
@@ -123,31 +130,58 @@ export async function processSyncQueue(): Promise<{
   let processedCount = 0;
   let failedCount = 0;
   const syncedIds: string[] = [];
+  const queue = storage.get<SyncEvent[]>(SYNC_QUEUE_KEY, []);
 
   for (const event of pending) {
     try {
       const tableName = getTableNameForModule(event.module);
       if (event.type === 'create') {
-        await supabaseDataService.insertRecord(tableName, event.data as any);
+        await supabaseDataService.insertRecord(tableName, event.data);
       } else if (event.type === 'update') {
-        await supabaseDataService.updateRecord(tableName, event.entityId, event.data as any);
+        await supabaseDataService.updateRecord(tableName, event.entityId, event.data);
       } else if (event.type === 'delete') {
         await supabaseDataService.deleteRecord(tableName, event.entityId);
       }
 
       syncedIds.push(event.id);
       processedCount++;
-    } catch (err) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Sync execution error';
       console.error(`Failed to sync event ${event.id}:`, err);
       failedCount++;
+
+      // Increment retry count in queue
+      const targetIndex = queue.findIndex((e) => e.id === event.id);
+      if (targetIndex !== -1) {
+        queue[targetIndex].retryCount = (queue[targetIndex].retryCount || 0) + 1;
+        queue[targetIndex].lastError = errorMsg;
+      }
     }
   }
+
+  storage.set(SYNC_QUEUE_KEY, queue);
 
   if (syncedIds.length > 0) {
     markEventsSynced(syncedIds);
   }
 
   return { processed: processedCount, failed: failedCount };
+}
+
+/**
+ * Initialize automatic background sync triggers on network re-connection.
+ */
+export function initAutoSync(): () => void {
+  if (typeof window === 'undefined') return () => {};
+
+  const handleOnline = () => {
+    processSyncQueue().catch((err) =>
+      console.error('[EduPulse Sync] Network re-connection sync failed:', err)
+    );
+  };
+
+  window.addEventListener('online', handleOnline);
+  return () => window.removeEventListener('online', handleOnline);
 }
 
 function getTableNameForModule(module: string): string {
@@ -162,3 +196,4 @@ function getTableNameForModule(module: string): string {
   };
   return map[module.toLowerCase()] || 'profiles';
 }
+

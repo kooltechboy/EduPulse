@@ -75,7 +75,12 @@ async function generateContent(
       };
     }
 
-    const response = await client.models.generateContent({
+    // 15-Second Timeout Promise Guard
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('AI Request Timeout after 15000ms')), 15000)
+    );
+
+    const apiPromise = client.models.generateContent({
       model: MODEL_ID,
       contents: prompt,
       config: {
@@ -84,6 +89,8 @@ async function generateContent(
         temperature: 0.7,
       },
     });
+
+    const response = (await Promise.race([apiPromise, timeoutPromise])) as { text?: string };
 
     const text = response.text;
     if (!text) {

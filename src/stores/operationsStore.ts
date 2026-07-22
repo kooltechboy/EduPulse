@@ -195,9 +195,23 @@ export const useOperationsStore = create<OperationsState>()(
       showToast('Menu Added', 'Daily menu saved successfully.');
     },
     updateMealAccountBalance: (studentId, amount) => {
-      set((state) => ({
-        mealAccounts: state.mealAccounts.map((m) => (m.studentId === studentId ? { ...m, balance: m.balance + amount } : m)),
-      }));
+      set((state) => {
+        const exists = state.mealAccounts.some((m) => m.studentId === studentId);
+        if (!exists) {
+          const newAcc: MealAccount = {
+            studentId,
+            studentName: 'Student Account',
+            balance: amount,
+            transactions: [],
+          };
+          return { mealAccounts: [...state.mealAccounts, newAcc] };
+        }
+        return {
+          mealAccounts: state.mealAccounts.map((m) =>
+            m.studentId === studentId ? { ...m, balance: m.balance + amount } : m
+          ),
+        };
+      });
       showToast('Balance Updated', 'Meal account balance updated.');
     },
     processOrder: (studentId, amount) => {
@@ -213,9 +227,22 @@ export const useOperationsStore = create<OperationsState>()(
       showToast('Conduct Logged', 'Conduct record saved successfully.');
     },
     updateHousePoints: (houseName, points) => {
-      set((state) => ({
-        housePoints: state.housePoints.map((h) => (h.houseName === houseName ? { ...h, totalPoints: h.totalPoints + points } : h)),
-      }));
+      set((state) => {
+        const exists = state.housePoints.some((h) => h.houseName === houseName);
+        if (!exists) {
+          const newHouse: HousePoint = {
+            houseName,
+            totalPoints: points,
+            color: '#3b82f6',
+          };
+          return { housePoints: [...state.housePoints, newHouse] };
+        }
+        return {
+          housePoints: state.housePoints.map((h) =>
+            h.houseName === houseName ? { ...h, totalPoints: h.totalPoints + points } : h
+          ),
+        };
+      });
       showToast('Points Updated', 'House points updated successfully.');
     },
 

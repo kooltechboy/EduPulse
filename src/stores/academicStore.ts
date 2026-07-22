@@ -115,7 +115,13 @@ export const useAcademicStore = create<AcademicState>()(
       showToast('Success', 'Submission added successfully');
     },
     gradeSubmission: (id, grade, feedback) => {
-      set((state) => ({ submissions: state.submissions.map(s => s.id === id ? { ...s, grade, feedback, gradedAt: new Date().toISOString() } : s) }));
+      set((state) => ({
+        submissions: state.submissions.map((s) =>
+          s.id === id
+            ? { ...s, grade, feedback, status: 'graded', gradedAt: new Date().toISOString() }
+            : s
+        ),
+      }));
       showToast('Success', 'Submission graded successfully');
     },
     markAttendance: (record) => {
