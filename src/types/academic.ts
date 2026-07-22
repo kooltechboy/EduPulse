@@ -1,6 +1,13 @@
-export type GradeLevel = 'pre-k' | 'kindergarten' | 'grade-1' | 'grade-2' | 'grade-3' | 'grade-4' | 'grade-5' | 'grade-6' | 'grade-7' | 'grade-8' | 'grade-9' | 'grade-10' | 'grade-11' | 'grade-12';
+export type GradeLevel = 
+  | 'pre-k' 
+  | 'kindergarten' 
+  | 'grade-1' | 'grade-2' | 'grade-3' | 'grade-4' | 'grade-5' | 'grade-6' 
+  | 'grade-7' | 'grade-8' | 'grade-9' 
+  | 'grade-10' | 'grade-11' | 'grade-12' 
+  | 'undergraduate-yr1' | 'undergraduate-yr2' | 'undergraduate-yr3' | 'undergraduate-yr4' 
+  | 'postgraduate';
 
-export type Tier = 'early-childhood' | 'elementary' | 'middle-school' | 'high-school';
+export type Tier = 'early-childhood' | 'elementary' | 'middle-school' | 'high-school' | 'higher-education';
 
 export type StudentStatus = 'active' | 'inactive' | 'graduated' | 'transferred' | 'suspended';
 

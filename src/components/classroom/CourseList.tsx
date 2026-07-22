@@ -23,12 +23,16 @@ interface Course {
 }
 
 const mockCourses: Course[] = [
-  { id: '1', name: 'Advanced Mathematics', code: 'MATH401', teacher: 'Dr. Smith', tier: 'AP', grade: '12', enrolled: 24, capacity: 30, schedule: 'Mon, Wed, Fri 9:00 AM', status: 'active' },
-  { id: '2', name: 'Physics I', code: 'PHY301', teacher: 'Prof. Johnson', tier: 'Honors', grade: '11', enrolled: 28, capacity: 30, schedule: 'Tue, Thu 10:30 AM', status: 'active' },
-  { id: '3', name: 'World History', code: 'HIS201', teacher: 'Mr. Davis', tier: 'Standard', grade: '10', enrolled: 25, capacity: 25, schedule: 'Mon, Wed 1:00 PM', status: 'active' },
-  { id: '4', name: 'English Literature', code: 'ENG401', teacher: 'Ms. Wilson', tier: 'AP', grade: '12', enrolled: 20, capacity: 25, schedule: 'Tue, Thu 9:00 AM', status: 'active' },
-  { id: '5', name: 'Biology', code: 'BIO201', teacher: 'Dr. Brown', tier: 'Standard', grade: '10', enrolled: 29, capacity: 30, schedule: 'Mon, Wed, Fri 11:00 AM', status: 'active' },
-  { id: '6', name: 'Chemistry', code: 'CHE301', teacher: 'Dr. Smith', tier: 'Honors', grade: '11', enrolled: 22, capacity: 25, schedule: 'Tue, Thu 1:00 PM', status: 'active' },
+  { id: '1', name: 'Pre-K Sunshine Explorers Classroom', code: 'PREK-101', teacher: 'Ms. Emily Parker', tier: 'Early Childhood', grade: 'Pre-K', enrolled: 18, capacity: 20, schedule: 'Mon-Fri 8:30 AM - 12:00 PM', status: 'active' },
+  { id: '2', name: 'Kindergarten Discovery Classroom', code: 'KND-102', teacher: 'Mrs. Sarah Jenkins', tier: 'Early Childhood', grade: 'Kindergarten', enrolled: 22, capacity: 25, schedule: 'Mon-Fri 8:30 AM - 2:30 PM', status: 'active' },
+  { id: '3', name: 'Primary Grade 3 Math & Science', code: 'ELEM-301', teacher: 'Mr. David Thompson', tier: 'Primary School', grade: 'Grade 3', enrolled: 24, capacity: 25, schedule: 'Mon-Fri 9:00 AM - 3:00 PM', status: 'active' },
+  { id: '4', name: 'Primary Grade 5 Reading & Social Studies', code: 'ELEM-502', teacher: 'Ms. Clara Oswald', tier: 'Primary School', grade: 'Grade 5', enrolled: 26, capacity: 28, schedule: 'Mon-Fri 9:00 AM - 3:00 PM', status: 'active' },
+  { id: '5', name: 'Junior High Grade 8 Physical Science', code: 'JH-SCI801', teacher: 'Dr. Robert Brown', tier: 'Junior High', grade: 'Grade 8', enrolled: 28, capacity: 30, schedule: 'Mon, Wed, Fri 10:00 AM', status: 'active' },
+  { id: '6', name: 'Junior High Grade 9 Algebra I', code: 'JH-ALG901', teacher: 'Mr. James Davis', tier: 'Junior High', grade: 'Grade 9', enrolled: 27, capacity: 30, schedule: 'Tue, Thu 9:00 AM', status: 'active' },
+  { id: '7', name: 'Senior High AP Calculus BC', code: 'SH-MATH401', teacher: 'Dr. Smith', tier: 'Senior High', grade: 'Grade 12', enrolled: 24, capacity: 30, schedule: 'Mon, Wed, Fri 9:00 AM', status: 'active' },
+  { id: '8', name: 'Senior High Physics I', code: 'SH-PHY301', teacher: 'Prof. Johnson', tier: 'Senior High', grade: 'Grade 11', enrolled: 28, capacity: 30, schedule: 'Tue, Thu 10:30 AM', status: 'active' },
+  { id: '9', name: 'College Computer Science 101 (Python)', code: 'UNIV-CS101', teacher: 'Prof. Alan Turing', tier: 'College & University', grade: 'Undergraduate (Yr 1)', enrolled: 45, capacity: 50, schedule: 'Mon, Wed 2:00 PM', status: 'active' },
+  { id: '10', name: 'College Organic Chemistry II', code: 'UNIV-CHEM302', teacher: 'Dr. Marie Curie', tier: 'College & University', grade: 'Undergraduate (Yr 3)', enrolled: 32, capacity: 35, schedule: 'Tue, Thu 1:00 PM', status: 'active' }
 ];
 
 export const CourseList: React.FC = () => {
@@ -181,18 +185,34 @@ export const CourseList: React.FC = () => {
             style={{ border: 'none', background: 'transparent', outline: 'none', color: 'var(--color-text-primary)', width: '100%' }}
           />
         </div>
-        <select value={filterTier} onChange={(e) => setFilterTier(e.target.value)} className="ep-input" style={{ width: '160px' }}>
-          <option value="">All Tiers</option>
-          <option value="Standard">Standard</option>
-          <option value="Honors">Honors</option>
-          <option value="AP">AP</option>
+        <select value={filterTier} onChange={(e) => setFilterTier(e.target.value)} className="ep-input" style={{ width: '180px' }}>
+          <option value="">All Tiers & Levels</option>
+          <option value="Early Childhood">Early Childhood</option>
+          <option value="Primary School">Primary School</option>
+          <option value="Junior High">Junior High School</option>
+          <option value="Senior High">Senior High School</option>
+          <option value="College & University">College & University</option>
         </select>
-        <select value={filterGrade} onChange={(e) => setFilterGrade(e.target.value)} className="ep-input" style={{ width: '160px' }}>
-          <option value="">All Grades</option>
-          <option value="9">Grade 9</option>
-          <option value="10">Grade 10</option>
-          <option value="11">Grade 11</option>
-          <option value="12">Grade 12</option>
+        <select value={filterGrade} onChange={(e) => setFilterGrade(e.target.value)} className="ep-input" style={{ width: '180px' }}>
+          <option value="">All Grade Levels</option>
+          <option value="Pre-K">Pre-K</option>
+          <option value="Kindergarten">Kindergarten</option>
+          <option value="Grade 1">Grade 1</option>
+          <option value="Grade 2">Grade 2</option>
+          <option value="Grade 3">Grade 3</option>
+          <option value="Grade 4">Grade 4</option>
+          <option value="Grade 5">Grade 5</option>
+          <option value="Grade 6">Grade 6</option>
+          <option value="Grade 7">Grade 7</option>
+          <option value="Grade 8">Grade 8</option>
+          <option value="Grade 9">Grade 9</option>
+          <option value="Grade 10">Grade 10</option>
+          <option value="Grade 11">Grade 11</option>
+          <option value="Grade 12">Grade 12</option>
+          <option value="Undergraduate (Yr 1)">College - Freshman</option>
+          <option value="Undergraduate (Yr 2)">College - Sophomore</option>
+          <option value="Undergraduate (Yr 3)">College - Junior</option>
+          <option value="Undergraduate (Yr 4)">College - Senior</option>
         </select>
       </div>
 
@@ -263,20 +283,38 @@ export const CourseList: React.FC = () => {
                   <input name="code" defaultValue={courseToEdit?.code} required className="ep-course__modal-input" placeholder="e.g. MATH401" />
                 </div>
                 <div className="ep-course__modal-field">
-                  <label className="ep-course__modal-label">Subject Area / Tier</label>
-                  <select name="tier" defaultValue={courseToEdit?.tier || 'Standard'} className="ep-course__modal-select">
-                    <option value="Standard">Standard</option>
-                    <option value="Honors">Honors</option>
-                    <option value="AP">AP</option>
+                  <label className="ep-course__modal-label">Educational Level / Tier</label>
+                  <select name="tier" defaultValue={courseToEdit?.tier || 'Senior High'} className="ep-course__modal-select">
+                    <option value="Early Childhood">Early Childhood (Pre-K & Kindergarten)</option>
+                    <option value="Primary School">Primary School (Grades 1 - 6)</option>
+                    <option value="Junior High">Junior High School (Grades 7 - 9)</option>
+                    <option value="Senior High">Senior High School (Grades 10 - 12)</option>
+                    <option value="College & University">College & University (Higher Ed)</option>
+                    <option value="AP & Honors">AP & Honors</option>
                   </select>
                 </div>
                 <div className="ep-course__modal-field">
-                  <label className="ep-course__modal-label">Grade Level</label>
-                  <select name="grade" defaultValue={courseToEdit?.grade || '10'} className="ep-course__modal-select">
-                    <option value="9">Grade 9</option>
-                    <option value="10">Grade 10</option>
-                    <option value="11">Grade 11</option>
-                    <option value="12">Grade 12</option>
+                  <label className="ep-course__modal-label">Grade Level / Year</label>
+                  <select name="grade" defaultValue={courseToEdit?.grade || 'Grade 10'} className="ep-course__modal-select">
+                    <option value="Pre-K">Pre-K</option>
+                    <option value="Kindergarten">Kindergarten</option>
+                    <option value="Grade 1">Grade 1 (Primary)</option>
+                    <option value="Grade 2">Grade 2 (Primary)</option>
+                    <option value="Grade 3">Grade 3 (Primary)</option>
+                    <option value="Grade 4">Grade 4 (Primary)</option>
+                    <option value="Grade 5">Grade 5 (Primary)</option>
+                    <option value="Grade 6">Grade 6 (Primary)</option>
+                    <option value="Grade 7">Grade 7 (Junior High)</option>
+                    <option value="Grade 8">Grade 8 (Junior High)</option>
+                    <option value="Grade 9">Grade 9 (Junior High)</option>
+                    <option value="Grade 10">Grade 10 (Senior High)</option>
+                    <option value="Grade 11">Grade 11 (Senior High)</option>
+                    <option value="Grade 12">Grade 12 (Senior High)</option>
+                    <option value="Undergraduate (Yr 1)">College - Freshman (Yr 1)</option>
+                    <option value="Undergraduate (Yr 2)">College - Sophomore (Yr 2)</option>
+                    <option value="Undergraduate (Yr 3)">College - Junior (Yr 3)</option>
+                    <option value="Undergraduate (Yr 4)">College - Senior (Yr 4)</option>
+                    <option value="Postgraduate / Masters">Postgraduate / Masters / PhD</option>
                   </select>
                 </div>
                 <div className="ep-course__modal-field">

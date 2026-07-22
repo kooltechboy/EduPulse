@@ -392,21 +392,38 @@ export const StudentList: React.FC = () => {
             value={gradeFilter} 
             onChange={e => setGradeFilter(e.target.value)}
             options={[
-              { label: 'All Grades', value: '' },
-              { label: 'Grade 9', value: '9' },
-              { label: 'Grade 10', value: '10' },
-              { label: 'Grade 11', value: '11' },
-              { label: 'Grade 12', value: '12' },
+              { label: 'All Grade Levels', value: '' },
+              { label: 'Pre-K', value: 'pre-k' },
+              { label: 'Kindergarten', value: 'kindergarten' },
+              { label: 'Grade 1 (Primary)', value: 'grade-1' },
+              { label: 'Grade 2 (Primary)', value: 'grade-2' },
+              { label: 'Grade 3 (Primary)', value: 'grade-3' },
+              { label: 'Grade 4 (Primary)', value: 'grade-4' },
+              { label: 'Grade 5 (Primary)', value: 'grade-5' },
+              { label: 'Grade 6 (Primary)', value: 'grade-6' },
+              { label: 'Grade 7 (Junior High)', value: 'grade-7' },
+              { label: 'Grade 8 (Junior High)', value: 'grade-8' },
+              { label: 'Grade 9 (Junior High)', value: 'grade-9' },
+              { label: 'Grade 10 (Senior High)', value: '10' },
+              { label: 'Grade 11 (Senior High)', value: '11' },
+              { label: 'Grade 12 (Senior High)', value: '12' },
+              { label: 'College - Freshman (Yr 1)', value: 'undergraduate-yr1' },
+              { label: 'College - Sophomore (Yr 2)', value: 'undergraduate-yr2' },
+              { label: 'College - Junior (Yr 3)', value: 'undergraduate-yr3' },
+              { label: 'College - Senior (Yr 4)', value: 'undergraduate-yr4' },
+              { label: 'Postgraduate / Masters', value: 'postgraduate' },
             ]}
           />
           <Select 
             value={tierFilter} 
             onChange={e => setTierFilter(e.target.value)}
             options={[
-              { label: 'All Tiers', value: '' },
-              { label: 'Standard', value: 'standard' },
-              { label: 'Premium', value: 'premium' },
-              { label: 'Scholarship', value: 'scholarship' },
+              { label: 'All Educational Tiers', value: '' },
+              { label: 'Early Childhood', value: 'early-childhood' },
+              { label: 'Primary School', value: 'elementary' },
+              { label: 'Junior High School', value: 'middle-school' },
+              { label: 'Senior High School', value: 'high-school' },
+              { label: 'College & University', value: 'higher-education' },
             ]}
           />
           <Select 

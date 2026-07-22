@@ -70,26 +70,42 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, isOpen, onClo
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
           <Select 
-            label="Grade" 
+            label="Grade Level / Year" 
             name="grade" 
             value={formData.grade} 
             onChange={handleChange}
             options={[
-              { label: 'Grade 9', value: '9' },
-              { label: 'Grade 10', value: '10' },
-              { label: 'Grade 11', value: '11' },
-              { label: 'Grade 12', value: '12' },
+              { label: 'Pre-K', value: 'pre-k' },
+              { label: 'Kindergarten', value: 'kindergarten' },
+              { label: 'Grade 1 (Primary)', value: 'grade-1' },
+              { label: 'Grade 2 (Primary)', value: 'grade-2' },
+              { label: 'Grade 3 (Primary)', value: 'grade-3' },
+              { label: 'Grade 4 (Primary)', value: 'grade-4' },
+              { label: 'Grade 5 (Primary)', value: 'grade-5' },
+              { label: 'Grade 6 (Primary)', value: 'grade-6' },
+              { label: 'Grade 7 (Junior High)', value: 'grade-7' },
+              { label: 'Grade 8 (Junior High)', value: 'grade-8' },
+              { label: 'Grade 9 (Junior High)', value: 'grade-9' },
+              { label: 'Grade 10 (Senior High)', value: '10' },
+              { label: 'Grade 11 (Senior High)', value: '11' },
+              { label: 'Grade 12 (Senior High)', value: '12' },
+              { label: 'College - Freshman (Yr 1)', value: 'undergraduate-yr1' },
+              { label: 'College - Sophomore (Yr 2)', value: 'undergraduate-yr2' },
+              { label: 'College - Junior (Yr 3)', value: 'undergraduate-yr3' },
+              { label: 'College - Senior (Yr 4)', value: 'undergraduate-yr4' },
+              { label: 'Postgraduate / Masters', value: 'postgraduate' },
             ]}
           />
           <Select 
-            label="Section" 
+            label="Section / Room" 
             name="section" 
             value={formData.section} 
             onChange={handleChange}
             options={[
-              { label: 'Section A', value: 'A' },
-              { label: 'Section B', value: 'B' },
-              { label: 'Section C', value: 'C' },
+              { label: 'Section A (Room 101)', value: 'A' },
+              { label: 'Section B (Room 102)', value: 'B' },
+              { label: 'Section C (Room 103)', value: 'C' },
+              { label: 'Section D (Lab 1)', value: 'D' },
             ]}
           />
         </div>
@@ -101,14 +117,16 @@ export const StudentForm: React.FC<StudentFormProps> = ({ student, isOpen, onClo
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
           <Select 
-            label="Tier" 
+            label="Educational Tier" 
             name="tier" 
             value={formData.tier} 
             onChange={handleChange}
             options={[
-              { label: 'Standard', value: 'standard' },
-              { label: 'Premium', value: 'premium' },
-              { label: 'Scholarship', value: 'scholarship' },
+              { label: 'Early Childhood (Pre-K & Kindergarten)', value: 'early-childhood' },
+              { label: 'Primary School (Grades 1 - 6)', value: 'elementary' },
+              { label: 'Junior High School (Grades 7 - 9)', value: 'middle-school' },
+              { label: 'Senior High School (Grades 10 - 12)', value: 'high-school' },
+              { label: 'College & University (Higher Ed)', value: 'higher-education' },
             ]}
           />
           <Select 
