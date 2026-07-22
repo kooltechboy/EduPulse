@@ -2,42 +2,43 @@ import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { lazyWithRetry } from '@/utils/lazyWithRetry';
 
-// ── Lazy-loaded modules ───────────────────────────────────────────────────
+// ── Resilient Lazy-loaded modules with auto-reload retry on deployment updates ──────
 
-const LoginScreen = React.lazy(() => import('@/components/auth/LoginScreen').then(m => ({ default: m.LoginScreen })));
-const AppShell = React.lazy(() => import('@/components/shell/AppShell').then(m => ({ default: m.AppShell })));
-const RouteGuard = React.lazy(() => import('@/components/auth/RouteGuard').then(m => ({ default: m.RouteGuard })));
-const DashboardRouter = React.lazy(() => import('@/components/dashboard/DashboardRouter').then(m => ({ default: m.DashboardRouter })));
+const LoginScreen = lazyWithRetry(() => import('@/components/auth/LoginScreen'), 'LoginScreen');
+const AppShell = lazyWithRetry(() => import('@/components/shell/AppShell'), 'AppShell');
+const RouteGuard = lazyWithRetry(() => import('@/components/auth/RouteGuard'), 'RouteGuard');
+const DashboardRouter = lazyWithRetry(() => import('@/components/dashboard/DashboardRouter'), 'DashboardRouter');
 
 // SIS
-const StudentList = React.lazy(() => import('@/components/sis/students/StudentList').then(m => ({ default: m.StudentList })));
-const StaffList = React.lazy(() => import('@/components/sis/staff/StaffList').then(m => ({ default: m.StaffList })));
-const TeacherList = React.lazy(() => import('@/components/sis/teachers/TeacherList').then(m => ({ default: m.TeacherList })));
+const StudentList = lazyWithRetry(() => import('@/components/sis/students/StudentList'), 'StudentList');
+const StaffList = lazyWithRetry(() => import('@/components/sis/staff/StaffList'), 'StaffList');
+const TeacherList = lazyWithRetry(() => import('@/components/sis/teachers/TeacherList'), 'TeacherList');
 
 // Classroom / Schedule / Teacher Tools
-const CourseList = React.lazy(() => import('@/components/classroom/CourseList').then(m => ({ default: m.CourseList })));
-const Timetable = React.lazy(() => import('@/components/schedule/Timetable').then(m => ({ default: m.Timetable })));
-const AttendanceMarking = React.lazy(() => import('@/components/teacher/AttendanceMarking').then(m => ({ default: m.AttendanceMarking })));
-const Gradebook = React.lazy(() => import('@/components/teacher/Gradebook').then(m => ({ default: m.Gradebook })));
+const CourseList = lazyWithRetry(() => import('@/components/classroom/CourseList'), 'CourseList');
+const Timetable = lazyWithRetry(() => import('@/components/schedule/Timetable'), 'Timetable');
+const AttendanceMarking = lazyWithRetry(() => import('@/components/teacher/AttendanceMarking'), 'AttendanceMarking');
+const Gradebook = lazyWithRetry(() => import('@/components/teacher/Gradebook'), 'Gradebook');
 
 // Operations
-const AdmissionsPipeline = React.lazy(() => import('@/components/admissions/AdmissionsPipeline').then(m => ({ default: m.AdmissionsPipeline })));
-const FinanceView = React.lazy(() => import('@/components/finance/FinanceView').then(m => ({ default: m.FinanceView })));
-const MessagingHub = React.lazy(() => import('@/components/communication/MessagingHub').then(m => ({ default: m.MessagingHub })));
-const HRHub = React.lazy(() => import('@/components/hr/HRHub').then(m => ({ default: m.HRHub })));
-const BehaviorMatrix = React.lazy(() => import('@/components/behavior/BehaviorMatrix').then(m => ({ default: m.BehaviorMatrix })));
+const AdmissionsPipeline = lazyWithRetry(() => import('@/components/admissions/AdmissionsPipeline'), 'AdmissionsPipeline');
+const FinanceView = lazyWithRetry(() => import('@/components/finance/FinanceView'), 'FinanceView');
+const MessagingHub = lazyWithRetry(() => import('@/components/communication/MessagingHub'), 'MessagingHub');
+const HRHub = lazyWithRetry(() => import('@/components/hr/HRHub'), 'HRHub');
+const BehaviorMatrix = lazyWithRetry(() => import('@/components/behavior/BehaviorMatrix'), 'BehaviorMatrix');
 
 // Support
-const MedicalClinic = React.lazy(() => import('@/components/health/MedicalClinic').then(m => ({ default: m.MedicalClinic })));
-const CampusEvents = React.lazy(() => import('@/components/campus/CampusEvents').then(m => ({ default: m.CampusEvents })));
-const InventoryHub = React.lazy(() => import('@/components/inventory/InventoryHub').then(m => ({ default: m.InventoryHub })));
-const DigitalLibrary = React.lazy(() => import('@/components/library/DigitalLibrary').then(m => ({ default: m.DigitalLibrary })));
-const FleetManager = React.lazy(() => import('@/components/transport/FleetManager').then(m => ({ default: m.FleetManager })));
-const CounselingView = React.lazy(() => import('@/components/counseling/CounselingView').then(m => ({ default: m.CounselingView })));
-const CafeteriaView = React.lazy(() => import('@/components/cafeteria/CafeteriaView').then(m => ({ default: m.CafeteriaView })));
-const SecurityDashboard = React.lazy(() => import('@/components/admin/SecurityDashboard').then(m => ({ default: m.SecurityDashboard })));
-const CoordinationView = React.lazy(() => import('@/components/coordination/CoordinationView').then(m => ({ default: m.CoordinationView })));
+const MedicalClinic = lazyWithRetry(() => import('@/components/health/MedicalClinic'), 'MedicalClinic');
+const CampusEvents = lazyWithRetry(() => import('@/components/campus/CampusEvents'), 'CampusEvents');
+const InventoryHub = lazyWithRetry(() => import('@/components/inventory/InventoryHub'), 'InventoryHub');
+const DigitalLibrary = lazyWithRetry(() => import('@/components/library/DigitalLibrary'), 'DigitalLibrary');
+const FleetManager = lazyWithRetry(() => import('@/components/transport/FleetManager'), 'FleetManager');
+const CounselingView = lazyWithRetry(() => import('@/components/counseling/CounselingView'), 'CounselingView');
+const CafeteriaView = lazyWithRetry(() => import('@/components/cafeteria/CafeteriaView'), 'CafeteriaView');
+const SecurityDashboard = lazyWithRetry(() => import('@/components/admin/SecurityDashboard'), 'SecurityDashboard');
+const CoordinationView = lazyWithRetry(() => import('@/components/coordination/CoordinationView'), 'CoordinationView');
 
 // ── Loading Fallback ──────────────────────────────────────────────────────
 
