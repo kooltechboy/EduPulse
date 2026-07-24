@@ -1,10 +1,12 @@
-import React from 'react';
-import { Menu, Search, Bell, Sun, Moon, User, Sparkles } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Menu, Search, Bell, Sun, Moon, User, Sparkles, Activity } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useUIStore } from '@/stores/uiStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useLocation } from 'react-router-dom';
 import { UserRole } from '@/stores/authStore';
+import { MissionControlModal } from './MissionControlModal';
+import { telemetryService, HealthStatus } from '@/services/telemetryService';
 import './Shell.css';
 
 export const Header: React.FC = () => {
@@ -12,7 +14,14 @@ export const Header: React.FC = () => {
   const { toggleSidebar, setCommandPaletteOpen, setNotificationDrawerOpen, toggleAiCopilot } = useUIStore();
   const { notifications } = useNotificationStore();
   const location = useLocation();
-  const [profileOpen, setProfileOpen] = React.useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [missionControlOpen, setMissionControlOpen] = useState(false);
+  const [healthStatus, setHealthStatus] = useState<HealthStatus>('nominal');
+
+  useEffect(() => {
+    const unsub = telemetryService.subscribe((m) => setHealthStatus(m.status));
+    return () => unsub();
+  }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -21,6 +30,9 @@ export const Header: React.FC = () => {
     .filter(Boolean)
     .map(p => p.charAt(0).toUpperCase() + p.slice(1))
     .join(' / ') || 'Dashboard';
+
+  const statusColor =
+    healthStatus === 'nominal' ? '#22c55e' : healthStatus === 'degraded' ? '#f59e0b' : '#ef4444';
 
   return (
     <header className="ep-shell__header">
@@ -42,6 +54,28 @@ export const Header: React.FC = () => {
       </div>
 
       <div className="ep-header__right">
+        {/* NASA Mission Control Telemetry Trigger */}
+        <button
+          className="ep-header__icon-btn"
+          onClick={() => setMissionControlOpen(true)}
+          title="EduPulse Telemetry & Mission Control"
+          style={{ position: 'relative', border: '1px solid rgba(59, 130, 246, 0.3)', background: 'rgba(59, 130, 246, 0.1)' }}
+        >
+          <Activity size={18} style={{ color: '#3b82f6' }} />
+          <span
+            style={{
+              position: 'absolute',
+              top: 4,
+              right: 4,
+              width: 7,
+              height: 7,
+              borderRadius: '50%',
+              backgroundColor: statusColor,
+              boxShadow: `0 0 6px ${statusColor}`,
+            }}
+          />
+        </button>
+
         <button 
           className="ep-header__icon-btn" 
           onClick={toggleAiCopilot}
@@ -120,6 +154,13 @@ export const Header: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Mission Control Modal */}
+      <MissionControlModal
+        isOpen={missionControlOpen}
+        onClose={() => setMissionControlOpen(false)}
+      />
     </header>
   );
 };
+

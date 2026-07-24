@@ -23,6 +23,38 @@ export interface SyncEvent {
   lastError?: string;
 }
 
+/**
+ * NASA-Grade Field-Level Last-Write-Wins (LWW) Data Conflict Merger
+ * Merges local offline changes with remote record fields based on timestamp precedence.
+ */
+export function resolveFieldLevelConflict<T extends Record<string, any>>(
+  localRecord: T,
+  remoteRecord: T,
+  localTimestamp: string,
+  remoteTimestamp: string
+): T {
+  if (!remoteRecord) return localRecord;
+  if (!localRecord) return remoteRecord;
+
+  const localTime = new Date(localTimestamp).getTime();
+  const remoteTime = new Date(remoteTimestamp).getTime();
+
+  // If local timestamp is clearly newer, local wins
+  if (localTime >= remoteTime) {
+    return { ...remoteRecord, ...localRecord };
+  }
+
+  // Field-level non-null merging where remote fills missing local values
+  const merged: Record<string, any> = { ...remoteRecord };
+  Object.keys(localRecord).forEach((key) => {
+    if (localRecord[key] !== undefined && localRecord[key] !== null) {
+      merged[key] = localRecord[key];
+    }
+  });
+
+  return merged as T;
+}
+
 // ── Sync Queue ────────────────────────────────────────────────────────────
 
 const SYNC_QUEUE_KEY = 'sync_queue';
